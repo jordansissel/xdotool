@@ -148,10 +148,17 @@ void xdo_window_setsize(xdo_t *xdo, int wid, int width, int height) {
   if (height > 0)
     flags |= CWHeight;
   XConfigureWindow(xdo->xdpy, wid, flags, &wc);
+  XFlush(xdo->xdpy);
 }
 
 void xdo_window_focus(xdo_t *xdo, int wid) {
   XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
+  XFlush(xdo->xdpy);
+}
+
+void xdo_window_raise(xdo_t *xdo, int wid) {
+  XRaiseWindow(xdo->xdpy, wid);
+  XFlush(xdo->xdpy);
 }
 
 /* XXX: Include 'screen number' support? */

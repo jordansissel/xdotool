@@ -12,6 +12,7 @@ void cmd_key(int argc, char **args);
 void cmd_windowmove(int argc, char **args);
 void cmd_windowfocus(int argc, char **args);
 void cmd_windowsize(int argc, char **args);
+void cmd_windowraise(int argc, char **args);
 void cmd_search(int argc, char **args);
 
 xdo_t *xdo;
@@ -23,6 +24,7 @@ struct dispatch {
   "search", cmd_search,
   "windowsize", cmd_windowsize,
   "windowfocus", cmd_windowfocus,
+  "windowraise", cmd_windowraise,
   "windowmove", cmd_windowmove,
   "mousemove", cmd_mousemove,
   "mousedown", cmd_mousedown,
@@ -159,6 +161,17 @@ void cmd_windowfocus(int argc, char **args) {
 
   wid = (int)strtol(args[0], NULL, 0);
   xdo_window_focus(xdo, wid);
+}
+
+void cmd_windowraise(int argc, char **args) {
+  Window wid;
+  if (argc != 1) {
+    printf("usage: windowraise wid\n");
+    return;
+  }
+
+  wid = (int)strtol(args[0], NULL, 0);
+  xdo_window_raise(xdo, wid);
 }
 
 void cmd_windowsize(int argc, char **args) {

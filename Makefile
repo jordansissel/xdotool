@@ -28,9 +28,9 @@ xdotool: xdotool.o xdo.o
 	gcc $(CFLAGS) `pkg-config --libs x11 xtst` xdotool.o xdo.o -o $@
 
 package:
-	NAME=navmacro-`date +%Y%m%d`; \
+	NAME=xdotool-`date +%Y%m%d`; \
 	mkdir $${NAME}; \
-	rsync --exclude .svn -av *.c *.h README Makefile examples $${NAME}/; \
+	rsync --exclude .svn -av *.c *.h README Makefile $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -rf $${NAME}/
 
