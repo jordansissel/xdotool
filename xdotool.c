@@ -99,7 +99,6 @@ void cmd_mouseup(int argc, char **args) {
   }
 
   button = atoi(args[0]);
-  printf("button %s / %d\n", args[0], button);
 
   xdo_mouseup(xdo, button);
 }
