@@ -1,33 +1,29 @@
-navmacro - a simple tool launcher
-  Compile: make navmacro
-  Run: ./navmacro
-  Use: Ctrl+' (apostrophe) brings up the launcher. Type in a command, press enter to run it. Escape cancels.
-
 xdo: Fake input from the mouse and keyboard very easily
-  Compile: make xdotool
-  Run: ./xdotool <cmd> <args>
-  Use: The following commands are available:
-    key "key1" ["key2" ... "keyN"]
-      + Example:  ./xdotool key "ctrl+l" "BackSpace"
-    mousemove xcoord ycoord
-      + Example: ./xdotool mousemove 500 1000
-    mouseup <button>
-    mousedown <button>
-    click <button>
-      + Example: ./xdotool click 1 (click left button)
-    type "string to type"
-      + Example: ./xdotool type "hello there"
 
-    windowmove <windowid> <x> <y>
-    windowsize <windowid> <width> <height>
-    windowfocus <windowid>
-      + This will call XSetInputFocus. It will only work if the
-        window is currently on the screen (ie; not on another desktop or
-        minimized)
+Compile: make xdotool
+Run: ./xdotool <cmd> <args>
+Use: The following commands are available:
+  key "key1" ["key2" ... "keyN"]
+    + Example:  ./xdotool key "ctrl+l" "BackSpace"
+  mousemove xcoord ycoord
+    + Example: ./xdotool mousemove 500 1000
+  mouseup <button>
+  mousedown <button>
+  click <button>
+    + Example: ./xdotool click 1 (click left button)
+  type "string to type"
+    + Example: ./xdotool type "hello there"
 
-    search <regexp>
-      + This outputs a list of window ids matching the given regexp. 
-        Matches test: window title, window name, window class
-        See 'xwininfo' output for what each of these are/mean.
+  windowmove <windowid> <x> <y>
+  windowsize <windowid> <width> <height>
+  windowfocus <windowid>
+    + This will call XSetInputFocus. It will only work if the
+      window is currently on the screen (ie; not on another desktop or
+      minimized)
 
-    
+  search <regexp>
+    + This outputs a list of window ids matching the given regexp. 
+      Matches test: window title, window name, window class
+      See 'xwininfo' output for what each of these are/mean.
+
+  
