@@ -1,5 +1,9 @@
+# $Id$
+
 CFLAGS=-g -I/usr/X11R6/include -I/usr/local/include
 LDFLAGS=-g -L/usr/X11R6/lib -lX11 -lXtst
+
+all: xdotool
 
 clean:
 	rm *.o

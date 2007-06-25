@@ -1,4 +1,7 @@
 /* xdo library
+ *
+ * $Id$
+ * $Author$
  */
 
 #include <sys/select.h>

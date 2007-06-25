@@ -1,4 +1,7 @@
-/* xdo utility pieces */
+/* xdo utility pieces 
+ *
+ * $Id$
+ */
 
 /* human to Keysym string mapping */
 char *symbol_map[] = {

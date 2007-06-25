@@ -1,6 +1,9 @@
 /*
- * xdo library
+ * xdo library header
+ * - include this if you have code that uses xdo
  *
+ * $Author$
+ * $Id$
  */
 
 #include <X11/Xlib.h>

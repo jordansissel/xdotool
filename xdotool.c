@@ -1,6 +1,14 @@
+/* xdotool
+ *
+ * command line interface to the xdo library
+ *
+ * $Author$
+ * $Id$
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "xdo.h"
 
 void cmd_mousemove(int argc, char **args);
