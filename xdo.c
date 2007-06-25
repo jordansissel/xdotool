@@ -1,6 +1,8 @@
 /* xdo library
  *
  * $Id$
+ *
+ * $license$
  */
 
 #include <sys/select.h>
