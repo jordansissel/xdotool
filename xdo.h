@@ -2,7 +2,6 @@
  * xdo library header
  * - include this if you have code that uses xdo
  *
- * $Author$
  * $Id$
  */
 

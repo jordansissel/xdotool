@@ -2,7 +2,6 @@
  *
  * command line interface to the xdo library
  *
- * $Author$
  * $Id$
  */
 
