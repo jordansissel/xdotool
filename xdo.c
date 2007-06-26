@@ -1,6 +1,7 @@
 /* xdo library
  *
  * $Id$
+ * test
  */
 
 #include <sys/select.h>
