@@ -3,6 +3,7 @@
  * command line interface to the xdo library
  *
  * $Id$
+ * 
  */
 
 #include <stdio.h>
@@ -45,7 +46,6 @@ struct dispatch {
 int main(int argc, char **argv) {
   char *cmd;
   int i;
-  xdo = xdo_new(getenv("DISPLAY"));
 
   if (argc < 2) {
     fprintf(stderr, "usage: %s <cmd> <args>\n", argv[0]);
@@ -56,6 +56,13 @@ int main(int argc, char **argv) {
   argc -= 2;
 
   argv++; /* skip 'cmd' */
+
+  xdo = xdo_new(getenv("DISPLAY"));
+  if (xdo == NULL) {
+    fprintf(stderr, "Failed creating new xdo instance\n");
+    return 1;
+  }
+
   for (i = 0; dispatch[i].name != NULL; i++) {
     if (!strcasecmp(dispatch[i].name, cmd)) {
       dispatch[i].func(argc, argv);
@@ -64,6 +71,7 @@ int main(int argc, char **argv) {
   }
 
   xdo_free(xdo);
+  return 0;
 }
 
 
@@ -79,7 +87,9 @@ void cmd_mousemove(int argc, char **args) {
   x = atoi(args[0]);
   y = atoi(args[1]);
 
-  xdo_mousemove(xdo, x, y);
+  if (!xdo_mousemove(xdo, x, y)) {
+    fprintf(stderr, "xdo_mousemove reported an error\n");
+  }
 }
 
 void cmd_mousedown(int argc, char **args) {
@@ -93,7 +103,9 @@ void cmd_mousedown(int argc, char **args) {
 
   button = atoi(args[0]);
 
-  xdo_mousedown(xdo, button);
+  if (!xdo_mousedown(xdo, button)) {
+    fprintf(stderr, "xdo_mousedown reported an error\n");
+  }
 }
 
 void cmd_mouseup(int argc, char **args) {
@@ -107,7 +119,9 @@ void cmd_mouseup(int argc, char **args) {
 
   button = atoi(args[0]);
 
-  xdo_mouseup(xdo, button);
+  if (!xdo_mouseup(xdo, button)) {
+    fprintf(stderr, "xdo_mouseup reported an error\n");
+  }
 }
 
 void cmd_click(int argc, char **args) {
@@ -125,7 +139,9 @@ void cmd_type(int argc, char **args) {
   }
 
   for (i = 0; i < argc; i++) {
-    xdo_type(xdo, args[i]);
+    if (!xdo_type(xdo, args[i])) {
+      fprintf(stderr, "xdo_type reported an error\n");
+    }
   }
 }
 
@@ -139,7 +155,9 @@ void cmd_key(int argc, char **args) {
   }
 
   for (i = 0; i < argc; i++) {
-    xdo_keysequence(xdo, args[i]);
+    if (!xdo_keysequence(xdo, args[i])) {
+      fprintf(stderr, "xdo_keysequence reported an error\n");
+    }
   }
 }
 
@@ -155,7 +173,9 @@ void cmd_windowmove(int argc, char **args) {
   x = (int)strtol(args[1], NULL, 0);
   y = (int)strtol(args[2], NULL, 0);
 
-  xdo_window_move(xdo, wid, x, y);
+  if (!xdo_window_move(xdo, wid, x, y)) {
+    fprintf(stderr, "xdo_window_mvoe reported an error\n");
+  }
 }
 
 void cmd_windowfocus(int argc, char **args) {
@@ -166,7 +186,9 @@ void cmd_windowfocus(int argc, char **args) {
   }
 
   wid = (int)strtol(args[0], NULL, 0);
-  xdo_window_focus(xdo, wid);
+  if (!xdo_window_focus(xdo, wid)) {
+    fprintf(stderr, "xdo_window_focus reported an error\n");
+  }
 }
 
 void cmd_windowraise(int argc, char **args) {
@@ -177,7 +199,9 @@ void cmd_windowraise(int argc, char **args) {
   }
 
   wid = (int)strtol(args[0], NULL, 0);
-  xdo_window_raise(xdo, wid);
+  if (!xdo_window_raise(xdo, wid)) {
+    fprintf(stderr, "xdo_window_raise reported an error\n");
+  }
 }
 
 void cmd_windowsize(int argc, char **args) {
@@ -192,7 +216,9 @@ void cmd_windowsize(int argc, char **args) {
   width = (int)strtol(args[1], NULL, 0);
   height = (int)strtol(args[2], NULL, 0);
 
-  xdo_window_setsize(xdo, wid, width, height);
+  if (!xdo_window_setsize(xdo, wid, width, height)) {
+    fprintf(stderr, "xdo_window_setsize reported an error\n");
+  }
 }
 
 void cmd_search(int argc, char **args) {

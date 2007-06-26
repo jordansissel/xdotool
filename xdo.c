@@ -18,10 +18,6 @@
 #include "xdo.h"
 #include "xdo_util.h"
 
-static void _xdo_keydown(xdo_t *xdo, int keycode);
-static void _xdo_keyup(xdo_t *xdo, int keycode);
-static void _xdo_keyaction(xdo_t *xdo, int keycode, int state);
-
 static void _xdo_populate_charcode_map(xdo_t *xdo);
 static int _xdo_has_xtest(xdo_t *xdo);
 
@@ -34,6 +30,8 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
                                    int *window_list_size);
 
 static int _xdo_regex_match_window(xdo_t *xdo, Window window, regex_t *re);
+
+static int _is_success(const char *funcname, int code);
 
 /* context-free functions */
 char _keysym_to_char(char *keysym);
@@ -111,8 +109,6 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex,
   *nwindows = 0;
   *windowlist = malloc(matched_window_list_size * sizeof(Window));
 
-  /* regexec(&re, string, 0, NULL, 0) == 0 means MATCH */
-
   _xdo_get_child_windows(xdo, XDefaultRootWindow(xdo->xdpy), 
                          &total_window_list, &ntotal_windows,
                          &window_list_size);
@@ -133,15 +129,19 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex,
   regfree(&re);
 }
 
-void xdo_window_move(xdo_t *xdo, int wid, int x, int y) {
+int xdo_window_move(xdo_t *xdo, int wid, int x, int y) {
   XWindowChanges wc;
+  int ret;
   wc.x = x;
   wc.y = y;
-  XConfigureWindow(xdo->xdpy, wid, CWX | CWY, &wc);
+
+  ret = XConfigureWindow(xdo->xdpy, wid, CWX | CWY, &wc);
+  return _is_success("XConfigureWindow", ret);
 }
 
-void xdo_window_setsize(xdo_t *xdo, int wid, int width, int height) {
+int xdo_window_setsize(xdo_t *xdo, int wid, int width, int height) {
   XWindowChanges wc;
+  int ret;
   int flags = 0;
   wc.width = width;
   wc.height = height;
@@ -149,48 +149,59 @@ void xdo_window_setsize(xdo_t *xdo, int wid, int width, int height) {
     flags |= CWWidth;
   if (height > 0)
     flags |= CWHeight;
-  XConfigureWindow(xdo->xdpy, wid, flags, &wc);
+  ret = XConfigureWindow(xdo->xdpy, wid, flags, &wc);
   XFlush(xdo->xdpy);
+  return _is_success("XConfigureWindow", ret);
 }
 
-void xdo_window_focus(xdo_t *xdo, int wid) {
-  XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
+int xdo_window_focus(xdo_t *xdo, int wid) {
+  int ret;
+  ret = XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
   XFlush(xdo->xdpy);
+  return _is_success("XSetInputFocus", ret);
 }
 
-void xdo_window_raise(xdo_t *xdo, int wid) {
-  XRaiseWindow(xdo->xdpy, wid);
+int xdo_window_raise(xdo_t *xdo, int wid) {
+  int ret;
+  ret = XRaiseWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
+  return _is_success("XRaiseWindow", ret);
 }
 
 /* XXX: Include 'screen number' support? */
-void xdo_mousemove(xdo_t *xdo, int x, int y)  {
-  int result;
-  result = XTestFakeMotionEvent(xdo->xdpy, -1, x, y, CurrentTime);
+int xdo_mousemove(xdo_t *xdo, int x, int y)  {
+  int ret;
+  ret = XTestFakeMotionEvent(xdo->xdpy, -1, x, y, CurrentTime);
   XFlush(xdo->xdpy);
+  return _is_success("XTestFakeMotionEvent", ret);
 }
 
-void xdo_mousedown(xdo_t *xdo, int button) {
-  int result;
-  result = XTestFakeButtonEvent(xdo->xdpy, button, True, CurrentTime);
+int xdo_mousedown(xdo_t *xdo, int button) {
+  int ret;
+  ret = XTestFakeButtonEvent(xdo->xdpy, button, True, CurrentTime);
   XFlush(xdo->xdpy);
+  return _is_success("XTestFakeButtonEvent", ret);
 }
 
-void xdo_mouseup(xdo_t *xdo, int button) {
-  int result;
-  result = XTestFakeButtonEvent(xdo->xdpy, button, False, CurrentTime);
+int xdo_mouseup(xdo_t *xdo, int button) {
+  int ret;
+  ret = XTestFakeButtonEvent(xdo->xdpy, button, False, CurrentTime);
   XFlush(xdo->xdpy);
+  return _is_success("XTestFakeKeyEvent", ret);
 }
 
-void xdo_click(xdo_t *xdo, int button) {
-  int result;
-  xdo_mousedown(xdo, button);
-  xdo_mouseup(xdo, button);
+int xdo_click(xdo_t *xdo, int button) {
+  int ret;
+  ret = xdo_mousedown(xdo, button);
+  if (!ret)
+    return ret;
+  ret = xdo_mouseup(xdo, button);
+  return ret;
 
   /* no need to flush here */
 }
 
-void xdo_type(xdo_t *xdo, char *string) {
+int xdo_type(xdo_t *xdo, char *string) {
   int i = 0;
   char key = '0';
   int keycode = 0;
@@ -213,7 +224,7 @@ void xdo_type(xdo_t *xdo, char *string) {
   }
 }
 
-void xdo_keysequence(xdo_t *xdo, char *keyseq) {
+int xdo_keysequence(xdo_t *xdo, char *keyseq) {
   char *tokctx = NULL;
   char *tok = NULL;
   char *strptr = NULL;
@@ -383,7 +394,6 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
       *total_window_list = realloc(*total_window_list,
                                    *window_list_size * sizeof(Window));
     }
-
     _xdo_get_child_windows(xdo, w, total_window_list,
                            ntotal_windows, window_list_size);
   }
@@ -436,6 +446,21 @@ int _xdo_regex_match_window(xdo_t *xdo, Window window, regex_t *re) {
   return 0;
 }
 
+int _is_success(const char *funcname, int code) {
+  if (code == BadMatch) {
+    fprintf(stderr, "%s failed: got bad match\n", funcname);
+    return False;
+  } else if (code == BadValue) {
+    fprintf(stderr, "%s failed: got bad value\n", funcname);
+    return False;
+  } else if (code == BadWindow) {
+    fprintf(stderr, "%s failed: got bad window\n", funcname);
+    return False;
+  }
+
+  return True;
+}
+
 /* main test */
 #ifdef BUILDMAIN
 int main(int argc, char **argv) {
@@ -475,3 +500,4 @@ int main(int argc, char **argv) {
   return 0;
 }
 #endif
+
