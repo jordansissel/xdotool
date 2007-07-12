@@ -5,11 +5,14 @@ all: xdotool
 clean:
 	rm -f *.o || true
 
-xdo.o:
+xdo.o: xdo.c
 	gcc $(CFLAGS) `pkg-config --cflags x11 xtst` -c xdo.c
 
-xdotool.o:
+xdotool.o: xdotool.c
 	gcc $(CFLAGS) `pkg-config --cflags x11 xtst` -c xdotool.c
+
+xdo.c: xdo.h
+xdotool.c: xdo.h
 
 xdotool: xdotool.o xdo.o
 	gcc $(CFLAGS) `pkg-config --libs x11 xtst` xdotool.o xdo.o -o $@
