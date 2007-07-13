@@ -1,0 +1,13 @@
+20070711:
+  Added new search options to 'xdotool search'
+    --onlyvisible shows only visible windows in the results
+    --title causes only the window title to be matched
+    --name causes the window name to be matched
+    --class causes the window class to be matched
+
+  For information on names and classes, check out the xprop tool.
+    For example, for an xterm you will see this in the xprop output:
+    WM_CLASS(STRING) = "xterm", "XTerm"
+  "xterm" is the name, "XTerm" is the class. Don't ask me what the differences
+  are supposed to be. ;)
+
