@@ -1,4 +1,4 @@
-20070711:
+20070712:
   Added new search options to 'xdotool search'
     --onlyvisible shows only visible windows in the results
     --title causes only the window title to be matched
