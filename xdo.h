@@ -7,10 +7,12 @@
 
 #include <X11/Xlib.h>
 
-#define SEARCH_VISIBLEONLY 0x01
-#define SEARCH_TITLE 0x02
-#define SEARCH_CLASS 0x04
-#define SEARCH_NAME 0x08
+#define SEARCH_VISIBLEONLY (1L << 0)
+#define SEARCH_TITLE (1L << 1)
+#define SEARCH_CLASS (1L << 2)
+#define SEARCH_NAME (1L << 3)
+
+#define SIZE_RESPECTINCREMENT (1L << 0)
 
 /* Map keysym name to actual ascii */
 typedef struct keysymcharmap {
@@ -52,7 +54,7 @@ int xdo_type(xdo_t *xdo, char *string);
 int xdo_keysequence(xdo_t *xdo, char *keysequence);
 
 int xdo_window_move(xdo_t *xdo, int wid, int x, int y);
-int xdo_window_setsize(xdo_t *xdo, int wid, int w, int h);
+int xdo_window_setsize(xdo_t *xdo, int wid, int w, int h, int flags);
 int xdo_window_focus(xdo_t *xdo, int wid);
 int xdo_window_raise(xdo_t *xdo, int wid);
 

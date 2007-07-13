@@ -232,11 +232,32 @@ void cmd_windowraise(int argc, char **args) {
 
 void cmd_windowsize(int argc, char **args) {
   int width, height;
-  Window wid;
+  int wid;
+  int c;
 
+  int respect_increment = 0;
+  struct option longopts[] = {
+    { "respect_increment", 0, &respect_increment, 1 },
+    { 0, 0, 0, 0 },
+  };
+
+  int size_flags = 0;
   char *cmd = *args;
-  argc -= 1;
-  args++;
+
+  while (1) {
+    int option_index;
+
+    c = getopt_long_only(argc, args, "", longopts, &option_index);
+
+    if (c == -1)
+      break;
+  }
+
+  if (respect_increment)
+    size_flags |= SIZE_RESPECTINCREMENT;
+
+  args += optind;
+  argc -= optind;
 
   if (argc != 3) {
     printf("usage: %s wid width height\n", cmd);
@@ -247,7 +268,7 @@ void cmd_windowsize(int argc, char **args) {
   width = (int)strtol(args[1], NULL, 0);
   height = (int)strtol(args[2], NULL, 0);
 
-  if (!xdo_window_setsize(xdo, wid, width, height)) {
+  if (!xdo_window_setsize(xdo, wid, width, height, size_flags)) {
     fprintf(stderr, "xdo_window_setsize reported an error\n");
   }
 }

@@ -156,17 +156,39 @@ int xdo_window_move(xdo_t *xdo, int wid, int x, int y) {
   return _is_success("XConfigureWindow", ret);
 }
 
-int xdo_window_setsize(xdo_t *xdo, int wid, int width, int height) {
+int xdo_window_setsize(xdo_t *xdo, int wid, int width, int height, int flags) {
   XWindowChanges wc;
   int ret;
-  int flags = 0;
+  int cw_flags = 0;
+
   wc.width = width;
   wc.height = height;
+
+  if (flags & SIZE_RESPECTINCREMENT) {
+    XSizeHints hints;
+    long supplied_return;
+    memset(&hints, 0, sizeof(hints));
+    XGetWMNormalHints(xdo->xdpy, wid, &hints, &supplied_return);
+    if (supplied_return & PResizeInc) {
+      wc.width *= hints.width_inc;
+      wc.height *= hints.height_inc;
+    } else {
+      fprintf(stderr, "No size hints found for this window\n");
+    }
+
+    if (supplied_return & PBaseSize) {
+      wc.width += hints.base_width;
+      wc.height += hints.base_height;
+    }
+
+  }
+
   if (width > 0)
-    flags |= CWWidth;
+    cw_flags |= CWWidth;
   if (height > 0)
-    flags |= CWHeight;
-  ret = XConfigureWindow(xdo->xdpy, wid, flags, &wc);
+    cw_flags |= CWHeight;
+
+  ret = XConfigureWindow(xdo->xdpy, wid, cw_flags, &wc);
   XFlush(xdo->xdpy);
   return _is_success("XConfigureWindow", ret);
 }
@@ -451,19 +473,19 @@ int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re) {
       if (regexec(re, classhint.res_name, 0, NULL, 0) == 0) {
         XFree(classhint.res_name);
         XFree(classhint.res_class);
-        return 1;
+        return True;
       }
       XFree(classhint.res_name);
     }
     if ((flags & SEARCH_CLASS) && classhint.res_class) {
       if (regexec(re, classhint.res_class, 0, NULL, 0) == 0) {
         XFree(classhint.res_class);
-        return 1;
+        return True;
       }
       XFree(classhint.res_class);
     }
   }
-  return 0;
+  return False;
 }
 
 int _is_success(const char *funcname, int code) {
