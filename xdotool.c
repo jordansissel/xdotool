@@ -235,9 +235,9 @@ void cmd_windowsize(int argc, char **args) {
   int wid;
   int c;
 
-  int respect_increment = 0;
+  int use_hints = 0;
   struct option longopts[] = {
-    { "respect_increment", 0, &respect_increment, 1 },
+    { "usehints", 0, &use_hints, 1 },
     { 0, 0, 0, 0 },
   };
 
@@ -253,8 +253,8 @@ void cmd_windowsize(int argc, char **args) {
       break;
   }
 
-  if (respect_increment)
-    size_flags |= SIZE_RESPECTINCREMENT;
+  if (use_hints)
+    size_flags |= SIZE_USEHINTS;
 
   args += optind;
   argc -= optind;

@@ -1,6 +1,6 @@
 20070713:
-  * Add flag SIZE_RESPECTINCREMENT to xdo_window_setsize
-  * Add flag --respect_incrememnt to xdotool windowsize
+  * Add flag SIZE_USEHINTS to xdo_window_setsize
+  * Add flag --usehints to xdotool windowsize
 
   Increments are used often in terminals that say "my font is 5 by 7 pixels, so
   resize by that increment". So, you can use this to set a terminal to be 80x24

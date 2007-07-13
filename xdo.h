@@ -12,7 +12,7 @@
 #define SEARCH_CLASS (1L << 2)
 #define SEARCH_NAME (1L << 3)
 
-#define SIZE_RESPECTINCREMENT (1L << 0)
+#define SIZE_USEHINTS (1L << 0)
 
 /* Map keysym name to actual ascii */
 typedef struct keysymcharmap {

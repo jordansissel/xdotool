@@ -164,7 +164,7 @@ int xdo_window_setsize(xdo_t *xdo, int wid, int width, int height, int flags) {
   wc.width = width;
   wc.height = height;
 
-  if (flags & SIZE_RESPECTINCREMENT) {
+  if (flags & SIZE_USEHINTS) {
     XSizeHints hints;
     long supplied_return;
     memset(&hints, 0, sizeof(hints));
