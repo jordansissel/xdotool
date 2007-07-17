@@ -35,6 +35,8 @@ struct dispatch {
   "windowfocus", cmd_windowfocus,
   "windowraise", cmd_windowraise,
   "windowmove", cmd_windowmove,
+  "windowmap", cmd_windowmap,
+  "windowunmap", cmd_windowunmap,
   "mousemove", cmd_mousemove,
   "mousedown", cmd_mousedown,
   "mouseup", cmd_mouseup,
@@ -338,4 +340,38 @@ void cmd_search(int argc, char **args) {
 
   /* Free list as it's malloc'd by xdo_window_list_by_regex */
   free(list);
+}
+
+void cmd_windowmap(int argc, char **args) {
+  Window wid;
+  char *cmd = *args;
+  argc -= 1;
+  args++;
+
+  if (argc != 1) {
+    printf("usage: %s wid\n", cmd);
+    return;
+  }
+
+  wid = (int)strtol(args[0], NULL, 0);
+  if (!xdo_window_map(xdo, wid)) {
+    fprintf(stderr, "xdo_window_map reported an error\n");
+  }
+}
+
+void cmd_windowunmap(int argc, char **args) {
+  Window wid;
+  char *cmd = *args;
+  argc -= 1;
+  args++;
+
+  if (argc != 1) {
+    printf("usage: %s wid\n", cmd);
+    return;
+  }
+
+  wid = (int)strtol(args[0], NULL, 0);
+  if (!xdo_window_unmap(xdo, wid)) {
+    fprintf(stderr, "xdo_window_unmap reported an error\n");
+  }
 }

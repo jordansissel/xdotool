@@ -92,6 +92,20 @@ void xdo_free(xdo_t *xdo) {
   free(xdo);
 }
 
+void xdo_window_map(xdo_t *xdo, Window wid) {
+  int ret;
+  ret = XMapWindow(xdo->xdpy, wid);
+  XFlush(xdo->xdpy);
+  return _is_success("XMapWindow", ret);
+}
+
+void xdo_window_unmap(xdo_t *xdo, Window wid) {
+  int ret;
+  ret = XUnmapWindow(xdo->xdpy, wid);
+  XFlush(xdo->xdpy);
+  return _is_success("XMapWindow", ret);
+}
+
 void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
                               Window **windowlist, int *nwindows) {
   regex_t re;
