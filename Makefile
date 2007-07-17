@@ -20,7 +20,7 @@ xdotool: xdotool.o xdo.o
 package:
 	NAME=xdotool-`date +%Y%m%d`; \
 	mkdir $${NAME}; \
-	rsync --exclude .svn -av *.c *.h README Makefile $${NAME}/; \
+	rsync --exclude .svn -av *.c *.h README Makefile* $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -rf $${NAME}/
 
