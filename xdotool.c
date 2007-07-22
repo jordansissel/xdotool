@@ -22,6 +22,8 @@ void cmd_windowmove(int argc, char **args);
 void cmd_windowfocus(int argc, char **args);
 void cmd_windowsize(int argc, char **args);
 void cmd_windowraise(int argc, char **args);
+void cmd_windowmap(int argc, char **args);
+void cmd_windowunmap(int argc, char **args);
 void cmd_search(int argc, char **args);
 
 xdo_t *xdo;

@@ -92,14 +92,14 @@ void xdo_free(xdo_t *xdo) {
   free(xdo);
 }
 
-void xdo_window_map(xdo_t *xdo, Window wid) {
+int xdo_window_map(xdo_t *xdo, int wid) {
   int ret;
   ret = XMapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
   return _is_success("XMapWindow", ret);
 }
 
-void xdo_window_unmap(xdo_t *xdo, Window wid) {
+int xdo_window_unmap(xdo_t *xdo, int wid) {
   int ret;
   ret = XUnmapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
