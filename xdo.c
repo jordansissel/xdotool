@@ -276,6 +276,8 @@ int xdo_type(xdo_t *xdo, char *string) {
     /* XXX: Flush here or at the end? */
     XFlush(xdo->xdpy);
   }
+
+  return True;
 }
 
 int xdo_keysequence(xdo_t *xdo, char *keyseq) {
@@ -333,6 +335,7 @@ int xdo_keysequence(xdo_t *xdo, char *keyseq) {
     XTestFakeKeyEvent(xdo->xdpy, keys[i], False, CurrentTime);
 
   XFlush(xdo->xdpy);
+  return True;
 }
 
 /* Helper functions */
