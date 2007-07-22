@@ -1,4 +1,4 @@
-#CFLAGS=-g
+CFLAGS=-Wall
 
 all: xdotool
 

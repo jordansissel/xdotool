@@ -139,7 +139,6 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
                          &window_list_size);
   int i;
   for (i = 0; i < ntotal_windows; i++) {
-    XWindowAttributes wattr;
     Window wid = total_window_list[i];
     if (flags & SEARCH_VISIBLEONLY && !_xdo_is_window_visible(xdo, wid))
       continue;
@@ -255,6 +254,7 @@ int xdo_click(xdo_t *xdo, int button) {
   /* no need to flush here */
 }
 
+/* XXX: Return proper code if errors found */
 int xdo_type(xdo_t *xdo, char *string) {
   int i = 0;
   char key = '0';
@@ -293,7 +293,7 @@ int xdo_keysequence(xdo_t *xdo, char *keyseq) {
 
   if (strcspn(keyseq, " \t\n.-[]{}\\|") != strlen(keyseq)) {
     fprintf(stderr, "Error: Invalid key sequence '%s'\n", keyseq);
-    return;
+    return False;
   }
 
   keys = malloc(keys_size * sizeof(int));
@@ -462,7 +462,6 @@ int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re) {
   XWindowAttributes attr;
   XTextProperty tp;
   XClassHint classhint;
-  char *name;
   int i;
 
   XGetWindowAttributes(xdo->xdpy, window, &attr);

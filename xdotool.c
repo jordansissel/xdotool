@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <string.h>
 
 #include "xdo.h"
 
@@ -32,20 +33,20 @@ struct dispatch {
   const char *name;
   void (*func)(int argc, char **args);
 } dispatch[] = {
-  "search", cmd_search,
-  "windowsize", cmd_windowsize,
-  "windowfocus", cmd_windowfocus,
-  "windowraise", cmd_windowraise,
-  "windowmove", cmd_windowmove,
-  "windowmap", cmd_windowmap,
-  "windowunmap", cmd_windowunmap,
-  "mousemove", cmd_mousemove,
-  "mousedown", cmd_mousedown,
-  "mouseup", cmd_mouseup,
-  "click", cmd_click,
-  "type", cmd_type,
-  "key", cmd_key,
-  NULL, NULL,
+  { "search", cmd_search, },
+  { "windowsize", cmd_windowsize, },
+  { "windowfocus", cmd_windowfocus, },
+  { "windowraise", cmd_windowraise, },
+  { "windowmove", cmd_windowmove, },
+  { "windowmap", cmd_windowmap, },
+  { "windowunmap", cmd_windowunmap, },
+  { "mousemove", cmd_mousemove, },
+  { "mousedown", cmd_mousedown, },
+  { "mouseup", cmd_mouseup, },
+  { "click", cmd_click, },
+  { "type", cmd_type, },
+  { "key", cmd_key, },
+  { NULL, NULL, },
 };
 
 int main(int argc, char **argv) {
@@ -322,7 +323,7 @@ void cmd_search(int argc, char **args) {
 
   if (argc != 1) {
     printf(
-    "Usage: xdotool search "
+    "Usage: xdotool %s "
     "[--onlyvisible] [--title --class --name] regexp_pattern\n"
     " --onlyvisible   matches only windows currently visible\n"
     " --title         check regexp_pattern agains the window title\n"
@@ -330,15 +331,15 @@ void cmd_search(int argc, char **args) {
     " --name          check regexp_pattern agains the window name\n"
     "\n"
     "* If none of --title, --class, and --name are specified,\n"
-    "the defaults are to match any of them.\n"
-    );
+    "the defaults are to match any of them.\n", 
+    cmd);
     return;
   }
 
   xdo_window_list_by_regex(xdo, *args, search_flags, &list, &nwindows);
-  for (i = 0; i < nwindows; i++) {
-    printf("%d\n", list[i]);
-  }
+  /* XXX: We shouldn't assume 'Window' == 'int' here... */
+  for (i = 0; i < nwindows; i++)
+    printf("%d\n", (int)list[i]);
 
   /* Free list as it's malloc'd by xdo_window_list_by_regex */
   free(list);
