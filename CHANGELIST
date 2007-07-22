@@ -1,3 +1,7 @@
+20070722:
+  * Compiles without warnings when using gcc -Wall now
+  * Fixed false error reporting due to some functions missing return statements
+
 20070713:
   * Add flag SIZE_USEHINTS to xdo_window_setsize
   * Add flag --usehints to xdotool windowsize
