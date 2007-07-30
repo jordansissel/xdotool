@@ -3,7 +3,10 @@
  * command line interface to the xdo library
  *
  * $Id$
- * 
+ *
+ * getwindowfocus contributed by Lee Pumphret
+ *
+ * XXX: Need to use 'Window' instead of 'int' where appropriate.
  */
 
 #include <stdio.h>
@@ -26,6 +29,7 @@ void cmd_windowraise(int argc, char **args);
 void cmd_windowmap(int argc, char **args);
 void cmd_windowunmap(int argc, char **args);
 void cmd_search(int argc, char **args);
+void cmd_getwindowfocus(int argc, char **args);
 
 xdo_t *xdo;
 
@@ -33,7 +37,11 @@ struct dispatch {
   const char *name;
   void (*func)(int argc, char **args);
 } dispatch[] = {
+  /* Query functions */
   { "search", cmd_search, },
+  { "getwindowfocus", cmd_getwindowfocus, },
+
+  /* Action functions */
   { "windowsize", cmd_windowsize, },
   { "windowfocus", cmd_windowfocus, },
   { "windowraise", cmd_windowraise, },
@@ -343,6 +351,25 @@ void cmd_search(int argc, char **args) {
 
   /* Free list as it's malloc'd by xdo_window_list_by_regex */
   free(list);
+}
+
+/* Added 2007-07-28 - Lee Pumphret */
+void cmd_getwindowfocus(int argc, char **args) {
+  Window window = -1;
+  char *cmd = *args;
+  argc -= 1;
+  args++;
+
+  if (argc != 0) {
+    printf("usage: %s\n", cmd);
+    return;
+  }
+
+  if (!xdo_window_get_focus(xdo, (int*)&window)) {
+    fprintf(stderr, "xdo_window_focus reported an error\n");
+  } else {
+    printf("%d\n", (int)window);
+  }
 }
 
 void cmd_windowmap(int argc, char **args) {

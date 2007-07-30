@@ -65,7 +65,6 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, char *display,
   xdo->xdpy = xdpy;
   xdo->close_display_when_freed = close_display_when_freed;
 
-  /* XXX: Check for NULL here */
   if (display == NULL)
     display = "unknown";
 
@@ -337,6 +336,16 @@ int xdo_keysequence(xdo_t *xdo, char *keyseq) {
   XFlush(xdo->xdpy);
   return True;
 }
+
+/* Add by Lee Pumphret 2007-07-28
+ * Modified slightly by Jordan Sissel */
+int xdo_window_get_focus(xdo_t *xdo, int *window_ret) {
+  int ret;
+  int unused_revert_ret;
+  ret = XGetInputFocus(xdo->xdpy, (Window*)window_ret, &unused_revert_ret);
+  return _is_success("XGetInputFocus", ret);
+}
+
 
 /* Helper functions */
 static int _xdo_keycode_from_char(xdo_t *xdo, char key) {

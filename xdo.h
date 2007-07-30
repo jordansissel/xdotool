@@ -57,6 +57,7 @@ int xdo_window_move(xdo_t *xdo, int wid, int x, int y);
 int xdo_window_setsize(xdo_t *xdo, int wid, int w, int h, int flags);
 int xdo_window_focus(xdo_t *xdo, int wid);
 int xdo_window_raise(xdo_t *xdo, int wid);
+int xdo_window_get_focus(xdo_t *xdo, int *window_ret);
 
 int xdo_window_map(xdo_t *xdo, int wid);
 int xdo_window_unmap(xdo_t *xdo, int wid);
