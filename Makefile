@@ -1,4 +1,4 @@
-CFLAGS=-Wall
+CFLAGS+=-Wall
 
 DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst
 DEFAULT_INC=-I/usr/X11R6/include -I/usr/local/include
