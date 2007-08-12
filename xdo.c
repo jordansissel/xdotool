@@ -295,7 +295,7 @@ int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed) {
 
   int i;
   for (i = 0; i < nkeys; i++) {
-    fprintf(stderr, "Typing %d (%d)\n", keys[i], pressed);
+    //fprintf(stderr, "Typing %d (%d)\n", keys[i], pressed);
     XTestFakeKeyEvent(xdo->xdpy, keys[i], pressed, CurrentTime);
   }
 
