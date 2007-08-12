@@ -4,6 +4,9 @@
     send keyup or keydown events.
   * Lee Pumphret contributed getwindowfocus, which tells you the window id of the window
     currently holding focus.
+  * Removed 'Makefile.no-pkg-config' because the original Makefile now knows
+    how to build for both cases: with and without pkg-config.
+
 
 20070722:
   * Compiles without warnings when using gcc -Wall now
