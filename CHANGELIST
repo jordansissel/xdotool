@@ -1,3 +1,10 @@
+20070812:
+  * Magnus Boman contributed keysequence_{up,down} adding new commands to
+    xdotool: keyup and keydown. These take the same arguments as 'key' but only
+    send keyup or keydown events.
+  * Lee Pumphret contributed getwindowfocus, which tells you the window id of the window
+    currently holding focus.
+
 20070722:
   * Compiles without warnings when using gcc -Wall now
   * Fixed false error reporting due to some functions missing return statements
@@ -8,7 +15,8 @@
 
   Increments are used often in terminals that say "my font is 5 by 7 pixels, so
   resize by that increment". So, you can use this to set a terminal to be 80x24
-  characters instead of pixels. Verified by resizing xterm and gnome-terminal         (with menus enabled).
+  characters instead of pixels. Verified by resizing xterm and gnome-terminal
+  (with menus enabled).
 
 
 20070712:
