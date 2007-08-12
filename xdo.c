@@ -1,7 +1,10 @@
 /* xdo library
  *
  * $Id$
- * test
+ *
+ * - getwindowfocus contributed by Lee Pumphret
+ * - keysequence_{up,down} contributed by Magnus Boman
+ *
  */
 
 #include <sys/select.h>
@@ -30,6 +33,8 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
                                    int *ntotal_windows, 
                                    int *window_list_size);
 
+static int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq, int **keys, int *nkeys);
+static int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed);
 static int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re);
 static int _xdo_is_window_visible(xdo_t *xdo, Window wid);
 
@@ -279,63 +284,40 @@ int xdo_type(xdo_t *xdo, char *string) {
   return True;
 }
 
-int xdo_keysequence(xdo_t *xdo, char *keyseq) {
-  char *tokctx = NULL;
-  char *tok = NULL;
-  char *strptr = NULL;
-  int i;
-  
-  /* Array of keys to press, in order */
+int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed) {
   int *keys = NULL;
-  int nkeys = 0;
-  int keys_size = 10;
+  int nkeys;
 
-  if (strcspn(keyseq, " \t\n.-[]{}\\|") != strlen(keyseq)) {
-    fprintf(stderr, "Error: Invalid key sequence '%s'\n", keyseq);
+  if (_xdo_keysequence_to_keycode_list(xdo, keyseq, &keys, &nkeys) == False) {
+    fprintf(stderr, "Failure converting key sequence '%s' to keycodes\n", keyseq);
     return False;
   }
 
-  keys = malloc(keys_size * sizeof(int));
-  strptr = keyseq;
-  while ((tok = strtok_r(strptr, "+", &tokctx)) != NULL) {
-    int keysym;
-    if (strptr != NULL)
-      strptr = NULL;
-
-    /* Check if 'tok' (string keysym) is an alias to another key */
-    /* symbol_map comes from xdo.util */
-    for (i = 0; symbol_map[i] != NULL; i+=2)
-      if (!strcasecmp(tok, symbol_map[i]))
-        tok = symbol_map[i + 1];
-
-    keysym = XStringToKeysym(tok);
-    if (keysym == NoSymbol) {
-      fprintf(stderr, "(symbol) No such key name '%s'. Ignoring it.\n", tok);
-      continue;
-    }
-
-    keys[nkeys] = XKeysymToKeycode(xdo->xdpy, keysym);
-
-    if (keys[nkeys] == 0) {
-      fprintf(stderr, "No such key '%s'. Ignoring it.\n", tok);
-      continue;
-    }
-
-    nkeys++;
-    if (nkeys == keys_size) {
-      keys_size *= 2;
-      keys = realloc(keys, keys_size);
-    }
+  int i;
+  for (i = 0; i < nkeys; i++) {
+    fprintf(stderr, "Typing %d (%d)\n", keys[i], pressed);
+    XTestFakeKeyEvent(xdo->xdpy, keys[i], pressed, CurrentTime);
   }
 
-  for (i = 0; i < nkeys; i++)
-    XTestFakeKeyEvent(xdo->xdpy, keys[i], True, CurrentTime);
-  for (i = nkeys - 1; i >= 0; i--)
-    XTestFakeKeyEvent(xdo->xdpy, keys[i], False, CurrentTime);
-
+  free(keys);
   XFlush(xdo->xdpy);
   return True;
 }
+  
+int xdo_keysequence_down(xdo_t *xdo, char *keyseq) {
+  return _xdo_keysequence_do(xdo, keyseq, True);
+}
+
+int xdo_keysequence_up(xdo_t *xdo, char *keyseq) {
+  return _xdo_keysequence_do(xdo, keyseq, False);
+}
+
+int xdo_keysequence(xdo_t *xdo, char *keyseq) {
+  _xdo_keysequence_do(xdo, keyseq, True);
+  _xdo_keysequence_do(xdo, keyseq, False);
+  return True;
+}
+
 
 /* Add by Lee Pumphret 2007-07-28
  * Modified slightly by Jordan Sissel */
@@ -465,6 +447,59 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
   }
 
   XFree(children);
+}
+
+int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq, int **keys, int *nkeys) {
+  char *tokctx = NULL;
+  char *tok = NULL;
+  char *strptr = NULL;
+  int i;
+  
+  /* Array of keys to press, in order given by keyseq */
+  int keys_size = 10;
+  *nkeys = 0;
+
+  if (strcspn(keyseq, " \t\n.-[]{}\\|") != strlen(keyseq)) {
+    fprintf(stderr, "Error: Invalid key sequence '%s'\n", keyseq);
+    return False;
+  }
+
+  *keys = malloc(keys_size * sizeof(int));
+  strptr = strdup(keyseq);
+  while ((tok = strtok_r(strptr, "+", &tokctx)) != NULL) {
+    int keysym;
+    if (strptr != NULL)
+      strptr = NULL;
+
+    /* Check if 'tok' (string keysym) is an alias to another key */
+    /* symbol_map comes from xdo.util */
+    for (i = 0; symbol_map[i] != NULL; i+=2)
+      if (!strcasecmp(tok, symbol_map[i]))
+        tok = symbol_map[i + 1];
+
+    keysym = XStringToKeysym(tok);
+    if (keysym == NoSymbol) {
+      fprintf(stderr, "(symbol) No such key name '%s'. Ignoring it.\n", tok);
+      continue;
+    }
+
+    (*keys)[*nkeys] = XKeysymToKeycode(xdo->xdpy, keysym);
+
+    if ((*keys)[*nkeys] == 0) {
+      fprintf(stderr, "No such key '%s'. Ignoring it.\n", tok);
+      continue;
+    }
+
+    (*nkeys)++;
+    if (*nkeys == keys_size) {
+      keys_size *= 2;
+      *keys = realloc(*keys, keys_size);
+    }
+  }
+
+  free(strptr);
+
+  return True;
 }
 
 int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re) {

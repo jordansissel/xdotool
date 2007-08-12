@@ -52,6 +52,8 @@ int xdo_click(xdo_t *xdo, int button);
 
 int xdo_type(xdo_t *xdo, char *string);
 int xdo_keysequence(xdo_t *xdo, char *keysequence);
+int xdo_keysequence_up(xdo_t *xdo, char *keysequence);
+int xdo_keysequence_down(xdo_t *xdo, char *keysequence);
 
 int xdo_window_move(xdo_t *xdo, int wid, int x, int y);
 int xdo_window_setsize(xdo_t *xdo, int wid, int w, int h, int flags);

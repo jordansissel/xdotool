@@ -5,6 +5,7 @@
  * $Id$
  *
  * getwindowfocus contributed by Lee Pumphret
+ * keyup/down contributed by Lee Pumphret
  *
  * XXX: Need to use 'Window' instead of 'int' where appropriate.
  */
@@ -29,6 +30,8 @@ void cmd_windowraise(int argc, char **args);
 void cmd_windowmap(int argc, char **args);
 void cmd_windowunmap(int argc, char **args);
 void cmd_search(int argc, char **args);
+void cmd_windowmap(int argc, char **args);
+void cmd_windowunmap(int argc, char **args);
 void cmd_getwindowfocus(int argc, char **args);
 
 xdo_t *xdo;
@@ -54,6 +57,8 @@ struct dispatch {
   { "click", cmd_click, },
   { "type", cmd_type, },
   { "key", cmd_key, },
+  { "keyup", cmd_key, },
+  { "keydown", cmd_key, },
   { NULL, NULL, },
 };
 
@@ -181,10 +186,22 @@ void cmd_key(int argc, char **args) {
     return;
   }
 
+  int (*func)(xdo_t *, char *) = NULL;
+
+  if (!strcmp(cmd, "key")) {
+    func = xdo_keysequence;
+  } else if (!strcmp(cmd, "keyup")) {
+    func = xdo_keysequence_up;
+  } else if (!strcmp(cmd, "keydown")) {
+    func = xdo_keysequence_down;
+  } else {
+    fprintf(stderr, "Unknown command '%s'\n", cmd);
+    return;
+  }
+
   for (i = 0; i < argc; i++) {
-    if (!xdo_keysequence(xdo, args[i])) {
-      fprintf(stderr, "xdo_keysequence reported an error\n");
-    }
+    if (!func(xdo, args[i]))
+      fprintf(stderr, "xdo_keysequence reported an error for string '%s'\n", args[i]);
   }
 }
 
