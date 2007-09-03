@@ -17,22 +17,23 @@
 
 #include "xdo.h"
 
-void cmd_mousemove(int argc, char **args);
-void cmd_mousedown(int argc, char **args);
-void cmd_mouseup(int argc, char **args);
 void cmd_click(int argc, char **args);
-void cmd_type(int argc, char **args);
-void cmd_key(int argc, char **args);
-void cmd_windowmove(int argc, char **args);
-void cmd_windowfocus(int argc, char **args);
-void cmd_windowsize(int argc, char **args);
-void cmd_windowraise(int argc, char **args);
-void cmd_windowmap(int argc, char **args);
-void cmd_windowunmap(int argc, char **args);
-void cmd_search(int argc, char **args);
-void cmd_windowmap(int argc, char **args);
-void cmd_windowunmap(int argc, char **args);
 void cmd_getwindowfocus(int argc, char **args);
+void cmd_help(int argc, char **args);
+void cmd_key(int argc, char **args);
+void cmd_mousedown(int argc, char **args);
+void cmd_mousemove(int argc, char **args);
+void cmd_mouseup(int argc, char **args);
+void cmd_search(int argc, char **args);
+void cmd_type(int argc, char **args);
+void cmd_windowfocus(int argc, char **args);
+void cmd_windowmap(int argc, char **args);
+void cmd_windowmap(int argc, char **args);
+void cmd_windowmove(int argc, char **args);
+void cmd_windowraise(int argc, char **args);
+void cmd_windowsize(int argc, char **args);
+void cmd_windowunmap(int argc, char **args);
+void cmd_windowunmap(int argc, char **args);
 
 xdo_t *xdo;
 
@@ -41,24 +42,27 @@ struct dispatch {
   void (*func)(int argc, char **args);
 } dispatch[] = {
   /* Query functions */
-  { "search", cmd_search, },
   { "getwindowfocus", cmd_getwindowfocus, },
+  { "search", cmd_search, },
+
+  { "help", cmd_help, },
+  { "-h", cmd_help, },
 
   /* Action functions */
-  { "windowsize", cmd_windowsize, },
-  { "windowfocus", cmd_windowfocus, },
-  { "windowraise", cmd_windowraise, },
-  { "windowmove", cmd_windowmove, },
-  { "windowmap", cmd_windowmap, },
-  { "windowunmap", cmd_windowunmap, },
-  { "mousemove", cmd_mousemove, },
-  { "mousedown", cmd_mousedown, },
-  { "mouseup", cmd_mouseup, },
   { "click", cmd_click, },
-  { "type", cmd_type, },
   { "key", cmd_key, },
-  { "keyup", cmd_key, },
   { "keydown", cmd_key, },
+  { "keyup", cmd_key, },
+  { "mousedown", cmd_mousedown, },
+  { "mousemove", cmd_mousemove, },
+  { "mouseup", cmd_mouseup, },
+  { "type", cmd_type, },
+  { "windowfocus", cmd_windowfocus, },
+  { "windowmap", cmd_windowmap, },
+  { "windowmove", cmd_windowmove, },
+  { "windowraise", cmd_windowraise, },
+  { "windowsize", cmd_windowsize, },
+  { "windowunmap", cmd_windowunmap, },
   { NULL, NULL, },
 };
 
@@ -68,6 +72,7 @@ int main(int argc, char **argv) {
 
   if (argc < 2) {
     fprintf(stderr, "usage: %s <cmd> <args>\n", argv[0]);
+    cmd_help(0, NULL);
     exit(1);
   }
 
@@ -91,6 +96,12 @@ int main(int argc, char **argv) {
   return 0;
 }
 
+void cmd_help(int argc, char **args) {
+  int i;
+  printf("Available commands:\n");
+  for (i = 0; dispatch[i].name != NULL; i++)
+    printf("  %s\n", dispatch[i].name);
+}
 
 void cmd_mousemove(int argc, char **args) {
   int x, y;
