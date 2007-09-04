@@ -233,6 +233,13 @@ int xdo_mousemove(xdo_t *xdo, int x, int y)  {
   return _is_success("XTestFakeMotionEvent", ret);
 }
 
+int xdo_mousemove_relative(xdo_t *xdo, int x, int y)  {
+  int ret;
+  ret = XTestFakeRelativeMotionEvent(xdo->xdpy, x, y, CurrentTime);
+  XFlush(xdo->xdpy);
+  return _is_success("XTestFakeRelativeMotionEvent", ret);
+}
+
 int xdo_mousedown(xdo_t *xdo, int button) {
   int ret;
   ret = XTestFakeButtonEvent(xdo->xdpy, button, True, CurrentTime);

@@ -44,7 +44,7 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, char *display,
 void xdo_free(xdo_t *xdo);
 
 int xdo_mousemove(xdo_t *xdo, int x, int y);
-//void xdo_motion_relative(xdo_t *xdo, int x, int y);
+int xdo_mousemove_relative(xdo_t *xdo, int x, int y);
 int xdo_mousedown(xdo_t *xdo, int button);
 int xdo_mouseup(xdo_t *xdo, int button);
 

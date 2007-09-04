@@ -23,6 +23,7 @@ void cmd_help(int argc, char **args);
 void cmd_key(int argc, char **args);
 void cmd_mousedown(int argc, char **args);
 void cmd_mousemove(int argc, char **args);
+void cmd_mousemove_relative(int argc, char **args);
 void cmd_mouseup(int argc, char **args);
 void cmd_search(int argc, char **args);
 void cmd_type(int argc, char **args);
@@ -55,6 +56,7 @@ struct dispatch {
   { "keyup", cmd_key, },
   { "mousedown", cmd_mousedown, },
   { "mousemove", cmd_mousemove, },
+  { "mousemove_relative", cmd_mousemove_relative, },
   { "mouseup", cmd_mouseup, },
   { "type", cmd_type, },
   { "windowfocus", cmd_windowfocus, },
@@ -120,6 +122,26 @@ void cmd_mousemove(int argc, char **args) {
 
   if (!xdo_mousemove(xdo, x, y)) {
     fprintf(stderr, "xdo_mousemove reported an error\n");
+  }
+}
+
+void cmd_mousemove_relative(int argc, char **args) {
+  int x, y;
+  char *cmd = *args;
+  argc -= 1;
+  args++;
+
+  if (argc != 2) {
+    fprintf(stderr, "usage: %s <xcoord> <ycoord>\n", cmd);
+    fprintf(stderr, "You specified the wrong number of args.\n");
+    return;
+  }
+
+  x = atoi(args[0]);
+  y = atoi(args[1]);
+
+  if (!xdo_mousemove_relative(xdo, x, y)) {
+    fprintf(stderr, "xdo_mousemove_relative reported an error\n");
   }
 }
 

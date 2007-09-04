@@ -29,19 +29,19 @@ xdotool: xdotool.o xdo.o
 package: test-package-build create-package
 
 create-package:
-	@NAME=fex-`date +%Y%m%d`; \
+	@NAME=xdotool-`date +%Y%m%d`; \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
-	rsync --exclude .svn -a `ls *.c *.h CHANGELIST README Makefile* 2> /dev/null` $${NAME}/; \
+	rsync --exclude .svn -a `ls -d *.c *.h examples t CHANGELIST README Makefile* 2> /dev/null` $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -rf $${NAME}/
 
 # Make sure the package we're building compiles.
 test-package-build: create-package
-	@NAME=fex-`date +%Y%m%d`; \
+	@NAME=xdotool-`date +%Y%m%d`; \
 	echo "Testing package $$NAME"; \
 	tar -zxf $${NAME}.tar.gz; \
-	make -C $${NAME} fex; \
+	make -C $${NAME} xdotool; \
 	rm -rf $${NAME}/
 	rm -f $${NAME}.tar.gz
 

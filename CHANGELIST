@@ -1,3 +1,9 @@
+20070903:
+  * Add xdo_mousemove_relative for relative mouse movements
+  * Add xdolib.sh. This is a script library to help with features xdo does not
+    explicitly implement, such as querying window attributes, or fetching the
+    root window id. An example which uses this is: examples/move_window_away.sh
+
 20070812:
   * Magnus Boman contributed keysequence_{up,down} adding new commands to
     xdotool: keyup and keydown. These take the same arguments as 'key' but only
