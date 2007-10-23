@@ -42,4 +42,5 @@ try $xdotool click 1
 try $xdotool type "hello"
 try $xdotool key "ctrl+w"
 
-pkill -f xdotool_test_window
+#pkill -f xdotool_test_window
+kill $xterm_pid
