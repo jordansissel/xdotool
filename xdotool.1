@@ -1,0 +1,172 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH XDOTOOL 1 "December 30, 2007"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+xdotool \- simulate X11 keyboard/mouse input
+.SH SYNOPSIS
+.B xdotool
+.I cmd args
+.SH DESCRIPTION
+.B xdotool
+lets you programatically (or manually) simulate keyboard input and
+mouse activity, move and resize windows, etc. It does this using X11's
+XTEST extension and other Xlib functions.
+.SH COMMANDS
+.ti 4
+.B key
+.I keystroke
+.br
+Type a given keystroke. Examples being "alt+r", "Control_L+J",
+"ctrl+alt+n", "BackSpace".
+
+Generally, any valid X Keysym string will work. Multiple keys are
+separated by '+'. Aliases exist for "alt", "ctrl", "shift", "super",
+and "meta" which all map to Foo_L, such as Alt_L and Control_L, etc.
+
+.IR Example :
+To press "return":
+.br
+.B xdotool key Return 
+
+.ti 4
+.B keydown
+.I keystroke
+.br
+Same as above, except only keydown events are sent.
+
+.ti 4
+.B keyup
+.I keystroke
+.br
+Same as above, except only keyup events are sent. 
+
+.ti 4
+.B type
+.I something to type
+.br
+Types a series of letters. In order, as fast as possible. 
+
+.IR Example :
+to type 'Hello world!' you would do: 
+.br
+.B xdotool type 'Hello world!'
+
+.ti 4
+.B mousemove
+.I x y
+.br
+Move the mouse to the specific X and Y coordinates on the screen 
+
+.ti 4
+.B mousedown
+.I button
+.br
+Send 'mouse down' for the given button. 1 == left, 2 == middle, 3 ==
+right, etc.
+
+.ti 4
+.B mouseup
+.I button
+.br
+Send 'mouse up for the given button 
+
+.ti 4
+.B click
+.I button
+.br
+Send mousedown followed by mouseup for the given button 
+
+.ti 4
+.B search
+.I [options] somestring
+.br
+Search for windows with titles, names, or classes matching
+somestring. The output is line-delimited list of X window identifiers
+
+The options available are:
+
+.ti 9
+.B --onlyvisible
+- Show only visible windows in the results.
+.br
+.ti 9
+.B --title
+- Match against the window title
+.br
+.ti 9
+.B --name
+- Match against the window name
+.br
+.ti 9
+.B --class
+- Match against the window class
+
+The default options are
+.B "--title --name --class" 
+
+.ti 4
+.B getwindowfocus
+.br
+Prints the window id of the currently focused window 
+
+.ti 4
+.B windowsize
+.I [options] windowid width height
+.br
+Set the window size of the given window
+
+The options available are:
+
+.ti 9
+.B --usehints
+- Use window sizing hints when setting width. This is useful on
+terminals.
+
+.IR Example :
+To set a terminal to be 80x24 characters, you would use:
+.br
+.B xdotool windowsize --usehints windowid 80 24
+
+.ti 4
+.B windowmove
+.I windowid x y
+.br
+Move the window to the given position 
+
+.ti 4
+.B windowfocus
+.I windowid
+.br
+Focus the window
+
+
+.SH SEE ALSO
+.ad l
+.BR xprop (1),
+.BR xwininfo (1),
+.nh
+.I http://www.semicomplete.com/blog/projects/xdotool/
+.hy
+.ad b
+.SH AUTHOR
+xdotool was written by Jordan Sissel.
+.PP
+This manual page was written by Daniel Kahn Gillmor
+.nh
+<dkg-debian.org@fifthhorseman.net>,
+.hy
+for the Debian project (but may be used by others).
