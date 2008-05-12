@@ -32,7 +32,7 @@ create-package:
 	@NAME=xdotool-`date +%Y%m%d`; \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
-	rsync --exclude .svn -a `ls -d *.c *.h examples t CHANGELIST README Makefile* 2> /dev/null` $${NAME}/; \
+	rsync --exclude .svn -a `ls -d *.c *.1 *.h examples t COPYRIGHT CHANGELIST README Makefile* 2> /dev/null` $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -rf $${NAME}/
 
