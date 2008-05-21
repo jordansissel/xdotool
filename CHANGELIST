@@ -1,6 +1,9 @@
-20071230:
-  * Manpage contribution by Daniel Kahn Gillmor
-  * Add COPYRIGHT from svn to the distributed package.
+20080521:
+  * Import patches from keynav's xdotool branch (From Lukas Mai) which make
+    xdotool compile happily when building with -Wall and -pedantic (and others)
+  * Finally convert to using Window type for (hopefully) everything instead of
+    incorrectly typecasting Window to int sometimes.
+  * Confirmed that the one (but mostly useless) test passes.
 
 20070903:
   * Add xdo_mousemove_relative for relative mouse movements

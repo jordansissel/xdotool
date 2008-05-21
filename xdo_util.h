@@ -4,7 +4,7 @@
  */
 
 /* human to Keysym string mapping */
-char *symbol_map[] = {
+const char *symbol_map[] = {
   "alt", "Alt_L",
   "ctrl", "Control_L",
   "control", "Control_L",

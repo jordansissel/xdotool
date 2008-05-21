@@ -7,10 +7,12 @@
  *
  */
 
+#define _XOPEN_SOURCE 500
 #include <sys/select.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <regex.h>
 
@@ -54,7 +56,7 @@ xdo_t* xdo_new(char *display_name) {
   return xdo_new_with_opened_display(xdpy, display_name, 1);
 }
 
-xdo_t* xdo_new_with_opened_display(Display *xdpy, char *display, 
+xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
                                    int close_display_when_freed) {
   xdo_t *xdo = NULL;
 
@@ -96,14 +98,14 @@ void xdo_free(xdo_t *xdo) {
   free(xdo);
 }
 
-int xdo_window_map(xdo_t *xdo, int wid) {
+int xdo_window_map(xdo_t *xdo, Window wid) {
   int ret;
   ret = XMapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
   return _is_success("XMapWindow", ret);
 }
 
-int xdo_window_unmap(xdo_t *xdo, int wid) {
+int xdo_window_unmap(xdo_t *xdo, Window wid) {
   int ret;
   ret = XUnmapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
@@ -119,6 +121,7 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
   int matched_window_list_size = 100;
 
   int ret;
+  int i;
 
   ret = regcomp(&re, regex, REG_EXTENDED | REG_ICASE);
   if (ret != 0) {
@@ -141,7 +144,6 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
   _xdo_get_child_windows(xdo, XDefaultRootWindow(xdo->xdpy), 
                          &total_window_list, &ntotal_windows,
                          &window_list_size);
-  int i;
   for (i = 0; i < ntotal_windows; i++) {
     Window wid = total_window_list[i];
     if (flags & SEARCH_VISIBLEONLY && !_xdo_is_window_visible(xdo, wid))
@@ -163,7 +165,7 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
   regfree(&re);
 }
 
-int xdo_window_move(xdo_t *xdo, int wid, int x, int y) {
+int xdo_window_move(xdo_t *xdo, Window wid, int x, int y) {
   XWindowChanges wc;
   int ret;
   wc.x = x;
@@ -173,7 +175,7 @@ int xdo_window_move(xdo_t *xdo, int wid, int x, int y) {
   return _is_success("XConfigureWindow", ret);
 }
 
-int xdo_window_setsize(xdo_t *xdo, int wid, int width, int height, int flags) {
+int xdo_window_setsize(xdo_t *xdo, Window wid, int width, int height, int flags) {
   XWindowChanges wc;
   int ret;
   int cw_flags = 0;
@@ -210,7 +212,7 @@ int xdo_window_setsize(xdo_t *xdo, int wid, int width, int height, int flags) {
   return _is_success("XConfigureWindow", ret);
 }
 
-int xdo_window_focus(xdo_t *xdo, int wid) {
+int xdo_window_focus(xdo_t *xdo, Window wid) {
   int ret;
   ret = XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
   XFlush(xdo->xdpy);
@@ -218,7 +220,7 @@ int xdo_window_focus(xdo_t *xdo, int wid) {
 }
 
 /* XRaiseWindow is ignored in ion3 and Gnome2. Is it even useful? */
-int xdo_window_raise(xdo_t *xdo, int wid) {
+int xdo_window_raise(xdo_t *xdo, Window wid) {
   int ret;
   ret = XRaiseWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
@@ -294,13 +296,13 @@ int xdo_type(xdo_t *xdo, char *string) {
 int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed) {
   int *keys = NULL;
   int nkeys;
+  int i;
 
   if (_xdo_keysequence_to_keycode_list(xdo, keyseq, &keys, &nkeys) == False) {
     fprintf(stderr, "Failure converting key sequence '%s' to keycodes\n", keyseq);
     return False;
   }
 
-  int i;
   for (i = 0; i < nkeys; i++) {
     //fprintf(stderr, "Typing %d (%d)\n", keys[i], pressed);
     XTestFakeKeyEvent(xdo->xdpy, keys[i], pressed, CurrentTime);
@@ -328,10 +330,10 @@ int xdo_keysequence(xdo_t *xdo, char *keyseq) {
 
 /* Add by Lee Pumphret 2007-07-28
  * Modified slightly by Jordan Sissel */
-int xdo_window_get_focus(xdo_t *xdo, int *window_ret) {
+int xdo_window_get_focus(xdo_t *xdo, Window *window_ret) {
   int ret;
   int unused_revert_ret;
-  ret = XGetInputFocus(xdo->xdpy, (Window*)window_ret, &unused_revert_ret);
+  ret = XGetInputFocus(xdo->xdpy, window_ret, &unused_revert_ret);
   return _is_success("XGetInputFocus", ret);
 }
 
@@ -390,12 +392,12 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
      * Index '1' in ... == shift key held
      * hence this little loop. */
     for (j = 0; j <= 1; j++) { 
-     int index = (i - xdo->keycode_low) * 2 + j;
+     int idx = (i - xdo->keycode_low) * 2 + j;
      keybuf = XKeysymToString(XKeycodeToKeysym(xdo->xdpy, i, j));
 
-     xdo->charcodes[index].key = _keysym_to_char(keybuf);
-     xdo->charcodes[index].code = i;
-     xdo->charcodes[index].shift = j ? shift_keycode : 0;
+     xdo->charcodes[idx].key = _keysym_to_char(keybuf);
+     xdo->charcodes[idx].code = i;
+     xdo->charcodes[idx].shift = j ? shift_keycode : 0;
     }
   }
 }
@@ -426,9 +428,8 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
                                    int *ntotal_windows,
                                    int *window_list_size) {
   Window dummy;
-  int i;
   Window *children;
-  unsigned int nchildren;
+  unsigned int i, nchildren;
 
   if (*window_list_size == 0) {
     *ntotal_windows = 0;
@@ -458,7 +459,7 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
 
 int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq, int **keys, int *nkeys) {
   char *tokctx = NULL;
-  char *tok = NULL;
+  const char *tok = NULL;
   char *strptr = NULL;
   int i;
   

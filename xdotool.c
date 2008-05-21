@@ -14,12 +14,14 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
+#include <strings.h>
+
 
 #include "xdo.h"
 
 void cmd_click(int argc, char **args);
 void cmd_getwindowfocus(int argc, char **args);
-void cmd_help(int argc, char **args);
+void cmd_help(int unused_argc, char **unused_args);
 void cmd_key(int argc, char **args);
 void cmd_mousedown(int argc, char **args);
 void cmd_mousemove(int argc, char **args);
@@ -37,6 +39,7 @@ void cmd_windowunmap(int argc, char **args);
 void cmd_windowunmap(int argc, char **args);
 
 xdo_t *xdo;
+void window_print(Window wid);
 
 struct dispatch {
   const char *name;
@@ -98,7 +101,20 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void cmd_help(int argc, char **args) {
+void window_print(Window wid) {
+  switch (sizeof(Window)) {
+    case sizeof(int):
+      printf("%d\n", (int)wid);
+      break;
+    case sizeof(long):
+      printf("%ld\n", (long)wid);
+      break;
+    default:
+      printf("Unknown window storage size (%ld)\n", sizeof(Window));
+  }
+}
+
+void cmd_help(int unused_argc, char **unused_args) {
   int i;
   printf("Available commands:\n");
   for (i = 0; dispatch[i].name != NULL; i++)
@@ -250,7 +266,7 @@ void cmd_windowmove(int argc, char **args) {
     return;
   }
 
-  wid = (int)strtol(args[0], NULL, 0);
+  wid = (Window)strtol(args[0], NULL, 0);
   x = (int)strtol(args[1], NULL, 0);
   y = (int)strtol(args[2], NULL, 0);
 
@@ -270,7 +286,7 @@ void cmd_windowfocus(int argc, char **args) {
     return;
   }
 
-  wid = (int)strtol(args[0], NULL, 0);
+  wid = (Window)strtol(args[0], NULL, 0);
   if (!xdo_window_focus(xdo, wid)) {
     fprintf(stderr, "xdo_window_focus reported an error\n");
   }
@@ -287,7 +303,7 @@ void cmd_windowraise(int argc, char **args) {
     return;
   }
 
-  wid = (int)strtol(args[0], NULL, 0);
+  wid = (Window)strtol(args[0], NULL, 0);
   if (!xdo_window_raise(xdo, wid)) {
     fprintf(stderr, "xdo_window_raise reported an error\n");
   }
@@ -295,7 +311,7 @@ void cmd_windowraise(int argc, char **args) {
 
 void cmd_windowsize(int argc, char **args) {
   int width, height;
-  int wid;
+  Window wid;
   int c;
 
   int use_hints = 0;
@@ -327,7 +343,7 @@ void cmd_windowsize(int argc, char **args) {
     return;
   }
 
-  wid = (int)strtol(args[0], NULL, 0);
+  wid = (Window)strtol(args[0], NULL, 0);
   width = (int)strtol(args[1], NULL, 0);
   height = (int)strtol(args[2], NULL, 0);
 
@@ -397,7 +413,7 @@ void cmd_search(int argc, char **args) {
   xdo_window_list_by_regex(xdo, *args, search_flags, &list, &nwindows);
   /* XXX: We shouldn't assume 'Window' == 'int' here... */
   for (i = 0; i < nwindows; i++)
-    printf("%d\n", (int)list[i]);
+    window_print(list[i]);
 
   /* Free list as it's malloc'd by xdo_window_list_by_regex */
   free(list);
@@ -405,7 +421,7 @@ void cmd_search(int argc, char **args) {
 
 /* Added 2007-07-28 - Lee Pumphret */
 void cmd_getwindowfocus(int argc, char **args) {
-  Window window = -1;
+  Window wid = 0;
   char *cmd = *args;
   argc -= 1;
   args++;
@@ -415,10 +431,10 @@ void cmd_getwindowfocus(int argc, char **args) {
     return;
   }
 
-  if (!xdo_window_get_focus(xdo, (int*)&window)) {
+  if (!xdo_window_get_focus(xdo, &wid)) {
     fprintf(stderr, "xdo_window_focus reported an error\n");
   } else {
-    printf("%d\n", (int)window);
+    window_print(wid);
   }
 }
 
@@ -433,7 +449,7 @@ void cmd_windowmap(int argc, char **args) {
     return;
   }
 
-  wid = (int)strtol(args[0], NULL, 0);
+  wid = (Window)strtol(args[0], NULL, 0);
   if (!xdo_window_map(xdo, wid)) {
     fprintf(stderr, "xdo_window_map reported an error\n");
   }
@@ -450,7 +466,7 @@ void cmd_windowunmap(int argc, char **args) {
     return;
   }
 
-  wid = (int)strtol(args[0], NULL, 0);
+  wid = (Window)strtol(args[0], NULL, 0);
   if (!xdo_window_unmap(xdo, wid)) {
     fprintf(stderr, "xdo_window_unmap reported an error\n");
   }
