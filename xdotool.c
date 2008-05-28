@@ -102,16 +102,8 @@ int main(int argc, char **argv) {
 }
 
 void window_print(Window wid) {
-  switch (sizeof(Window)) {
-    case sizeof(int):
-      printf("%d\n", (int)wid);
-      break;
-    case sizeof(long):
-      printf("%ld\n", (long)wid);
-      break;
-    default:
-      printf("Unknown window storage size (%ld)\n", sizeof(Window));
-  }
+  /* Window is XID is 'unsigned long' or CARD32 */
+  printf("%ld\n", wid);
 }
 
 void cmd_help(int unused_argc, char **unused_args) {
