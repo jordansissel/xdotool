@@ -29,6 +29,7 @@ void cmd_mousemove_relative(int argc, char **args);
 void cmd_mouseup(int argc, char **args);
 void cmd_search(int argc, char **args);
 void cmd_type(int argc, char **args);
+void cmd_windowactivate(int argc, char **args);
 void cmd_windowfocus(int argc, char **args);
 void cmd_windowmap(int argc, char **args);
 void cmd_windowmap(int argc, char **args);
@@ -62,6 +63,7 @@ struct dispatch {
   { "mousemove_relative", cmd_mousemove_relative, },
   { "mouseup", cmd_mouseup, },
   { "type", cmd_type, },
+  { "windowactivate", cmd_windowactivate, },
   { "windowfocus", cmd_windowfocus, },
   { "windowmap", cmd_windowmap, },
   { "windowmove", cmd_windowmove, },
@@ -267,6 +269,24 @@ void cmd_windowmove(int argc, char **args) {
   }
 }
 
+void cmd_windowactivate(int argc, char **args) {
+  Window wid;
+  char *cmd = *args;
+  argc -= 1;
+  args++;
+
+  if (argc != 1) {
+    printf("usage: %s wid\n", cmd);
+    return;
+  }
+
+  wid = (Window)strtol(args[0], NULL, 0);
+  if (!xdo_window_activate(xdo, wid)) {
+    fprintf(stderr, "xdo_window_activate reported an error\n");
+    return;
+  }
+}
+
 void cmd_windowfocus(int argc, char **args) {
   Window wid;
   char *cmd = *args;
@@ -403,7 +423,6 @@ void cmd_search(int argc, char **args) {
   }
 
   xdo_window_list_by_regex(xdo, *args, search_flags, &list, &nwindows);
-  /* XXX: We shouldn't assume 'Window' == 'int' here... */
   for (i = 0; i < nwindows; i++)
     window_print(list[i]);
 

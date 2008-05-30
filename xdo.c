@@ -135,19 +135,22 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
   if ((flags & (SEARCH_TITLE | SEARCH_CLASS | SEARCH_NAME)) == 0) {
     fprintf(stderr, "No text fields specified for regex search. \nDefaulting to"
             " window title, class, and name searching\n");
-    flags = SEARCH_TITLE | SEARCH_CLASS | SEARCH_NAME;
+    flags |= SEARCH_TITLE | SEARCH_CLASS | SEARCH_NAME;
   }
 
   *nwindows = 0;
   *windowlist = malloc(matched_window_list_size * sizeof(Window));
 
-  _xdo_get_child_windows(xdo, XDefaultRootWindow(xdo->xdpy), 
+  _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, 0),
                          &total_window_list, &ntotal_windows,
                          &window_list_size);
+  printf("visible only: %d\n", flags & SEARCH_VISIBLEONLY);
   for (i = 0; i < ntotal_windows; i++) {
     Window wid = total_window_list[i];
-    if (flags & SEARCH_VISIBLEONLY && !_xdo_is_window_visible(xdo, wid))
+    if (flags & SEARCH_VISIBLEONLY && !_xdo_is_window_visible(xdo, wid)) {
+      printf("Skipping %ld\n", wid);
       continue;
+    }
 
     if (!_xdo_regex_match_window(xdo, wid, flags, &re))
       continue;
@@ -217,6 +220,24 @@ int xdo_window_focus(xdo_t *xdo, Window wid) {
   ret = XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
   XFlush(xdo->xdpy);
   return _is_success("XSetInputFocus", ret);
+}
+
+int xdo_window_activate(xdo_t *xdo, Window wid) {
+  int ret;
+  XEvent xev;
+  XWindowAttributes wattr;
+
+  xev.type = ClientMessage;
+  xev.xclient.display = xdo->xdpy;
+  xev.xclient.window = wid;
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_ACTIVE_WINDOW", False);
+  xev.xclient.data.l[0] = 2;
+  xev.xclient.data.l[1] = CurrentTime;
+  xev.xclient.data.l[2] = 0;
+
+  XGetWindowAttributes(xdo->xdpy, wid, &wattr);
+  ret = XSendEvent(xdo->xdpy, wattr.screen->root, False, SubstructureNotifyMask, &xev);
+  return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret);
 }
 
 /* XRaiseWindow is ignored in ion3 and Gnome2. Is it even useful? */
