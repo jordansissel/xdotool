@@ -39,6 +39,8 @@ static int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq, int **keys
 static int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed);
 static int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re);
 static int _xdo_is_window_visible(xdo_t *xdo, Window wid);
+static unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
+                                       long *nitems, Atom *type, int *size);
 
 static int _is_success(const char *funcname, int code);
 
@@ -240,6 +242,56 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
   return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret);
 }
 
+int xdo_set_number_of_desktops(xdo_t *xdo, long ndesktops) {
+  /* XXX: This should support passing a screen number */
+  XEvent xev;
+  Window root;
+  int ret;
+
+  root = RootWindow(xdo->xdpy, 0);
+
+  xev.type = ClientMessage;
+  xev.xclient.display = xdo->xdpy;
+  xev.xclient.window = root;
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_NUMBER_OF_DESKTOPS", 
+                                         False);
+  xev.xclient.format = 32;
+  xev.xclient.data.l[0] = ndesktops;
+  xev.xclient.data.l[1] = 0;
+  xev.xclient.data.l[2] = 0;
+  xev.xclient.data.l[3] = 0;
+
+  ret = XSendEvent(xdo->xdpy, root, False,
+                   SubstructureNotifyMask | SubstructureRedirectMask,
+                   &xev);
+
+  return _is_success("XSendEvent[EWMH:_NET_NUMBER_OF_DESKTOPS]", ret);
+}
+
+int xdo_get_number_of_desktops(xdo_t *xdo, long *ndesktops) {
+  Atom type;
+  int size;
+  long nitems;
+  unsigned char *data;
+  Window root;
+
+  Atom request;
+
+  request = XInternAtom(xdo->xdpy, "_NET_NUMBER_OF_DESKTOPS", False);
+  root = XDefaultRootWindow(xdo->xdpy);
+
+  data = _xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+
+  if (nitems > 0)
+    *ndesktops = *((long*)data);
+  else
+    *ndesktops = 0;
+
+  return _is_success("XGetWindowProperty[_NET_NUMBER_OF_DESKTOPS]",
+                     *ndesktops == 0);
+
+}
+
 /* XRaiseWindow is ignored in ion3 and Gnome2. Is it even useful? */
 int xdo_window_raise(xdo_t *xdo, Window wid) {
   int ret;
@@ -348,7 +400,6 @@ int xdo_keysequence(xdo_t *xdo, char *keyseq) {
   return True;
 }
 
-
 /* Add by Lee Pumphret 2007-07-28
  * Modified slightly by Jordan Sissel */
 int xdo_window_get_focus(xdo_t *xdo, Window *window_ret) {
@@ -357,7 +408,6 @@ int xdo_window_get_focus(xdo_t *xdo, Window *window_ret) {
   ret = XGetInputFocus(xdo->xdpy, window_ret, &unused_revert_ret);
   return _is_success("XGetInputFocus", ret);
 }
-
 
 /* Helper functions */
 static int _xdo_keycode_from_char(xdo_t *xdo, char key) {
@@ -587,6 +637,9 @@ int _is_success(const char *funcname, int code) {
   } else if (code == BadWindow) {
     fprintf(stderr, "%s failed: got bad window\n", funcname);
     return False;
+  } else if (code != Success) {
+    fprintf(stderr, "%s failed (code=%d)\n", funcname, code);
+    return False;
   }
 
   return True;
@@ -600,5 +653,44 @@ int _xdo_is_window_visible(xdo_t *xdo, Window wid) {
     return False;
 
   return True;
+}
+
+/* Arbitrary window property retrieval
+ * slightly modified version from xprop.c from Xorg */
+unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
+                                long *nitems, Atom *type, int *size) {
+  Atom actual_type;
+  int actual_format;
+  unsigned long _nitems;
+  unsigned long nbytes;
+  unsigned long bytes_after; /* unused */
+  unsigned char *prop;
+  int status;
+
+  status = XGetWindowProperty(xdo->xdpy, window, atom, 0, (~0L),
+                              False, AnyPropertyType, &actual_type,
+                              &actual_format, &_nitems, &bytes_after,
+                              &prop);
+  if (status == BadWindow) {
+    fprintf(stderr, "window id # 0x%lx does not exists!", window);
+    return NULL;
+  } if (status != Success) {
+    fprintf(stderr, "XGetWindowProperty failed!");
+    return NULL;
+  }
+
+  if (actual_format == 32)
+    nbytes = sizeof(long);
+  else if (actual_format == 16)
+    nbytes = sizeof(short);
+  else if (actual_format == 8)
+    nbytes = 1;
+  else if (actual_format == 0)
+    nbytes = 0;
+
+  *nitems = _nitems;
+  *type = actual_type;
+  *size = actual_format;
+  return prop;
 }
 
