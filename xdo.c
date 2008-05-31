@@ -225,6 +225,11 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
   XEvent xev;
   XWindowAttributes wattr;
 
+  /* If this window is on another desktop, let's go to that desktop first */
+  long desktop = 0;
+  xdo_get_desktop_for_window(xdo, wid, &desktop);
+  xdo_set_current_desktop(xdo, desktop);
+
   xev.type = ClientMessage;
   xev.xclient.display = xdo->xdpy;
   xev.xclient.window = wid;
