@@ -228,12 +228,16 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
   xev.xclient.display = xdo->xdpy;
   xev.xclient.window = wid;
   xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_ACTIVE_WINDOW", False);
+  xev.xclient.format = 32;
   xev.xclient.data.l[0] = 2;
-  xev.xclient.data.l[1] = CurrentTime;
+  xev.xclient.data.l[1] = 5;
   xev.xclient.data.l[2] = 0;
 
+  printf("%ld\n", wid);
   XGetWindowAttributes(xdo->xdpy, wid, &wattr);
-  ret = XSendEvent(xdo->xdpy, wattr.screen->root, False, SubstructureNotifyMask | SubstructureRedirectMask, &xev);
+  ret = XSendEvent(xdo->xdpy, wattr.screen->root, False,
+                   SubstructureNotifyMask | SubstructureRedirectMask,
+                   &xev);
   return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret);
 }
 
