@@ -285,6 +285,7 @@ void cmd_windowactivate(int argc, char **args) {
     fprintf(stderr, "xdo_window_activate reported an error\n");
     return;
   }
+
 }
 
 void cmd_windowfocus(int argc, char **args) {
