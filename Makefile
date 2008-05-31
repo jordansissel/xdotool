@@ -1,4 +1,5 @@
-CFLAGS+= -std=c99 -pedantic -Wall -W -Wno-missing-field-initializers -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Winline -Wdisabled-optimization -O2 -pipe
+WARNFLAGS+=-pedantic -Wall -W -Wno-missing-field-initializers -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Winline -Wdisabled-optimization
+CFLAGS=-pipe -std=c99
 
 DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst
 DEFAULT_INC=-I/usr/X11R6/include -I/usr/local/include
@@ -13,6 +14,9 @@ all: xdotool
 
 clean:
 	rm -f *.o || true
+
+wmspec: wmspec.c
+	gcc -g $(LDFLAGS) $(CFLAGS) wmspec.c -o wmspec
 
 xdo.o: xdo.c
 	gcc $(CFLAGS) -c xdo.c
