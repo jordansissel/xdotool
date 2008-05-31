@@ -342,6 +342,52 @@ int xdo_get_current_desktop(xdo_t *xdo, long *desktop) {
                      *desktop == -1);
 }
 
+int xdo_set_desktop_for_window(xdo_t *xdo, Window wid, long desktop) {
+  XEvent xev;
+  int ret;
+  XWindowAttributes wattr;
+  XGetWindowAttributes(xdo->xdpy, wid, &wattr);
+
+  xev.type = ClientMessage;
+  xev.xclient.display = xdo->xdpy;
+  xev.xclient.window = wid;
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_WM_DESKTOP", 
+                                         False);
+  xev.xclient.format = 32;
+  xev.xclient.data.l[0] = desktop;
+  xev.xclient.data.l[1] = 2; /* indicate we are messaging from a pager */
+  xev.xclient.data.l[2] = 0;
+  xev.xclient.data.l[3] = 0;
+
+  ret = XSendEvent(xdo->xdpy, wattr.screen->root, False,
+                   SubstructureNotifyMask | SubstructureRedirectMask,
+                   &xev);
+
+  printf("ret: %d\n", ret);
+  return _is_success("XSendEvent[EWMH:_NET_WM_DESKTOP]", ret);
+}
+
+int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop) {
+  Atom type;
+  int size;
+  long nitems;
+  unsigned char *data;
+
+  Atom request;
+
+  request = XInternAtom(xdo->xdpy, "_NET_WM_DESKTOP", False);
+
+  data = _xdo_getwinprop(xdo, wid, request, &nitems, &type, &size);
+
+  if (nitems > 0)
+    *desktop = *((long*)data);
+  else
+    *desktop = -1;
+
+  return _is_success("XGetWindowProperty[_NET_WM_DESKTOP]",
+                     *desktop == -1);
+}
+
 /* XRaiseWindow is ignored in ion3 and Gnome2. Is it even useful? */
 int xdo_window_raise(xdo_t *xdo, Window wid) {
   int ret;

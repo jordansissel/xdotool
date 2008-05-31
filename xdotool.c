@@ -42,6 +42,8 @@ void cmd_set_num_desktops(int argc, char **args);
 void cmd_get_num_desktops(int argc, char **args);
 void cmd_set_desktop(int argc, char **args);
 void cmd_get_desktop(int argc, char **args);
+void cmd_set_desktop_for_window(int argc, char **args);
+void cmd_get_desktop_for_window(int argc, char **args);
 
 xdo_t *xdo;
 void window_print(Window wid);
@@ -80,6 +82,8 @@ struct dispatch {
   { "get_num_desktops", cmd_get_num_desktops, },
   { "set_desktop", cmd_set_desktop, },
   { "get_desktop", cmd_get_desktop, },
+  { "set_desktop_for_window", cmd_set_desktop_for_window, },
+  { "get_desktop_for_window", cmd_get_desktop_for_window, },
   { NULL, NULL, },
 };
 
@@ -516,3 +520,34 @@ void cmd_get_desktop(int argc, char **args) {
   printf("%ld\n", desktop);
 }
 
+void cmd_set_desktop_for_window(int argc, char **args) {
+  char *cmd = *args; argc--; args++;
+  long desktop = 0;
+  Window window = 0;
+
+  if (argc != 2) {
+    printf("usage: %s <window> <desktop>\n", cmd);
+    return;
+  }
+
+  window = (Window)strtol(args[0], NULL, 0);
+  desktop = strtol(args[1], NULL, 0);
+
+  xdo_set_desktop_for_window(xdo, window, desktop);
+}
+
+void cmd_get_desktop_for_window(int argc, char **args) {
+  char *cmd = *args; argc--; args++;
+  long desktop = 0;
+  Window window = 0;
+
+  if (argc != 1) {
+    printf("usage: %s <window>\n");
+    return;
+  }
+
+  window = (Window)strtol(args[0], NULL, 0);
+
+  xdo_get_desktop_for_window(xdo, window, &desktop);
+  printf("%ld\n", desktop);
+}
