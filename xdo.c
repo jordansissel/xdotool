@@ -229,7 +229,7 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
   xev.xclient.window = wid;
   xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_ACTIVE_WINDOW", False);
   xev.xclient.format = 32;
-  xev.xclient.data.l[0] = 2;
+  xev.xclient.data.l[0] = 2; /* 2 == Message from a window pager */
   xev.xclient.data.l[1] = 5;
   xev.xclient.data.l[2] = 0;
 
@@ -238,6 +238,7 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
   ret = XSendEvent(xdo->xdpy, wattr.screen->root, False,
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
+
   return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret);
 }
 
