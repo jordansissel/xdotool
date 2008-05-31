@@ -147,10 +147,8 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
   printf("visible only: %d\n", flags & SEARCH_VISIBLEONLY);
   for (i = 0; i < ntotal_windows; i++) {
     Window wid = total_window_list[i];
-    if (flags & SEARCH_VISIBLEONLY && !_xdo_is_window_visible(xdo, wid)) {
-      printf("Skipping %ld\n", wid);
+    if (flags & SEARCH_VISIBLEONLY && !_xdo_is_window_visible(xdo, wid))
       continue;
-    }
 
     if (!_xdo_regex_match_window(xdo, wid, flags, &re))
       continue;
@@ -236,7 +234,7 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
   xev.xclient.data.l[2] = 0;
 
   XGetWindowAttributes(xdo->xdpy, wid, &wattr);
-  ret = XSendEvent(xdo->xdpy, wattr.screen->root, False, SubstructureNotifyMask, &xev);
+  ret = XSendEvent(xdo->xdpy, wattr.screen->root, False, SubstructureNotifyMask | SubstructureRedirectMask, &xev);
   return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret);
 }
 
