@@ -144,7 +144,6 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
   _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, 0),
                          &total_window_list, &ntotal_windows,
                          &window_list_size);
-  printf("visible only: %d\n", flags & SEARCH_VISIBLEONLY);
   for (i = 0; i < ntotal_windows; i++) {
     Window wid = total_window_list[i];
     if (flags & SEARCH_VISIBLEONLY && !_xdo_is_window_visible(xdo, wid))
