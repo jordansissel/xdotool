@@ -40,6 +40,8 @@ void cmd_windowunmap(int argc, char **args);
 /* pager-like commands */
 void cmd_set_num_desktops(int argc, char **args);
 void cmd_get_num_desktops(int argc, char **args);
+void cmd_set_desktop(int argc, char **args);
+void cmd_get_desktop(int argc, char **args);
 
 xdo_t *xdo;
 void window_print(Window wid);
@@ -76,6 +78,8 @@ struct dispatch {
 
   { "set_num_desktops", cmd_set_num_desktops, },
   { "get_num_desktops", cmd_get_num_desktops, },
+  { "set_desktop", cmd_set_desktop, },
+  { "get_desktop", cmd_get_desktop, },
   { NULL, NULL, },
 };
 
@@ -488,3 +492,27 @@ void cmd_get_num_desktops(int argc, char **args) {
 
   printf("%ld\n", ndesktops);
 }
+
+void cmd_set_desktop(int argc, char **args) {
+  char *cmd = *args; argc--; args++;
+  long desktop;
+
+  if (argc != 1) {
+    printf("usage: %s desktop\n", cmd);
+    return;
+  }
+
+  desktop = strtol(args[0], NULL, 0);
+
+  xdo_set_current_desktop(xdo, desktop);
+}
+
+void cmd_get_desktop(int argc, char **args) {
+  char *cmd = *args; argc--; args++;
+  long desktop = 0;
+
+  xdo_get_current_desktop(xdo, &desktop);
+
+  printf("%ld\n", desktop);
+}
+

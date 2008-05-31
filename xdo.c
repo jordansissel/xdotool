@@ -292,6 +292,56 @@ int xdo_get_number_of_desktops(xdo_t *xdo, long *ndesktops) {
 
 }
 
+int xdo_set_current_desktop(xdo_t *xdo, long desktop) {
+  /* XXX: This should support passing a screen number */
+  XEvent xev;
+  Window root;
+  int ret;
+
+  root = RootWindow(xdo->xdpy, 0);
+
+  xev.type = ClientMessage;
+  xev.xclient.display = xdo->xdpy;
+  xev.xclient.window = root;
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_CURRENT_DESKTOP", 
+                                         False);
+  xev.xclient.format = 32;
+  xev.xclient.data.l[0] = desktop;
+  xev.xclient.data.l[1] = CurrentTime;
+  xev.xclient.data.l[2] = 0;
+  xev.xclient.data.l[3] = 0;
+
+  ret = XSendEvent(xdo->xdpy, root, False,
+                   SubstructureNotifyMask | SubstructureRedirectMask,
+                   &xev);
+
+  printf("ret: %d\n", ret);
+  return _is_success("XSendEvent[EWMH:_NET_CURRENT_DESKTOP]", ret);
+}
+
+int xdo_get_current_desktop(xdo_t *xdo, long *desktop) {
+  Atom type;
+  int size;
+  long nitems;
+  unsigned char *data;
+  Window root;
+
+  Atom request;
+
+  request = XInternAtom(xdo->xdpy, "_NET_CURRENT_DESKTOP", False);
+  root = XDefaultRootWindow(xdo->xdpy);
+
+  data = _xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+
+  if (nitems > 0)
+    *desktop = *((long*)data);
+  else
+    *desktop = -1;
+
+  return _is_success("XGetWindowProperty[_NET_CURRENT_DESKTOP]",
+                     *desktop == -1);
+}
+
 /* XRaiseWindow is ignored in ion3 and Gnome2. Is it even useful? */
 int xdo_window_raise(xdo_t *xdo, Window wid) {
   int ret;
