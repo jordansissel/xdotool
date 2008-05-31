@@ -148,7 +148,6 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
     Window wid = total_window_list[i];
     if (flags & SEARCH_VISIBLEONLY && !_xdo_is_window_visible(xdo, wid))
       continue;
-
     if (!_xdo_regex_match_window(xdo, wid, flags, &re))
       continue;
 
@@ -230,10 +229,9 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
   xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_ACTIVE_WINDOW", False);
   xev.xclient.format = 32;
   xev.xclient.data.l[0] = 2; /* 2 == Message from a window pager */
-  xev.xclient.data.l[1] = 5;
+  xev.xclient.data.l[1] = CurrentTime;
   xev.xclient.data.l[2] = 0;
 
-  printf("%ld\n", wid);
   XGetWindowAttributes(xdo->xdpy, wid, &wattr);
   ret = XSendEvent(xdo->xdpy, wattr.screen->root, False,
                    SubstructureNotifyMask | SubstructureRedirectMask,
@@ -603,44 +601,4 @@ int _xdo_is_window_visible(xdo_t *xdo, Window wid) {
 
   return True;
 }
-
-/* main test */
-#ifdef BUILDMAIN
-int main(int argc, char **argv) {
-  char *display_name;
-  xdo_t *xdo;
-
-  char *yay;
-
-  if ( (display_name = getenv("DISPLAY")) == (void *)NULL) {
-    fprintf(stderr, "Error: DISPLAY environment variable not set\n");
-    exit(1);
-  }
-
-  //yay = strdup("ctrl+l");
-
-  xdo = xdo_new(display_name);
-  //xdo_mousemove(xdo, 100, 100);
-  //usleep(100 * 1000);
-  //xdo_keysequence(xdo, strdup("ctrl+l"));
-  //xdo_type(xdo, strdup("ls"));
-  //xdo_keysequence(xdo, strdup("Return"));
-
-  
-  Window *list;
-  int nwindows;
-  char *query = "xterm";
-  int i;
-  if (argc > 1)
-    query = argv[1];
-
-  xdo_window_list_by_regex(xdo, query, &list, &nwindows);
-  for (i = 0; i < nwindows; i++) {
-    printf("%d\n", list[i]);
-  }
-  xdo_free(xdo);
-
-  return 0;
-}
-#endif
 

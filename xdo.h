@@ -12,6 +12,9 @@
 #define SEARCH_CLASS (1L << 2)
 #define SEARCH_NAME (1L << 3)
 
+#define SEARCH_IGNORE_TRANSIENTS (1L << 4)
+#define SEARCH_IGNORE_WINDOW_INPUTONLY (1L << 5)
+
 #define SIZE_USEHINTS (1L << 0)
 
 /* Map keysym name to actual ascii */
@@ -37,7 +40,6 @@ typedef struct xdo {
   int close_display_when_freed;
 } xdo_t;
 
-
 xdo_t* xdo_new(char *display);
 xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
                                    int close_display_when_freed);
@@ -61,7 +63,6 @@ int xdo_window_focus(xdo_t *xdo, Window wid);
 int xdo_window_raise(xdo_t *xdo, Window wid);
 int xdo_window_get_focus(xdo_t *xdo, Window *window_ret);
 int xdo_window_activate(xdo_t *xdo, Window wid);
-
 
 int xdo_window_map(xdo_t *xdo, Window wid);
 int xdo_window_unmap(xdo_t *xdo, Window wid);
