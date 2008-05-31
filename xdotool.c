@@ -50,6 +50,7 @@ struct dispatch {
   { "getwindowfocus", cmd_getwindowfocus, },
   { "search", cmd_search, },
 
+  /* Help me! */
   { "help", cmd_help, },
   { "-h", cmd_help, },
 
