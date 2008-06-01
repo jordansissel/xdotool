@@ -222,11 +222,11 @@ int xdo_window_focus(xdo_t *xdo, Window wid) {
 
 int xdo_window_activate(xdo_t *xdo, Window wid) {
   int ret;
+  long desktop = 0;
   XEvent xev;
   XWindowAttributes wattr;
 
   /* If this window is on another desktop, let's go to that desktop first */
-  long desktop = 0;
   xdo_get_desktop_for_window(xdo, wid, &desktop);
   xdo_set_current_desktop(xdo, desktop);
 
