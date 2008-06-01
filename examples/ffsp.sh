@@ -1,11 +1,10 @@
 #!/bin/sh
-# On my workstation, this switches to desktop 2, clears the search bar, pastes
-# into the search bar, and presses enter. Hence searching for whatever lies in
-# my X clipboard.
+# Activate firefox and paste the clipboard contents into the url bar.
 
-xdotool key "alt+2"
+wid=`xdotool search --title "Mozilla Firefox"`
+xdotool windowactivate $wid
+sleep 0.2
 xdotool key "ctrl+j"
 xdotool key "BackSpace"
-xdotool mousemove 600 35
-xdotool click 2
+xdotool key "ctrl+v"
 xdotool key "Return"
