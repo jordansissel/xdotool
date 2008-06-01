@@ -490,6 +490,11 @@ void cmd_get_num_desktops(int argc, char **args) {
   char *cmd = *args; argc--; args++;
   long ndesktops = 0;
 
+  if (argc != 0) {
+    printf("usage: %s\n", cmd);
+    return;
+  }
+
   xdo_get_number_of_desktops(xdo, &ndesktops);
 
   printf("%ld\n", ndesktops);
@@ -512,6 +517,11 @@ void cmd_set_desktop(int argc, char **args) {
 void cmd_get_desktop(int argc, char **args) {
   char *cmd = *args; argc--; args++;
   long desktop = 0;
+
+  if (argc != 0) {
+    printf("usage: %s\n", cmd);
+    return;
+  }
 
   xdo_get_current_desktop(xdo, &desktop);
 
@@ -540,7 +550,7 @@ void cmd_get_desktop_for_window(int argc, char **args) {
   Window window = 0;
 
   if (argc != 1) {
-    printf("usage: %s <window>\n");
+    printf("usage: %s <window>\n", cmd);
     return;
   }
 

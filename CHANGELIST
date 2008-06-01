@@ -1,3 +1,22 @@
+20080601:
+  * Add new commands:
+    - windowactivate: Activate a window. If the window is on another desktop, we
+        will switch to that desktop and then activate the window.
+    - set_num_desktops number: Changes the number of desktops or workspaces.
+    - get_num_desktops: Output the current number of desktops.
+    - set_desktop desktop_number: Change the current view to the specified
+        desktop.
+    - get_desktop: Output the current desktop in view.
+    - set_desktop_for_window window_id desktop_number: Move a window to a
+        different desktop.
+    - get_desktop_for_window window_id: Output the desktop currently containing
+        the given window.
+
+    windowactivate tested and confirmed working in: ion-3 and Gnome2 (metacity)
+    The rest of the new commands have only been tested in Gnome2. They do not
+    work in ion-3 due to lacking support for EWMH in ion.
+  * Rewrote the man page in perlpod format.
+
 20080521:
   * Import patches from keynav's xdotool branch (From Lukas Mai) which make
     xdotool compile happily when building with -Wall and -pedantic (and others)
