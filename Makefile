@@ -10,7 +10,7 @@ INC=`pkg-config --cflags x11 xtst 2> /dev/null || echo "$(DEFAULT_INC)"`
 CFLAGS+=$(INC)
 LDFLAGS+=$(LIBS)
 
-all: xdotool
+all: xdotool xdotool.1
 
 clean:
 	rm -f *.o || true
@@ -29,6 +29,9 @@ xdotool.c: xdo.h
 
 xdotool: xdotool.o xdo.o
 	gcc $(CFLAGS) $(LDFLAGS) xdotool.o xdo.o -o $@
+
+xdotool.1: xdotool.pod
+	pod2man -c "" -r "" xdotool.pod > $@
 
 package: test-package-build create-package
 

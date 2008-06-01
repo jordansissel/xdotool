@@ -1,0 +1,233 @@
+=pod
+
+=head1 NAME
+
+xdotool - command-line X11 automation tool
+
+=head1 SYNOPSIS
+
+B<xdotool> I<cmd> I<args...>
+
+=head1 DESCRIPTION
+
+B<xdotool> lets you programatically (or manually) simulate keyboard input and
+mouse activity, move and resize windows, etc. It does this using X11's
+XTEST extension and other Xlib functions.
+
+There is some support for Extended Window Manager Hints (aka EWMH or NetWM).
+See the L</EXTENDED WINDOW MANAGER HINTS> section for more information.
+
+=head1 KEYBOARD COMMANDS
+
+=over
+
+=item B<key> I<keystroke>
+
+Type a given keystroke. Examples being "alt+r", "Control_L+J",
+"ctrl+alt+n", "BackSpace".
+
+Generally, any valid X Keysym string will work. Multiple keys are
+separated by '+'. Aliases exist for "alt", "ctrl", "shift", "super",
+and "meta" which all map to Foo_L, such as Alt_L and Control_L, etc.
+
+Example: Send the keystroke "F2"
+ xdotool key F2
+
+=item B<keydown> I<keystroke>
+
+Same as above, except only keydown events are sent.
+
+=item B<keyup> I<keystroke>
+
+Same as above, except only keyup events are sent.
+
+=item B<type> I<something to type>
+
+Types a series of letters. In order, as fast as possible.
+
+Example: to type 'Hello world!' you would do:
+ xdotool type 'Hello world!'
+
+=back
+
+=head1 MOUSE COMMANDS
+
+=over 
+
+=item B<mousemove> I<x> I<y>
+
+Move the mouse to the specific X and Y coordinates on the screen
+
+=item B<mousedown> I<button>
+
+Send 'mouse down' for the given button. 1 == left, 2 ==  middle,  3  == right,
+etc.
+
+=item B<mouseup> I<button>
+
+Send 'mouse up for the given button
+
+=item B<click> I<button>
+
+Send mousedown followed by mouseup for the given button
+
+=back
+
+=head1 WINDOW COMMANDS
+
+=over
+
+=item B<search> I<[options]> I<somestring>
+
+Search  for windows with titles, names, or classes matching somestring.  The
+output is line-delimited list of X window identifiers
+
+The options available are:
+
+=over
+
+=item B<--onlyvisible> - Show only visible windows in the results.
+
+=item B<--title> - Match against the window title
+
+=item B<--name> - Match against the window name
+
+=item B<--class> - Match against the window class
+
+=back
+
+The default options are C<--title --name --class>
+
+=item B<getwindowfocus>
+
+Prints the window id of the currently focused window
+
+=item B<windowsize> [options] windowid width height
+
+Set the window size of the given window
+
+The options available are:
+
+=over
+
+=item B<--usehints> - Use window sizing hints when setting width and height.
+This is useful on terminals.
+
+=back
+
+Example: To set a terminal to be 80x24 characters, you would use:
+C<xdotool windowsize --usehints windowid 80 24>
+
+=item B<windowmove> I<windowid> I<x> I<y>
+
+Move the window to the given position
+
+=item B<windowfocus> I<windowid>
+
+Focus the window
+
+=item B<windowmap> I<window_id>
+
+Map a window. In X11 terminology, mapping a window means making it visible on
+the screen.
+
+=item B<windowraise> I<window_id>
+
+Raise the window to the top of the stack. This may not work on all window managers.
+
+=item B<windowunmap> I<window_id>
+
+Unmap a window, making it no longer appear on your screen.
+
+=back
+
+=head1 DESKTOP AND WINDOW COMMANDS
+
+These commands follow the EWMH standard. See the section L<EXTENDED WINDOW
+MANAGER HINTS> for more information.
+
+=over 
+
+=item B<windowactivate> I<windowid>
+
+Activate the window. This command is different from windowfocus:
+if the window is on another desktop, we will switch to that desktop. It also
+uses a different method for bringing the window up. I recommend trying this
+command before using windowfocus, as it will work on more window managers.
+
+=item B<set_num_desktops> I<number>
+
+Changes the number of desktops or workspaces.
+
+=item B<get_num_desktops>
+
+Output the current number of desktops.
+
+=item B<set_desktop> I<desktop_number>
+
+Change the current view to the specified desktop.
+
+=item B<get_desktop>
+
+Output the current desktop in view.
+
+=item B<set_desktop_for_window> I<window_id> I<desktop_number>
+
+Move a window to a different desktop.
+
+=item B<get_desktop_for_window> I<window_id>
+
+Output the desktop currently containing the given window.
+
+=back
+
+=head1 EXTENDED WINDOW MANAGER HINTS
+
+The following pieces of the EWMH standard are supported:
+
+=over 
+
+=item _NET_SUPPORTED
+
+Asks the window manager what is supported
+
+=item _NET_CURRENT_DESKTOP
+
+Query and set the current desktop. Support for this enables these commands:
+C<set_desktop>, C<get_desktop>.
+
+=item _NET_WM_DESKTOP
+
+Query and set what desktop a window is living in. Support for this enables
+these commands: C<set_desktop_for_window>, C<get_desktop_for_window>.
+
+=item _NET_ACTIVATE_WINDOW
+
+Activate a window by asking the window manager to bring it forward. Support for
+this enables these commands: C<windowactivate>.
+
+=back
+
+=head1 SEE ALSO
+
+L<xprop(1)>, L<xwininfo(1)>, 
+
+Project site: L<http://www.semicomplete.com/projects/xdotool>
+
+Google Code: L<http://semicomplete.googlecode.com/>
+
+=head1 CONTACT
+
+Please send questions to xdotool-users@googlegroups.com. File bugs and feature requests at the following URL:
+
+L<http://code.google.com/p/semicomplete/issues/list>
+
+=head1 AUTHOR
+
+xdotool was written by Jordan Sissel.
+
+This manual page was written originally by Daniel Kahn Gillmor
+E<lt>dkg-debian.org@fifthhorseman.netE<gt> for the Debian project (but may be
+used by others). It is maintained by Jordan Sissel.
+
+=cut
