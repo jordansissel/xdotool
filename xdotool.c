@@ -123,8 +123,6 @@ void window_print(Window wid) {
 }
 
 void cmd_help(int argc, char **args) {
-  char *cmd = *args; argc--; args++;
-
   int i;
   printf("Available commands:\n");
   for (i = 0; dispatch[i].name != NULL; i++)

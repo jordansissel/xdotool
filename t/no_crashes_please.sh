@@ -42,5 +42,17 @@ try $xdotool click 1
 try $xdotool type "hello"
 try $xdotool key "ctrl+w"
 
+try $xdotool windowactivate $wid
+
+try $xdotool get_num_desktops $wid
+desktops=`$xdotool get_num_desktops $wid`
+try $xdotool set_num_desktops $desktops
+
+cur_desktop=`$xdotool get_desktop`
+try $xdotool set_desktop $cur_desktop
+
+desktop=`$xdotool get_desktop_for_window $wid`
+try $xdotool set_desktop_for_window $wid $desktop
+
 #pkill -f xdotool_test_window
 kill $xterm_pid

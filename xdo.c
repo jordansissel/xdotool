@@ -41,6 +41,7 @@ static int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t
 static int _xdo_is_window_visible(xdo_t *xdo, Window wid);
 static unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
                                        long *nitems, Atom *type, int *size);
+static int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature);
 
 static int _is_success(const char *funcname, int code);
 
@@ -227,23 +228,29 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
   XWindowAttributes wattr;
 
   /* If this window is on another desktop, let's go to that desktop first */
-  xdo_get_desktop_for_window(xdo, wid, &desktop);
-  xdo_set_current_desktop(xdo, desktop);
 
+  if (_xdo_ewmh_is_supported(xdo, "_NET_WM_DESKTOP") == True
+      && _xdo_ewmh_is_supported(xdo, "_NET_CURRENT_DESKTOP") == True) {
+    xdo_get_desktop_for_window(xdo, wid, &desktop);
+    xdo_set_current_desktop(xdo, desktop);
+  }
+
+  memset(&xev, 0, sizeof(xev));
   xev.type = ClientMessage;
   xev.xclient.display = xdo->xdpy;
   xev.xclient.window = wid;
   xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_ACTIVE_WINDOW", False);
   xev.xclient.format = 32;
-  xev.xclient.data.l[0] = 2; /* 2 == Message from a window pager */
+  xev.xclient.data.l[0] = 2L; /* 2 == Message from a window pager */
   xev.xclient.data.l[1] = CurrentTime;
-  xev.xclient.data.l[2] = 0;
 
   XGetWindowAttributes(xdo->xdpy, wid, &wattr);
   ret = XSendEvent(xdo->xdpy, wattr.screen->root, False,
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
+  /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
+   * Manpage says it will only generate BadWindow or BadValue errors */
   return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret);
 }
 
@@ -255,6 +262,7 @@ int xdo_set_number_of_desktops(xdo_t *xdo, long ndesktops) {
 
   root = RootWindow(xdo->xdpy, 0);
 
+  memset(&xev, 0, sizeof(xev));
   xev.type = ClientMessage;
   xev.xclient.display = xdo->xdpy;
   xev.xclient.window = root;
@@ -262,9 +270,6 @@ int xdo_set_number_of_desktops(xdo_t *xdo, long ndesktops) {
                                          False);
   xev.xclient.format = 32;
   xev.xclient.data.l[0] = ndesktops;
-  xev.xclient.data.l[1] = 0;
-  xev.xclient.data.l[2] = 0;
-  xev.xclient.data.l[3] = 0;
 
   ret = XSendEvent(xdo->xdpy, root, False,
                    SubstructureNotifyMask | SubstructureRedirectMask,
@@ -305,6 +310,7 @@ int xdo_set_current_desktop(xdo_t *xdo, long desktop) {
 
   root = RootWindow(xdo->xdpy, 0);
 
+  memset(&xev, 0, sizeof(xev));
   xev.type = ClientMessage;
   xev.xclient.display = xdo->xdpy;
   xev.xclient.window = root;
@@ -313,14 +319,11 @@ int xdo_set_current_desktop(xdo_t *xdo, long desktop) {
   xev.xclient.format = 32;
   xev.xclient.data.l[0] = desktop;
   xev.xclient.data.l[1] = CurrentTime;
-  xev.xclient.data.l[2] = 0;
-  xev.xclient.data.l[3] = 0;
 
   ret = XSendEvent(xdo->xdpy, root, False,
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  printf("ret: %d\n", ret);
   return _is_success("XSendEvent[EWMH:_NET_CURRENT_DESKTOP]", ret);
 }
 
@@ -353,6 +356,7 @@ int xdo_set_desktop_for_window(xdo_t *xdo, Window wid, long desktop) {
   XWindowAttributes wattr;
   XGetWindowAttributes(xdo->xdpy, wid, &wattr);
 
+  memset(&xev, 0, sizeof(xev));
   xev.type = ClientMessage;
   xev.xclient.display = xdo->xdpy;
   xev.xclient.window = wid;
@@ -361,14 +365,11 @@ int xdo_set_desktop_for_window(xdo_t *xdo, Window wid, long desktop) {
   xev.xclient.format = 32;
   xev.xclient.data.l[0] = desktop;
   xev.xclient.data.l[1] = 2; /* indicate we are messaging from a pager */
-  xev.xclient.data.l[2] = 0;
-  xev.xclient.data.l[3] = 0;
 
   ret = XSendEvent(xdo->xdpy, wattr.screen->root, False,
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  printf("ret: %d\n", ret);
   return _is_success("XSendEvent[EWMH:_NET_WM_DESKTOP]", ret);
 }
 
@@ -738,7 +739,7 @@ int _is_success(const char *funcname, int code) {
   } else if (code == BadWindow) {
     fprintf(stderr, "%s failed: got bad window\n", funcname);
     return False;
-  } else if (code != Success) {
+  } else if (code != 1) {
     fprintf(stderr, "%s failed (code=%d)\n", funcname, code);
     return False;
   }
@@ -795,3 +796,26 @@ unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
   return prop;
 }
 
+int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature) {
+  Atom type = 0;
+  long nitems = 0L;
+  int size = 0;
+  Atom *results = NULL;
+  long i = 0;
+
+  Window root;
+  Atom request;
+  Atom feature_atom;
+  
+  request = XInternAtom(xdo->xdpy, "_NET_SUPPORTED", False);
+  feature_atom = XInternAtom(xdo->xdpy, feature, False);
+  root = RootWindow(xdo->xdpy, 0);
+
+  results = (Atom *) _xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+  for (i = 0L; i < nitems; i++) {
+    if (results[i] == feature_atom)
+      return True;
+  }
+
+  return False;
+}
