@@ -35,7 +35,7 @@ xdotool.1: xdotool.pod
 
 package: test-package-build create-package
 
-create-package:
+create-package: xdotool.1
 	@NAME=xdotool-`date +%Y%m%d`; \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
