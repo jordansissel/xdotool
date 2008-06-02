@@ -25,7 +25,8 @@
   * Confirmed that the one (but mostly useless) test passes.
 
 20071230:
-  * Added manpage contributed by Daniel Kahn Gillmor.
+  * Manpage contribution by Daniel Kahn Gillmor
+  * Add COPYRIGHT from svn to the distributed package.
 
 20070903:
   * Add xdo_mousemove_relative for relative mouse movements
@@ -54,7 +55,6 @@
   resize by that increment". So, you can use this to set a terminal to be 80x24
   characters instead of pixels. Verified by resizing xterm and gnome-terminal
   (with menus enabled).
-
 
 20070712:
   Added new search options to 'xdotool search'
