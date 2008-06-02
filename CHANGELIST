@@ -24,6 +24,9 @@
     incorrectly typecasting Window to int sometimes.
   * Confirmed that the one (but mostly useless) test passes.
 
+20071230:
+  * Added manpage contributed by Daniel Kahn Gillmor.
+
 20070903:
   * Add xdo_mousemove_relative for relative mouse movements
   * Add xdolib.sh. This is a script library to help with features xdo does not
