@@ -37,7 +37,7 @@ uninstall:
 	rm -f $(INSTALLMAN)/man1/xdotool.1
 
 clean:
-	rm -f *.o || true
+	rm -f *.o xdotool xdotool.1 || true
 
 xdo.o: xdo.c
 	gcc $(CFLAGS) -c xdo.c
