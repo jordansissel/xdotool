@@ -36,7 +36,6 @@ uninstall:
 	rm -f $(INSTALLBIN)/xdotool
 	rm -f $(INSTALLMAN)/man1/xdotool.1
 
-
 clean:
 	rm -f *.o || true
 
@@ -57,11 +56,11 @@ xdotool.1: xdotool.pod
 
 package: test-package-build create-package
 
-create-package: xdotool.1
+create-package: 
 	@NAME=xdotool-`date +%Y%m%d`; \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
-	rsync --exclude .svn -a `ls -d *.1 *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* 2> /dev/null` $${NAME}/; \
+	rsync --exclude .svn -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* 2> /dev/null` $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -rf $${NAME}/
 
