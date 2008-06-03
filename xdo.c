@@ -450,7 +450,7 @@ int xdo_window_raise(xdo_t *xdo, Window wid) {
   int ret;
   ret = XRaiseWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
-  return _is_success("XRaiseWindow", ret);
+  return _is_success("XRaiseWindow", ret == 0);
 }
 
 /* XXX: Include 'screen number' support? */

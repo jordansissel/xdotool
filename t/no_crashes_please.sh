@@ -2,7 +2,7 @@
 
 try () {
   "$@" > /dev/null
-  
+
   if [ $? -ne 0 ]; then
     echo "FAILURE: $@"
   else
@@ -27,7 +27,8 @@ try $xdotool search xdotool_test_window
 try $xdotool getwindowfocus
 
 wid=`$xdotool search xdotool_test_window`
-try $xdotool windowsize $wid 50 50
+try $xdotool windowraise $wid
+try $xdotool windowsize $wid 500 500
 try $xdotool windowfocus $wid
 try $xdotool windowmove $wid 300 300
 try $xdotool windowunmap $wid
