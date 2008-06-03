@@ -3,6 +3,9 @@ xdo: Fake input from the mouse and keyboard very easily
 
 ### See the website for more up-to-date documentation
 # http://www.semicomplete.com/projects/xdotool/
+#
+# Also see the manpage, which you can generate by running:
+# make xdotool.1
 
 Compile: make xdotool
 Run: ./xdotool <cmd> <args>
