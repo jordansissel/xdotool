@@ -1,3 +1,10 @@
+20080603:
+  * Daniel Kahn Gillmor reported a problem with return codes from xdotool. All
+    commands return proper exit status now (0 == success, nonzero == error)
+  * I tested on 3 window managers: Gnome2 2.20.0, OpenBox 3.4, ion-3rc-20070608
+    - Gnome and OpenBox pass all tests.
+    - ion-3 fails on any desktop-related methods (ion-3 lacks the support).
+
 20080601:
   * Add new commands:
     - windowactivate: Activate a window. If the window is on another desktop, we
