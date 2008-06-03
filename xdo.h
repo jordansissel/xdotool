@@ -76,5 +76,5 @@ int xdo_set_desktop_for_window(xdo_t *xdo, Window wid, long desktop);
 int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop);
 
 /* Returns: windowlist and nwindows */
-void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
-                              Window **windowlist, int *nwindows);
+int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
+                             Window **windowlist, int *nwindows);

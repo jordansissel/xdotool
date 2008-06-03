@@ -19,38 +19,38 @@
 
 #include "xdo.h"
 
-void cmd_click(int argc, char **args);
-void cmd_getwindowfocus(int argc, char **args);
-void cmd_help(int argc, char **args);
-void cmd_key(int argc, char **args);
-void cmd_mousedown(int argc, char **args);
-void cmd_mousemove(int argc, char **args);
-void cmd_mousemove_relative(int argc, char **args);
-void cmd_mouseup(int argc, char **args);
-void cmd_search(int argc, char **args);
-void cmd_type(int argc, char **args);
-void cmd_windowactivate(int argc, char **args);
-void cmd_windowfocus(int argc, char **args);
-void cmd_windowmap(int argc, char **args);
-void cmd_windowmove(int argc, char **args);
-void cmd_windowraise(int argc, char **args);
-void cmd_windowsize(int argc, char **args);
-void cmd_windowunmap(int argc, char **args);
+int cmd_click(int argc, char **args);
+int cmd_getwindowfocus(int argc, char **args);
+int cmd_help(int argc, char **args);
+int cmd_key(int argc, char **args);
+int cmd_mousedown(int argc, char **args);
+int cmd_mousemove(int argc, char **args);
+int cmd_mousemove_relative(int argc, char **args);
+int cmd_mouseup(int argc, char **args);
+int cmd_search(int argc, char **args);
+int cmd_type(int argc, char **args);
+int cmd_windowactivate(int argc, char **args);
+int cmd_windowfocus(int argc, char **args);
+int cmd_windowmap(int argc, char **args);
+int cmd_windowmove(int argc, char **args);
+int cmd_windowraise(int argc, char **args);
+int cmd_windowsize(int argc, char **args);
+int cmd_windowunmap(int argc, char **args);
 
 /* pager-like commands */
-void cmd_set_num_desktops(int argc, char **args);
-void cmd_get_num_desktops(int argc, char **args);
-void cmd_set_desktop(int argc, char **args);
-void cmd_get_desktop(int argc, char **args);
-void cmd_set_desktop_for_window(int argc, char **args);
-void cmd_get_desktop_for_window(int argc, char **args);
+int cmd_set_num_desktops(int argc, char **args);
+int cmd_get_num_desktops(int argc, char **args);
+int cmd_set_desktop(int argc, char **args);
+int cmd_get_desktop(int argc, char **args);
+int cmd_set_desktop_for_window(int argc, char **args);
+int cmd_get_desktop_for_window(int argc, char **args);
 
 xdo_t *xdo;
 void window_print(Window wid);
 
 struct dispatch {
   const char *name;
-  void (*func)(int argc, char **args);
+  int (*func)(int argc, char **args);
 } dispatch[] = {
   /* Query functions */
   { "getwindowfocus", cmd_getwindowfocus, },
@@ -89,6 +89,7 @@ struct dispatch {
 
 int main(int argc, char **argv) {
   char *cmd;
+  int ret = 0;
   int i;
 
   if (argc < 2) {
@@ -108,13 +109,13 @@ int main(int argc, char **argv) {
 
   for (i = 0; dispatch[i].name != NULL; i++) {
     if (!strcasecmp(dispatch[i].name, cmd)) {
-      dispatch[i].func(argc, argv);
+      ret = dispatch[i].func(argc, argv);
       break;
     }
   }
 
   xdo_free(xdo);
-  return 0;
+  return ret;
 }
 
 void window_print(Window wid) {
@@ -122,113 +123,147 @@ void window_print(Window wid) {
   printf("%ld\n", wid);
 }
 
-void cmd_help(int argc, char **args) {
+int cmd_help(int argc, char **args) {
   int i;
   printf("Available commands:\n");
   for (i = 0; dispatch[i].name != NULL; i++)
     printf("  %s\n", dispatch[i].name);
+
+  return 0;
 }
 
-void cmd_mousemove(int argc, char **args) {
+int cmd_mousemove(int argc, char **args) {
+  int ret = 0;
   int x, y;
   char *cmd = *args; argc--; args++;
 
   if (argc != 2) {
     fprintf(stderr, "usage: %s <xcoord> <ycoord>\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
-    return;
+    return 1;
   }
 
   x = atoi(args[0]);
   y = atoi(args[1]);
 
-  if (!xdo_mousemove(xdo, x, y)) {
+  ret = xdo_mousemove(xdo, x, y);
+
+  if (ret)
     fprintf(stderr, "xdo_mousemove reported an error\n");
-  }
+
+  return ret;
 }
 
-void cmd_mousemove_relative(int argc, char **args) {
+int cmd_mousemove_relative(int argc, char **args) {
   int x, y;
+  int ret = 0;
   char *cmd = *args; argc--; args++;
 
   if (argc != 2) {
     fprintf(stderr, "usage: %s <xcoord> <ycoord>\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
-    return;
+    return 1;
   }
 
   x = atoi(args[0]);
   y = atoi(args[1]);
 
-  if (!xdo_mousemove_relative(xdo, x, y)) {
+  ret = xdo_mousemove_relative(xdo, x, y);
+
+  if (ret)
     fprintf(stderr, "xdo_mousemove_relative reported an error\n");
-  }
+
+  return ret;
 }
 
-void cmd_mousedown(int argc, char **args) {
+int cmd_mousedown(int argc, char **args) {
+  int ret = 0;
   int button;
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
     fprintf(stderr, "usage: %s <button>\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
-    return;
+    return 1;
   }
 
   button = atoi(args[0]);
 
-  if (!xdo_mousedown(xdo, button)) {
+  ret = xdo_mousedown(xdo, button);
+
+  if (ret)
     fprintf(stderr, "xdo_mousedown reported an error\n");
-  }
+
+  return ret;
 }
 
-void cmd_mouseup(int argc, char **args) {
+int cmd_mouseup(int argc, char **args) {
+  int ret = 0;
   int button;
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
     fprintf(stderr, "usage: %s <button>\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
-    return;
+    return 1;
   }
 
   button = atoi(args[0]);
 
-  if (!xdo_mouseup(xdo, button)) {
+  ret = xdo_mouseup(xdo, button);
+  if (ret)
     fprintf(stderr, "xdo_mouseup reported an error\n");
+  
+  return ret;
+}
+
+int cmd_click(int argc, char **args) {
+  int button;
+  char *cmd = *args; argc--; args++;
+
+  if (argc != 1) {
+    fprintf(stderr, "usage: %s <button>\n", cmd);
+    fprintf(stderr, "You specified the wrong number of args.\n");
+    return 1;
   }
+
+  button = atoi(args[0]);
+  return xdo_click(xdo, button);
 }
 
-void cmd_click(int argc, char **args) {
-  cmd_mousedown(argc, args);
-  cmd_mouseup(argc, args);
-}
-
-void cmd_type(int argc, char **args) {
+int cmd_type(int argc, char **args) {
+  int ret = 0;
   int i;
   char *cmd = *args; argc--; args++;
 
   if (argc == 0) {
     fprintf(stderr, "usage: %s <things to type>\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
-    return;
+    return 1;
   }
 
   for (i = 0; i < argc; i++) {
-    if (!xdo_type(xdo, args[i])) {
+    int tmp = xdo_type(xdo, args[i]);
+
+    if (tmp) {
       fprintf(stderr, "xdo_type reported an error\n");
     }
+
+    ret += tmp;
   }
+
+  return ret > 0;
 }
 
-void cmd_key(int argc, char **args) {
+int cmd_key(int argc, char **args) {
+  int ret = 0;
   int i;
   char *cmd = *args; argc--; args++;
 
   if (argc == 0) {
     fprintf(stderr, "usage: %s <keyseq1> [keyseq2 ... keyseqN]\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
-    return;
+    return 1;
   }
 
   int (*func)(xdo_t *, char *) = NULL;
@@ -241,82 +276,98 @@ void cmd_key(int argc, char **args) {
     func = xdo_keysequence_down;
   } else {
     fprintf(stderr, "Unknown command '%s'\n", cmd);
-    return;
+    return 1;
   }
 
   for (i = 0; i < argc; i++) {
-    if (!func(xdo, args[i]))
+    int tmp = func(xdo, args[i]);
+    if (tmp != 0)
       fprintf(stderr, "xdo_keysequence reported an error for string '%s'\n", args[i]);
+    ret += tmp;
   }
+
+  return ret;
 }
 
-void cmd_windowmove(int argc, char **args) {
+int cmd_windowmove(int argc, char **args) {
+  int ret = 0;
   int x, y;
   Window wid;
   char *cmd = *args; argc--; args++;
 
   if (argc != 3) {
     printf("usage: %s wid x y\n", cmd);
-    return;
+    return 1;
   }
 
   wid = (Window)strtol(args[0], NULL, 0);
   x = (int)strtol(args[1], NULL, 0);
   y = (int)strtol(args[2], NULL, 0);
 
-  if (!xdo_window_move(xdo, wid, x, y)) {
-    fprintf(stderr, "xdo_window_mvoe reported an error\n");
-  }
+  ret = xdo_window_move(xdo, wid, x, y);
+  if (ret)
+    fprintf(stderr, "xdo_window_move reported an error\n");
+  
+  return ret;
 }
 
-void cmd_windowactivate(int argc, char **args) {
+int cmd_windowactivate(int argc, char **args) {
+  int ret = 0;
   Window wid;
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
     printf("usage: %s wid\n", cmd);
-    return;
+    return 1;
   }
 
   wid = (Window)strtol(args[0], NULL, 0);
-  if (!xdo_window_activate(xdo, wid)) {
+  ret = xdo_window_activate(xdo, wid);
+
+  if (ret)
     fprintf(stderr, "xdo_window_activate reported an error\n");
-    return;
-  }
 
+  return ret;
 }
 
-void cmd_windowfocus(int argc, char **args) {
+int cmd_windowfocus(int argc, char **args) {
+  int ret = 0;
   Window wid;
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
     printf("usage: %s wid\n", cmd);
-    return;
+    return 1;
   }
 
   wid = (Window)strtol(args[0], NULL, 0);
-  if (!xdo_window_focus(xdo, wid)) {
+  ret = xdo_window_focus(xdo, wid);
+  if (ret)
     fprintf(stderr, "xdo_window_focus reported an error\n");
-  }
+  
+  return ret;
 }
 
-void cmd_windowraise(int argc, char **args) {
+int cmd_windowraise(int argc, char **args) {
+  int ret = 0;
   Window wid;
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
     printf("usage: %s wid\n", cmd);
-    return;
-  }
+    return 1;
+   }
 
   wid = (Window)strtol(args[0], NULL, 0);
-  if (!xdo_window_raise(xdo, wid)) {
+  ret = xdo_window_raise(xdo, wid);
+  if (ret)
     fprintf(stderr, "xdo_window_raise reported an error\n");
-  }
+  
+  return ret;
 }
 
-void cmd_windowsize(int argc, char **args) {
+int cmd_windowsize(int argc, char **args) {
+  int ret = 0;
   int width, height;
   Window wid;
   int c;
@@ -347,19 +398,20 @@ void cmd_windowsize(int argc, char **args) {
 
   if (argc != 3) {
     printf("usage: %s wid width height\n", cmd);
-    return;
+    return 1;
   }
 
   wid = (Window)strtol(args[0], NULL, 0);
   width = (int)strtol(args[1], NULL, 0);
   height = (int)strtol(args[2], NULL, 0);
 
-  if (!xdo_window_setsize(xdo, wid, width, height, size_flags)) {
+  ret = xdo_window_setsize(xdo, wid, width, height, size_flags);
+  if (ret)
     fprintf(stderr, "xdo_window_setsize reported an error\n");
-  }
+  return ret;
 }
 
-void cmd_search(int argc, char **args) {
+int cmd_search(int argc, char **args) {
   Window *list;
   int nwindows;
   int i;
@@ -404,17 +456,17 @@ void cmd_search(int argc, char **args) {
 
   if (argc != 1) {
     printf(
-    "Usage: xdotool %s "
-    "[--onlyvisible] [--title --class --name] regexp_pattern\n"
-    " --onlyvisible   matches only windows currently visible\n"
-    " --title         check regexp_pattern agains the window title\n"
-    " --class         check regexp_pattern agains the window class\n"
-    " --name          check regexp_pattern agains the window name\n"
-    "\n"
-    "* If none of --title, --class, and --name are specified,\n"
-    "the defaults are to match any of them.\n", 
-    cmd);
-    return;
+      "Usage: xdotool %s "
+      "[--onlyvisible] [--title --class --name] regexp_pattern\n"
+      " --onlyvisible   matches only windows currently visible\n"
+      " --title         check regexp_pattern agains the window title\n"
+      " --class         check regexp_pattern agains the window class\n"
+      " --name          check regexp_pattern agains the window name\n"
+      "\n"
+      "* If none of --title, --class, and --name are specified,\n"
+      "the defaults are to match any of them.\n", 
+      cmd);
+    return 1;
   }
 
   xdo_window_list_by_regex(xdo, *args, search_flags, &list, &nwindows);
@@ -423,139 +475,158 @@ void cmd_search(int argc, char **args) {
 
   /* Free list as it's malloc'd by xdo_window_list_by_regex */
   free(list);
+
+  /* error if number of windows found is zero (behave like grep) */
+  return !nwindows;
 }
 
 /* Added 2007-07-28 - Lee Pumphret */
-void cmd_getwindowfocus(int argc, char **args) {
+int cmd_getwindowfocus(int argc, char **args) {
+  int ret = 0;
   Window wid = 0;
   char *cmd = *args; argc--; args++;
 
   if (argc != 0) {
     printf("usage: %s\n", cmd);
-    return;
+    return 1;
   }
 
-  if (!xdo_window_get_focus(xdo, &wid)) {
+  ret = xdo_window_get_focus(xdo, &wid);
+
+  if (ret) {
     fprintf(stderr, "xdo_window_focus reported an error\n");
-  } else {
+  } else { 
     window_print(wid);
   }
+
+  return ret;
 }
 
-void cmd_windowmap(int argc, char **args) {
+int cmd_windowmap(int argc, char **args) {
+  int ret = 0;
   Window wid;
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
     printf("usage: %s wid\n", cmd);
-    return;
+    return 1;
   }
 
   wid = (Window)strtol(args[0], NULL, 0);
-  if (!xdo_window_map(xdo, wid)) {
+  ret = xdo_window_map(xdo, wid);
+  if (ret)
     fprintf(stderr, "xdo_window_map reported an error\n");
-  }
+  
+  return ret;
 }
 
-void cmd_windowunmap(int argc, char **args) {
+int cmd_windowunmap(int argc, char **args) {
+  int ret = 0;
   Window wid;
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
     printf("usage: %s wid\n", cmd);
-    return;
+    return 1;
   }
 
   wid = (Window)strtol(args[0], NULL, 0);
-  if (!xdo_window_unmap(xdo, wid)) {
+  ret = xdo_window_unmap(xdo, wid);
+  if (ret)
     fprintf(stderr, "xdo_window_unmap reported an error\n");
-  }
+  
+  return ret;
 }
 
-void cmd_set_num_desktops(int argc, char **args) {
+int cmd_set_num_desktops(int argc, char **args) {
   char *cmd = *args; argc--; args++;
   long ndesktops;
 
   if (argc != 1) {
     printf("usage: %s num_desktops\n", cmd);
-    return;
+    return 1;
   }
 
   ndesktops = strtol(args[0], NULL, 0);
 
-  xdo_set_number_of_desktops(xdo, ndesktops);
+  return xdo_set_number_of_desktops(xdo, ndesktops);
 }
 
-void cmd_get_num_desktops(int argc, char **args) {
+int cmd_get_num_desktops(int argc, char **args) {
+  int ret = 0;
   char *cmd = *args; argc--; args++;
   long ndesktops = 0;
 
   if (argc != 0) {
     printf("usage: %s\n", cmd);
-    return;
+    return 1;
   }
 
-  xdo_get_number_of_desktops(xdo, &ndesktops);
+  ret = xdo_get_number_of_desktops(xdo, &ndesktops);
 
   printf("%ld\n", ndesktops);
+  return ret;
 }
 
-void cmd_set_desktop(int argc, char **args) {
+int cmd_set_desktop(int argc, char **args) {
   char *cmd = *args; argc--; args++;
   long desktop;
 
   if (argc != 1) {
     printf("usage: %s desktop\n", cmd);
-    return;
+    return 1;
   }
 
   desktop = strtol(args[0], NULL, 0);
 
-  xdo_set_current_desktop(xdo, desktop);
+  return xdo_set_current_desktop(xdo, desktop);
 }
 
-void cmd_get_desktop(int argc, char **args) {
+int cmd_get_desktop(int argc, char **args) {
+  int ret = 0;
   char *cmd = *args; argc--; args++;
   long desktop = 0;
 
   if (argc != 0) {
     printf("usage: %s\n", cmd);
-    return;
+    return 1;
   }
 
-  xdo_get_current_desktop(xdo, &desktop);
-
+  ret = xdo_get_current_desktop(xdo, &desktop);
   printf("%ld\n", desktop);
+  return ret;
 }
 
-void cmd_set_desktop_for_window(int argc, char **args) {
+int cmd_set_desktop_for_window(int argc, char **args) {
   char *cmd = *args; argc--; args++;
   long desktop = 0;
   Window window = 0;
 
   if (argc != 2) {
     printf("usage: %s <window> <desktop>\n", cmd);
-    return;
+    return 1;
   }
 
   window = (Window)strtol(args[0], NULL, 0);
   desktop = strtol(args[1], NULL, 0);
 
-  xdo_set_desktop_for_window(xdo, window, desktop);
+  return xdo_set_desktop_for_window(xdo, window, desktop);
 }
 
-void cmd_get_desktop_for_window(int argc, char **args) {
+int cmd_get_desktop_for_window(int argc, char **args) {
+  int ret = 0;
   char *cmd = *args; argc--; args++;
   long desktop = 0;
   Window window = 0;
 
   if (argc != 1) {
     printf("usage: %s <window>\n", cmd);
-    return;
+    return 1;
   }
 
   window = (Window)strtol(args[0], NULL, 0);
 
-  xdo_get_desktop_for_window(xdo, window, &desktop);
+  ret = xdo_get_desktop_for_window(xdo, window, &desktop);
   printf("%ld\n", desktop);
+  return ret;
 }

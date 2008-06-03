@@ -21,6 +21,8 @@ xdotool="../xdotool"
 xterm -T xdotool_test_window -e 'sleep 300' &
 xterm_pid="$!"
 
+sleep 1
+
 try $xdotool search xdotool_test_window
 try $xdotool getwindowfocus
 
@@ -43,9 +45,10 @@ try $xdotool type "hello"
 try $xdotool key "ctrl+w"
 
 try $xdotool windowactivate $wid
+sleep 0.2
 
-try $xdotool get_num_desktops $wid
-desktops=`$xdotool get_num_desktops $wid`
+try $xdotool get_num_desktops
+desktops=`$xdotool get_num_desktops`
 try $xdotool set_num_desktops $desktops
 
 cur_desktop=`$xdotool get_desktop`

@@ -105,17 +105,17 @@ int xdo_window_map(xdo_t *xdo, Window wid) {
   int ret;
   ret = XMapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
-  return _is_success("XMapWindow", ret);
+  return _is_success("XMapWindow", ret == 0);
 }
 
 int xdo_window_unmap(xdo_t *xdo, Window wid) {
   int ret;
   ret = XUnmapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
-  return _is_success("XMapWindow", ret);
+  return _is_success("XUnmapWindow", ret == 0);
 }
 
-void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
+int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
                               Window **windowlist, int *nwindows) {
   regex_t re;
   Window *total_window_list = NULL;
@@ -129,7 +129,7 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
   ret = regcomp(&re, regex, REG_EXTENDED | REG_ICASE);
   if (ret != 0) {
     fprintf(stderr, "Failed to compile regex: '%s'\n", regex);
-    return;
+    return 1;
   }
 
   /* Default search settings:
@@ -165,6 +165,7 @@ void xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
   }
 
   regfree(&re);
+  return 0;
 }
 
 int xdo_window_move(xdo_t *xdo, Window wid, int x, int y) {
@@ -174,7 +175,7 @@ int xdo_window_move(xdo_t *xdo, Window wid, int x, int y) {
   wc.y = y;
 
   ret = XConfigureWindow(xdo->xdpy, wid, CWX | CWY, &wc);
-  return _is_success("XConfigureWindow", ret);
+  return _is_success("XConfigureWindow", ret == 0);
 }
 
 int xdo_window_setsize(xdo_t *xdo, Window wid, int width, int height, int flags) {
@@ -211,14 +212,14 @@ int xdo_window_setsize(xdo_t *xdo, Window wid, int width, int height, int flags)
 
   ret = XConfigureWindow(xdo->xdpy, wid, cw_flags, &wc);
   XFlush(xdo->xdpy);
-  return _is_success("XConfigureWindow", ret);
+  return _is_success("XConfigureWindow", ret == 0);
 }
 
 int xdo_window_focus(xdo_t *xdo, Window wid) {
   int ret;
   ret = XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
   XFlush(xdo->xdpy);
-  return _is_success("XSetInputFocus", ret);
+  return _is_success("XSetInputFocus", ret == 0);
 }
 
 int xdo_window_activate(xdo_t *xdo, Window wid) {
@@ -226,6 +227,13 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
   long desktop = 0;
   XEvent xev;
   XWindowAttributes wattr;
+
+  if (_xdo_ewmh_is_supported(xdo, "_NET_ACTIVE_WINDOW") == False) {
+    fprintf(stderr,
+            "Your windowmanager claims not to support _NET_ACTIVE_WINDOW, "
+            "so the attempt to activate the window was aborted.\n");
+    return 1;
+  }
 
   /* If this window is on another desktop, let's go to that desktop first */
 
@@ -251,7 +259,8 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
 
   /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
    * Manpage says it will only generate BadWindow or BadValue errors */
-  return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret);
+  printf("netact:%d\n", ret);
+  return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret == 0);
 }
 
 int xdo_set_number_of_desktops(xdo_t *xdo, long ndesktops) {
@@ -259,6 +268,13 @@ int xdo_set_number_of_desktops(xdo_t *xdo, long ndesktops) {
   XEvent xev;
   Window root;
   int ret;
+
+  if (_xdo_ewmh_is_supported(xdo, "_NET_NUMBER_OF_DESKTOPS") == False) {
+    fprintf(stderr,
+            "Your windowmanager claims not to support _NET_NUMBER_OF_DESKTOPS, "
+            "so the attempt to change the number of desktops was aborted.\n");
+    return 1;
+  }
 
   root = RootWindow(xdo->xdpy, 0);
 
@@ -275,7 +291,7 @@ int xdo_set_number_of_desktops(xdo_t *xdo, long ndesktops) {
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  return _is_success("XSendEvent[EWMH:_NET_NUMBER_OF_DESKTOPS]", ret);
+  return _is_success("XSendEvent[EWMH:_NET_NUMBER_OF_DESKTOPS]", ret == 0);
 }
 
 int xdo_get_number_of_desktops(xdo_t *xdo, long *ndesktops) {
@@ -284,8 +300,14 @@ int xdo_get_number_of_desktops(xdo_t *xdo, long *ndesktops) {
   long nitems;
   unsigned char *data;
   Window root;
-
   Atom request;
+
+  if (_xdo_ewmh_is_supported(xdo, "_NET_NUMBER_OF_DESKTOPS") == False) {
+    fprintf(stderr,
+            "Your windowmanager claims not to support _NET_NUMBER_OF_DESKTOPS, "
+            "so the attempt to query the number of desktops was aborted.\n");
+    return 1;
+  }
 
   request = XInternAtom(xdo->xdpy, "_NET_NUMBER_OF_DESKTOPS", False);
   root = XDefaultRootWindow(xdo->xdpy);
@@ -310,6 +332,13 @@ int xdo_set_current_desktop(xdo_t *xdo, long desktop) {
 
   root = RootWindow(xdo->xdpy, 0);
 
+  if (_xdo_ewmh_is_supported(xdo, "_NET_CURRENT_DESKTOP") == False) {
+    fprintf(stderr,
+            "Your windowmanager claims not to support _NET_CURRENT_DESKTOP, "
+            "so the attempt to change desktops was aborted.\n");
+    return 1;
+  }
+
   memset(&xev, 0, sizeof(xev));
   xev.type = ClientMessage;
   xev.xclient.display = xdo->xdpy;
@@ -324,7 +353,7 @@ int xdo_set_current_desktop(xdo_t *xdo, long desktop) {
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  return _is_success("XSendEvent[EWMH:_NET_CURRENT_DESKTOP]", ret);
+  return _is_success("XSendEvent[EWMH:_NET_CURRENT_DESKTOP]", ret == 0);
 }
 
 int xdo_get_current_desktop(xdo_t *xdo, long *desktop) {
@@ -335,6 +364,13 @@ int xdo_get_current_desktop(xdo_t *xdo, long *desktop) {
   Window root;
 
   Atom request;
+
+  if (_xdo_ewmh_is_supported(xdo, "_NET_CURRENT_DESKTOP") == False) {
+    fprintf(stderr,
+            "Your windowmanager claims not to support _NET_CURRENT_DESKTOP, "
+            "so the query for the current desktop was aborted.\n");
+    return 1;
+  }
 
   request = XInternAtom(xdo->xdpy, "_NET_CURRENT_DESKTOP", False);
   root = XDefaultRootWindow(xdo->xdpy);
@@ -356,6 +392,14 @@ int xdo_set_desktop_for_window(xdo_t *xdo, Window wid, long desktop) {
   XWindowAttributes wattr;
   XGetWindowAttributes(xdo->xdpy, wid, &wattr);
 
+  if (_xdo_ewmh_is_supported(xdo, "_NET_WM_DESKTOP") == False) {
+    fprintf(stderr,
+            "Your windowmanager claims not to support _NET_WM_DESKTOP, "
+            "so the attempt to change a window's desktop location was "
+            "aborted.\n");
+    return 1;
+  }
+
   memset(&xev, 0, sizeof(xev));
   xev.type = ClientMessage;
   xev.xclient.display = xdo->xdpy;
@@ -370,7 +414,7 @@ int xdo_set_desktop_for_window(xdo_t *xdo, Window wid, long desktop) {
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  return _is_success("XSendEvent[EWMH:_NET_WM_DESKTOP]", ret);
+  return _is_success("XSendEvent[EWMH:_NET_WM_DESKTOP]", ret == 0);
 }
 
 int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop) {
@@ -378,8 +422,15 @@ int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop) {
   int size;
   long nitems;
   unsigned char *data;
-
   Atom request;
+
+  if (_xdo_ewmh_is_supported(xdo, "_NET_WM_DESKTOP") == False) {
+    fprintf(stderr,
+            "Your windowmanager claims not to support _NET_WM_DESKTOP, "
+            "so the attempt to query a window's desktop location was "
+            "aborted.\n");
+    return 1;
+  }
 
   request = XInternAtom(xdo->xdpy, "_NET_WM_DESKTOP", False);
 
@@ -407,39 +458,37 @@ int xdo_mousemove(xdo_t *xdo, int x, int y)  {
   int ret;
   ret = XTestFakeMotionEvent(xdo->xdpy, -1, x, y, CurrentTime);
   XFlush(xdo->xdpy);
-  return _is_success("XTestFakeMotionEvent", ret);
+  return _is_success("XTestFakeMotionEvent", ret == 0);
 }
 
 int xdo_mousemove_relative(xdo_t *xdo, int x, int y)  {
   int ret;
   ret = XTestFakeRelativeMotionEvent(xdo->xdpy, x, y, CurrentTime);
   XFlush(xdo->xdpy);
-  return _is_success("XTestFakeRelativeMotionEvent", ret);
+  return _is_success("XTestFakeRelativeMotionEvent", ret == 0);
 }
 
 int xdo_mousedown(xdo_t *xdo, int button) {
   int ret;
   ret = XTestFakeButtonEvent(xdo->xdpy, button, True, CurrentTime);
   XFlush(xdo->xdpy);
-  return _is_success("XTestFakeButtonEvent", ret);
+  return _is_success("XTestFakeButtonEvent(down)", ret == 0);
 }
 
 int xdo_mouseup(xdo_t *xdo, int button) {
   int ret;
   ret = XTestFakeButtonEvent(xdo->xdpy, button, False, CurrentTime);
   XFlush(xdo->xdpy);
-  return _is_success("XTestFakeKeyEvent", ret);
+  return _is_success("XTestFakeButtonEvent(up)", ret == 0);
 }
 
 int xdo_click(xdo_t *xdo, int button) {
   int ret;
   ret = xdo_mousedown(xdo, button);
-  if (!ret)
+  if (ret)
     return ret;
   ret = xdo_mouseup(xdo, button);
   return ret;
-
-  /* no need to flush here */
 }
 
 /* XXX: Return proper code if errors found */
@@ -449,6 +498,7 @@ int xdo_type(xdo_t *xdo, char *string) {
   int keycode = 0;
   int shiftcode = 0;
 
+  /* XXX: Add error handling */
   for (i = 0; string[i] != '\0'; i++) {
     key = string[i];
     keycode = _xdo_keycode_from_char(xdo, key);
@@ -465,10 +515,11 @@ int xdo_type(xdo_t *xdo, char *string) {
     XFlush(xdo->xdpy);
   }
 
-  return True;
+  return 0;
 }
 
 int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed) {
+  int ret = 0;
   int *keys = NULL;
   int nkeys;
   int i;
@@ -479,13 +530,12 @@ int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed) {
   }
 
   for (i = 0; i < nkeys; i++) {
-    //fprintf(stderr, "Typing %d (%d)\n", keys[i], pressed);
-    XTestFakeKeyEvent(xdo->xdpy, keys[i], pressed, CurrentTime);
+    ret += !XTestFakeKeyEvent(xdo->xdpy, keys[i], pressed, CurrentTime);
   }
 
   free(keys);
   XFlush(xdo->xdpy);
-  return True;
+  return ret;
 }
   
 int xdo_keysequence_down(xdo_t *xdo, char *keyseq) {
@@ -497,9 +547,10 @@ int xdo_keysequence_up(xdo_t *xdo, char *keyseq) {
 }
 
 int xdo_keysequence(xdo_t *xdo, char *keyseq) {
-  _xdo_keysequence_do(xdo, keyseq, True);
-  _xdo_keysequence_do(xdo, keyseq, False);
-  return True;
+  int ret;
+  ret += _xdo_keysequence_do(xdo, keyseq, True);
+  ret += _xdo_keysequence_do(xdo, keyseq, False);
+  return ret;
 }
 
 /* Add by Lee Pumphret 2007-07-28
@@ -508,7 +559,7 @@ int xdo_window_get_focus(xdo_t *xdo, Window *window_ret) {
   int ret;
   int unused_revert_ret;
   ret = XGetInputFocus(xdo->xdpy, window_ret, &unused_revert_ret);
-  return _is_success("XGetInputFocus", ret);
+  return _is_success("XGetInputFocus", ret == 0);
 }
 
 /* Helper functions */
@@ -730,21 +781,9 @@ int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re) {
 }
 
 int _is_success(const char *funcname, int code) {
-  if (code == BadMatch) {
-    fprintf(stderr, "%s failed: got bad match\n", funcname);
-    return False;
-  } else if (code == BadValue) {
-    fprintf(stderr, "%s failed: got bad value\n", funcname);
-    return False;
-  } else if (code == BadWindow) {
-    fprintf(stderr, "%s failed: got bad window\n", funcname);
-    return False;
-  } else if (code != 1) {
+  if (code != 0)
     fprintf(stderr, "%s failed (code=%d)\n", funcname, code);
-    return False;
-  }
-
-  return True;
+  return code;
 }
 
 int _xdo_is_window_visible(xdo_t *xdo, Window wid) {
