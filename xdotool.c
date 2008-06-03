@@ -89,7 +89,9 @@ struct dispatch {
 
 int main(int argc, char **argv) {
   char *cmd;
+  char *prog;
   int ret = 0;
+  int cmd_found = 0;
   int i;
 
   if (argc < 2) {
@@ -98,8 +100,9 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  cmd = *++argv; /* argv[1] */
-  argc -= 1; /* ignore arg0 (program name) */
+  prog = *argv;
+  argv++; argc--;
+  cmd = *argv; /* argv[1] */
 
   xdo = xdo_new(getenv("DISPLAY"));
   if (xdo == NULL) {
@@ -107,11 +110,17 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  for (i = 0; dispatch[i].name != NULL; i++) {
+  for (i = 0; dispatch[i].name != NULL && !cmd_found; i++) {
     if (!strcasecmp(dispatch[i].name, cmd)) {
       ret = dispatch[i].func(argc, argv);
-      break;
+      cmd_found = 1;
     }
+  }
+
+  if (!cmd_found) {
+    fprintf(stderr, "Unknown command: %s\n", cmd);
+    fprintf(stderr, "Run '%s help' if you want a command list\n", prog);
+    ret = 1;
   }
 
   xdo_free(xdo);
