@@ -259,7 +259,6 @@ int xdo_window_activate(xdo_t *xdo, Window wid) {
 
   /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
    * Manpage says it will only generate BadWindow or BadValue errors */
-  printf("netact:%d\n", ret);
   return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret == 0);
 }
 
