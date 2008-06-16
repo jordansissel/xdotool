@@ -21,12 +21,14 @@
 
 int cmd_click(int argc, char **args);
 int cmd_getwindowfocus(int argc, char **args);
+int cmd_getactivewindow(int argc, char **args);
 int cmd_help(int argc, char **args);
 int cmd_key(int argc, char **args);
 int cmd_mousedown(int argc, char **args);
 int cmd_mousemove(int argc, char **args);
 int cmd_mousemove_relative(int argc, char **args);
 int cmd_mouseup(int argc, char **args);
+int cmd_mouselocation(int argc, char **args);
 int cmd_search(int argc, char **args);
 int cmd_type(int argc, char **args);
 int cmd_windowactivate(int argc, char **args);
@@ -54,6 +56,7 @@ struct dispatch {
 } dispatch[] = {
   /* Query functions */
   { "getwindowfocus", cmd_getwindowfocus, },
+  { "getactivewindow", cmd_getactivewindow, },
   { "search", cmd_search, },
 
   /* Help me! */
@@ -69,6 +72,7 @@ struct dispatch {
   { "mousemove", cmd_mousemove, },
   { "mousemove_relative", cmd_mousemove_relative, },
   { "mouseup", cmd_mouseup, },
+  { "mouselocation", cmd_mouselocation, },
   { "type", cmd_type, },
   { "windowactivate", cmd_windowactivate, },
   { "windowfocus", cmd_windowfocus, },
@@ -222,7 +226,22 @@ int cmd_mouseup(int argc, char **args) {
   ret = xdo_mouseup(xdo, button);
   if (ret)
     fprintf(stderr, "xdo_mouseup reported an error\n");
-  
+
+  return ret;
+}
+
+int cmd_mouselocation(int argc, char **args) {
+  int x, y, screen_num;
+  int ret;
+  char *cmd = *args; argc--; args++;
+
+  if (argc != 0) {
+    fprintf(stderr, "usage: %s\n", cmd);
+    return 1;
+  }
+
+  ret = xdo_mouselocation(xdo, &x, &y, &screen_num);
+  printf("x:%d y:%d screen:%d\n", x, y, screen_num);
   return ret;
 }
 
@@ -509,6 +528,25 @@ int cmd_getwindowfocus(int argc, char **args) {
   }
 
   return ret;
+}
+
+int cmd_getactivewindow(int argc, char **args) {
+  Window wid = 0;
+  int ret;
+  char *cmd = *args; argc--; args++;
+
+  if (argc != 0) {
+    printf("usage: %s\n", cmd);
+    return 1;
+  }
+
+  ret = xdo_window_get_active(xdo, &wid);
+
+  if (ret) {
+    fprintf(stderr, "xdo_get_active_window reported an error\n");
+  } else {
+    window_print(wid);
+  }
 }
 
 int cmd_windowmap(int argc, char **args) {

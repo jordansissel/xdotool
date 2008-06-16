@@ -49,6 +49,7 @@ int xdo_mousemove(xdo_t *xdo, int x, int y);
 int xdo_mousemove_relative(xdo_t *xdo, int x, int y);
 int xdo_mousedown(xdo_t *xdo, int button);
 int xdo_mouseup(xdo_t *xdo, int button);
+int xdo_mouselocation(xdo_t *xdo, int *x, int *y, int *screen_num);
 
 int xdo_click(xdo_t *xdo, int button);
 
@@ -68,6 +69,7 @@ int xdo_window_map(xdo_t *xdo, Window wid);
 int xdo_window_unmap(xdo_t *xdo, Window wid);
 
 /* pager-like behaviors */
+int xdo_window_get_active(xdo_t *xdo, Window *window_ret);
 int xdo_set_number_of_desktops(xdo_t *xdo, long ndesktops);
 int xdo_get_number_of_desktops(xdo_t *xdo, long *ndesktops);
 int xdo_set_current_desktop(xdo_t *xdo, long desktop);

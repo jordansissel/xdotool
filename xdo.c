@@ -444,6 +444,34 @@ int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop) {
                      *desktop == -1);
 }
 
+int xdo_window_get_active(xdo_t *xdo, Window *window_ret) {
+  Atom type;
+  int size;
+  long nitems;
+  unsigned char *data;
+  Atom request;
+  Window root;
+
+  if (_xdo_ewmh_is_supported(xdo, "_NET_ACTIVE_WINDOW") == False) {
+    fprintf(stderr,
+            "Your windowmanager claims not to support _NET_ACTIVE_WINDOW, "
+            "so the attempt to query the active window aborted.\n");
+    return 1;
+  }
+
+  request = XInternAtom(xdo->xdpy, "_NET_ACTIVE_WINDOW", False);
+  root = XDefaultRootWindow(xdo->xdpy);
+  data = _xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+
+  if (nitems > 0)
+    *window_ret = *((Window*)data);
+  else
+    *window_ret = 0;
+
+  return _is_success("XGetWindowProperty[_NET_ACTIVE_WINDOW]",
+                     *window_ret == 0);
+}
+
 /* XRaiseWindow is ignored in ion3 and Gnome2. Is it even useful? */
 int xdo_window_raise(xdo_t *xdo, Window wid) {
   int ret;
@@ -479,6 +507,36 @@ int xdo_mouseup(xdo_t *xdo, int button) {
   ret = XTestFakeButtonEvent(xdo->xdpy, button, False, CurrentTime);
   XFlush(xdo->xdpy);
   return _is_success("XTestFakeButtonEvent(up)", ret == 0);
+}
+
+int xdo_mouselocation(xdo_t *xdo, int *x_ret, int *y_ret, int *screen_num_ret) {
+  int ret = False;
+  int x = 0, y = 0, screen_num = 0;
+  int i = 0;
+  Window dummy_win = 0;
+  int dummy_int = 0;
+  unsigned int dummy_uint = 0;
+  int screencount = ScreenCount(xdo->xdpy);
+
+  for (i = 0; i < screencount; i++) {
+    Screen *screen = ScreenOfDisplay(xdo->xdpy, i);
+    ret = XQueryPointer(xdo->xdpy, RootWindowOfScreen(screen),
+                        &dummy_win, &dummy_win,
+                        &x, &y, &dummy_int, &dummy_int, &dummy_uint);
+    if (ret == True) {
+      screen_num = i;
+      break;
+    }
+  }
+
+  if (ret == True) {
+    if (x_ret != NULL) *x_ret = x;
+    if (y_ret != NULL) *y_ret = y;
+    if (screen_num_ret != NULL) *screen_num_ret = screen_num;
+  }
+
+  return _is_success("XQueryPointer", ret == False);
+
 }
 
 int xdo_click(xdo_t *xdo, int button) {
