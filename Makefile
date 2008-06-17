@@ -1,12 +1,12 @@
-PREFIX=/usr/local
-INSTALLBIN=/usr/local/bin
-INSTALLMAN=/usr/local/man
+PREFIX?=/usr/local
+INSTALLBIN=$(PREFIX)/bin
+INSTALLMAN=$(PREFIX)/man
 
-WARNFLAGS+=-pedantic -Wall -W -Wno-missing-field-initializers -Wundef \
+WARNFLAGS+=-pedantic -Wall -W -Wundef \
            -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast \
            -Wcast-align -Wwrite-strings -Wstrict-prototypes \
            -Wmissing-prototypes -Wnested-externs -Winline \
-           -Wdisabled-optimization
+           -Wdisabled-optimization -Wno-missing-field-initializers
 
 CFLAGS=-pipe -std=c99 $(WARNFLAGS)
 
@@ -40,16 +40,16 @@ clean:
 	rm -f *.o xdotool xdotool.1 || true
 
 xdo.o: xdo.c
-	gcc $(CFLAGS) -c xdo.c
+	$(CC) $(CFLAGS) -c xdo.c
 
 xdotool.o: xdotool.c
-	gcc $(CFLAGS) -c xdotool.c
+	$(CC) $(CFLAGS) -c xdotool.c
 
 xdo.c: xdo.h
 xdotool.c: xdo.h
 
 xdotool: xdotool.o xdo.o
-	gcc $(CFLAGS) $(LDFLAGS) xdotool.o xdo.o -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) xdotool.o xdo.o -o $@
 
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@
