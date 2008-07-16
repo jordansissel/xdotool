@@ -102,14 +102,14 @@ void xdo_free(xdo_t *xdo) {
 }
 
 int xdo_window_map(xdo_t *xdo, Window wid) {
-  int ret;
+  int ret = 0;
   ret = XMapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
   return _is_success("XMapWindow", ret == 0);
 }
 
 int xdo_window_unmap(xdo_t *xdo, Window wid) {
-  int ret;
+  int ret = 0;
   ret = XUnmapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
   return _is_success("XUnmapWindow", ret == 0);
@@ -123,8 +123,8 @@ int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
   int window_list_size = 0;
   int matched_window_list_size = 100;
 
-  int ret;
-  int i;
+  int ret = 0;
+  int i = 0;
 
   ret = regcomp(&re, regex, REG_EXTENDED | REG_ICASE);
   if (ret != 0) {
@@ -170,7 +170,7 @@ int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
 
 int xdo_window_move(xdo_t *xdo, Window wid, int x, int y) {
   XWindowChanges wc;
-  int ret;
+  int ret = 0;
   wc.x = x;
   wc.y = y;
 
@@ -180,7 +180,7 @@ int xdo_window_move(xdo_t *xdo, Window wid, int x, int y) {
 
 int xdo_window_setsize(xdo_t *xdo, Window wid, int width, int height, int flags) {
   XWindowChanges wc;
-  int ret;
+  int ret = 0;
   int cw_flags = 0;
 
   wc.width = width;
@@ -216,14 +216,14 @@ int xdo_window_setsize(xdo_t *xdo, Window wid, int width, int height, int flags)
 }
 
 int xdo_window_focus(xdo_t *xdo, Window wid) {
-  int ret;
+  int ret = 0;
   ret = XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
   XFlush(xdo->xdpy);
   return _is_success("XSetInputFocus", ret == 0);
 }
 
 int xdo_window_activate(xdo_t *xdo, Window wid) {
-  int ret;
+  int ret = 0;
   long desktop = 0;
   XEvent xev;
   XWindowAttributes wattr;
@@ -266,7 +266,7 @@ int xdo_set_number_of_desktops(xdo_t *xdo, long ndesktops) {
   /* XXX: This should support passing a screen number */
   XEvent xev;
   Window root;
-  int ret;
+  int ret = 0;
 
   if (_xdo_ewmh_is_supported(xdo, "_NET_NUMBER_OF_DESKTOPS") == False) {
     fprintf(stderr,
@@ -327,7 +327,7 @@ int xdo_set_current_desktop(xdo_t *xdo, long desktop) {
   /* XXX: This should support passing a screen number */
   XEvent xev;
   Window root;
-  int ret;
+  int ret = 0;
 
   root = RootWindow(xdo->xdpy, 0);
 
@@ -387,7 +387,7 @@ int xdo_get_current_desktop(xdo_t *xdo, long *desktop) {
 
 int xdo_set_desktop_for_window(xdo_t *xdo, Window wid, long desktop) {
   XEvent xev;
-  int ret;
+  int ret = 0;
   XWindowAttributes wattr;
   XGetWindowAttributes(xdo->xdpy, wid, &wattr);
 
@@ -474,7 +474,7 @@ int xdo_window_get_active(xdo_t *xdo, Window *window_ret) {
 
 /* XRaiseWindow is ignored in ion3 and Gnome2. Is it even useful? */
 int xdo_window_raise(xdo_t *xdo, Window wid) {
-  int ret;
+  int ret = 0;
   ret = XRaiseWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
   return _is_success("XRaiseWindow", ret == 0);
@@ -482,28 +482,28 @@ int xdo_window_raise(xdo_t *xdo, Window wid) {
 
 /* XXX: Include 'screen number' support? */
 int xdo_mousemove(xdo_t *xdo, int x, int y)  {
-  int ret;
+  int ret = 0;
   ret = XTestFakeMotionEvent(xdo->xdpy, -1, x, y, CurrentTime);
   XFlush(xdo->xdpy);
   return _is_success("XTestFakeMotionEvent", ret == 0);
 }
 
 int xdo_mousemove_relative(xdo_t *xdo, int x, int y)  {
-  int ret;
+  int ret = 0;
   ret = XTestFakeRelativeMotionEvent(xdo->xdpy, x, y, CurrentTime);
   XFlush(xdo->xdpy);
   return _is_success("XTestFakeRelativeMotionEvent", ret == 0);
 }
 
 int xdo_mousedown(xdo_t *xdo, int button) {
-  int ret;
+  int ret = 0;
   ret = XTestFakeButtonEvent(xdo->xdpy, button, True, CurrentTime);
   XFlush(xdo->xdpy);
   return _is_success("XTestFakeButtonEvent(down)", ret == 0);
 }
 
 int xdo_mouseup(xdo_t *xdo, int button) {
-  int ret;
+  int ret = 0;
   ret = XTestFakeButtonEvent(xdo->xdpy, button, False, CurrentTime);
   XFlush(xdo->xdpy);
   return _is_success("XTestFakeButtonEvent(up)", ret == 0);
@@ -540,7 +540,7 @@ int xdo_mouselocation(xdo_t *xdo, int *x_ret, int *y_ret, int *screen_num_ret) {
 }
 
 int xdo_click(xdo_t *xdo, int button) {
-  int ret;
+  int ret = 0;
   ret = xdo_mousedown(xdo, button);
   if (ret)
     return ret;
@@ -604,7 +604,7 @@ int xdo_keysequence_up(xdo_t *xdo, char *keyseq) {
 }
 
 int xdo_keysequence(xdo_t *xdo, char *keyseq) {
-  int ret;
+  int ret = 0;
   ret += _xdo_keysequence_do(xdo, keyseq, True);
   ret += _xdo_keysequence_do(xdo, keyseq, False);
   return ret;
@@ -613,7 +613,7 @@ int xdo_keysequence(xdo_t *xdo, char *keyseq) {
 /* Add by Lee Pumphret 2007-07-28
  * Modified slightly by Jordan Sissel */
 int xdo_window_get_focus(xdo_t *xdo, Window *window_ret) {
-  int ret;
+  int ret = 0;
   int unused_revert_ret;
   ret = XGetInputFocus(xdo->xdpy, window_ret, &unused_revert_ret);
   return _is_success("XGetInputFocus", ret == 0);
