@@ -1,3 +1,6 @@
+20080716:
+  * Fix return codes in xdo_keysequence() and other functions
+
 20080606:
   * Correctly report an error if xdotool is invoked with an invalid command.
   * Fix invalid error code reporting from 'windowraise'
