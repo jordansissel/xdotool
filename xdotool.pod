@@ -71,6 +71,10 @@ Send 'mouse up for the given button
 
 Send mousedown followed by mouseup for the given button
 
+=item B<getmouselocation>
+
+Outputs the x, y, and screen location of the mouse cursor. Screen numbers will be nonzero if you have multiple monitors and are not using Xinerama.
+
 =back
 
 =head1 WINDOW COMMANDS
@@ -155,6 +159,11 @@ if the window is on another desktop, we will switch to that desktop. It also
 uses a different method for bringing the window up. I recommend trying this
 command before using windowfocus, as it will work on more window managers.
 
+=item B<getactivewindow>
+
+Output the current active window. This command is often more reliable than
+getwindowfocus.
+
 =item B<set_num_desktops> I<number>
 
 Changes the number of desktops or workspaces.
@@ -201,10 +210,10 @@ C<set_desktop>, C<get_desktop>.
 Query and set what desktop a window is living in. Support for this enables
 these commands: C<set_desktop_for_window>, C<get_desktop_for_window>.
 
-=item _NET_ACTIVATE_WINDOW
+=item _NET_ACTIVE_WINDOW
 
-Activate a window by asking the window manager to bring it forward. Support for
-this enables these commands: C<windowactivate>.
+Allows you to query and set the active window by asking the window manager to
+bring it forward. Support for this enables these commands: C<windowactivate>, C<getactivewindow>.
 
 =back
 
