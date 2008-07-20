@@ -1,3 +1,11 @@
+20080720:
+  * Add 'getmouselocation' which ouputs the coordinate of the mouse cursor and
+    the screen number the mouse is on.
+  * Add 'getactivewindow' which uses NETWM to query the active window; this is
+    often more reliable than 'getwindowfocus' assuming your window manager
+    supports it
+  * Fix typos in the documentationn.
+
 20080716:
   * Fix return codes in xdo_keysequence() and other functions
 
