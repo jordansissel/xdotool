@@ -1,6 +1,6 @@
 PREFIX?=/usr/local
-INSTALLBIN=$(PREFIX)/bin
-INSTALLMAN=$(PREFIX)/man
+INSTALLBIN?=$(PREFIX)/bin
+INSTALLMAN?=$(PREFIX)/man
 
 WARNFLAGS+=-pedantic -Wall -W -Wundef \
            -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast \
