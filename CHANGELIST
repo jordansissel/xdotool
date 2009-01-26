@@ -1,3 +1,14 @@
+20090126:
+  * Change the default behavior of 'getwindowfocus' to get the first
+    ancestor-or-self window that has WM_CLASS set. WM_CLASS will be set on
+    (all?) top-level windows and it's possible that the currently focused window
+    according to X is not a top-level window. To use the previous behavior, use
+    'getwindowfocus -f'
+  * Make 'xdotool key at' work correctly. 'at' is usually Shift+2, for example.
+    Now all shifted characters should work, but I've only tested on a US
+    keyboard.
+  * Minor Makefile fixes for package maintainers.
+
 20080720:
   * Add 'getmouselocation' which ouputs the coordinate of the mouse cursor and
     the screen number the mouse is on.
