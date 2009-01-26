@@ -35,7 +35,8 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
                                    int *ntotal_windows, 
                                    int *window_list_size);
 
-static int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq, int **keys, int *nkeys);
+static int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
+                                            charcodemap_t **keys, int *nkeys);
 static int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed);
 static int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re);
 static int _xdo_is_window_visible(xdo_t *xdo, Window wid);
@@ -46,7 +47,7 @@ static int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature);
 static int _is_success(const char *funcname, int code);
 
 /* context-free functions */
-char _keysym_to_char(char *keysym);
+static char _keysym_to_char(const char *keysym);
 
 xdo_t* xdo_new(char *display_name) {
   Display *xdpy;
@@ -561,11 +562,11 @@ int xdo_type(xdo_t *xdo, char *string) {
     keycode = _xdo_keycode_from_char(xdo, key);
     shiftcode = _xdo_get_shiftcode_if_needed(xdo, key);
 
-    if (shiftcode)
+    if (shiftcode > 0)
       XTestFakeKeyEvent(xdo->xdpy, shiftcode, True, CurrentTime);
     XTestFakeKeyEvent(xdo->xdpy, keycode, True, CurrentTime);
     XTestFakeKeyEvent(xdo->xdpy, keycode, False, CurrentTime);
-    if (shiftcode)
+    if (shiftcode > 0)
       XTestFakeKeyEvent(xdo->xdpy, shiftcode, False, CurrentTime);
 
     /* XXX: Flush here or at the end? */
@@ -577,17 +578,28 @@ int xdo_type(xdo_t *xdo, char *string) {
 
 int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed) {
   int ret = 0;
-  int *keys = NULL;
-  int nkeys;
+  charcodemap_t *keys = NULL;
+  int nkeys = 0;
   int i;
+  KeyCode shiftcode;
 
   if (_xdo_keysequence_to_keycode_list(xdo, keyseq, &keys, &nkeys) == False) {
     fprintf(stderr, "Failure converting key sequence '%s' to keycodes\n", keyseq);
     return False;
   }
 
+  /* If shiftcode is necessary, send shift before the key if pressed is true,
+   * otherwise release the shift key after the key is released */
   for (i = 0; i < nkeys; i++) {
-    ret += !XTestFakeKeyEvent(xdo->xdpy, keys[i], pressed, CurrentTime);
+    shiftcode = keys[i].shift;
+
+    if (pressed > 0 && shiftcode)
+      ret += !XTestFakeKeyEvent(xdo->xdpy, shiftcode, pressed, CurrentTime);
+
+    ret += !XTestFakeKeyEvent(xdo->xdpy, keys[i].code, pressed, CurrentTime);
+
+    if (pressed == 0 && shiftcode)
+      ret += !XTestFakeKeyEvent(xdo->xdpy, shiftcode, pressed, CurrentTime);
   }
 
   free(keys);
@@ -684,7 +696,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
 }
 
 /* context-free functions */
-char _keysym_to_char(char *keysym) {
+char _keysym_to_char(const char *keysym) {
   int i;
 
   if (keysym == NULL)
@@ -738,11 +750,13 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
   XFree(children);
 }
 
-int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq, int **keys, int *nkeys) {
+int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
+                                     charcodemap_t **keys, int *nkeys) {
   char *tokctx = NULL;
   const char *tok = NULL;
   char *strptr = NULL;
   int i;
+  KeyCode shift_keycode;
   
   /* Array of keys to press, in order given by keyseq */
   int keys_size = 10;
@@ -753,10 +767,14 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq, int **keys, int *
     return False;
   }
 
-  *keys = malloc(keys_size * sizeof(int));
+  shift_keycode = XKeysymToKeycode(xdo->xdpy, XStringToKeysym("Shift_L"));
+
+  *keys = malloc(keys_size * sizeof(KeyCode));
   strptr = strdup(keyseq);
   while ((tok = strtok_r(strptr, "+", &tokctx)) != NULL) {
-    int keysym;
+    KeySym sym;
+    KeyCode key;
+
     if (strptr != NULL)
       strptr = NULL;
 
@@ -766,15 +784,21 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq, int **keys, int *
       if (!strcasecmp(tok, symbol_map[i]))
         tok = symbol_map[i + 1];
 
-    keysym = XStringToKeysym(tok);
-    if (keysym == NoSymbol) {
+    sym = XStringToKeysym(tok);
+    if (sym == NoSymbol) {
       fprintf(stderr, "(symbol) No such key name '%s'. Ignoring it.\n", tok);
       continue;
     }
 
-    (*keys)[*nkeys] = XKeysymToKeycode(xdo->xdpy, keysym);
+    key = XKeysymToKeycode(xdo->xdpy, sym);
+    (*keys)[*nkeys].code = key;
+    if (XKeycodeToKeysym(xdo->xdpy, key, 0) == sym) {
+      (*keys)[*nkeys].shift = 0;
+    } else  {
+      (*keys)[*nkeys].shift = shift_keycode;
+    }
 
-    if ((*keys)[*nkeys] == 0) {
+    if ((*keys)[*nkeys].code == 0) {
       fprintf(stderr, "No such key '%s'. Ignoring it.\n", tok);
       continue;
     }
@@ -782,7 +806,7 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq, int **keys, int *
     (*nkeys)++;
     if (*nkeys == keys_size) {
       keys_size *= 2;
-      *keys = realloc(*keys, keys_size);
+      *keys = realloc(*keys, keys_size * sizeof(KeyCode));
     }
   }
 
