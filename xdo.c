@@ -627,8 +627,52 @@ int xdo_keysequence(xdo_t *xdo, char *keyseq) {
 int xdo_window_get_focus(xdo_t *xdo, Window *window_ret) {
   int ret = 0;
   int unused_revert_ret;
+
   ret = XGetInputFocus(xdo->xdpy, window_ret, &unused_revert_ret);
   return _is_success("XGetInputFocus", ret == 0);
+}
+
+/* Like xdo_window_get_focus, but return the first ancestor-or-self window
+ * having a property of WM_CLASS. This allows you to get the "real" or
+ * top-level-ish window having focus rather than something you may
+ * not expect to be the window having focused. */
+int xdo_window_sane_get_focus(xdo_t *xdo, Window *window_ret) {
+  int done = 0;
+  Window w;
+  XClassHint classhint;
+
+  /* for XQueryTree */
+  Window dummy, parent, *children = NULL;
+  unsigned int nchildren;
+
+  xdo_window_get_focus(xdo, &w);
+
+  while (!done) {
+    Status s;
+    s = XGetClassHint(xdo->xdpy, w, &classhint);
+    //fprintf(stderr, "%d\n", s);
+
+    if (s == 0) {
+      /* Error. This window doesn't have a class hint */
+      //fprintf(stderr, "no class on: %d\n", w);
+      XQueryTree(xdo->xdpy, w, &dummy, &parent, &children, &nchildren);
+
+      /* Don't care about the children, but we still need to free them */
+      if (children != NULL)
+        XFree(children);
+      //fprintf(stderr, "parent: %d\n", parent);
+      w = parent;
+    } else {
+      /* Must XFree the class and name items. */
+      XFree(classhint.res_class);
+      XFree(classhint.res_name);
+
+      done = 1;
+    }
+  }
+
+  *window_ret = w;
+  return _is_success("xdo_window_sane_get_focus", w == 0);
 }
 
 /* Helper functions */
@@ -730,7 +774,6 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
     *total_window_list = malloc(*window_list_size * sizeof(Window));
   }
 
-  /* foo */
   if (!XQueryTree(xdo->xdpy, window, &dummy, &dummy, &children, &nchildren))
     return;
 

@@ -136,7 +136,7 @@ void window_print(Window wid) {
   printf("%ld\n", wid);
 }
 
-int cmd_help(int argc, char **args) {
+int cmd_help(int unused_argc, char **unused_args) {
   int i;
   printf("Available commands:\n");
   for (i = 0; dispatch[i].name != NULL; i++)
@@ -324,7 +324,7 @@ int cmd_windowmove(int argc, char **args) {
   char *cmd = *args; argc--; args++;
 
   if (argc != 3) {
-    printf("usage: %s wid x y\n", cmd);
+    fprintf(stderr, "usage: %s wid x y\n", cmd);
     return 1;
   }
 
@@ -345,7 +345,7 @@ int cmd_windowactivate(int argc, char **args) {
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
-    printf("usage: %s wid\n", cmd);
+    fprintf(stderr, "usage: %s wid\n", cmd);
     return 1;
   }
 
@@ -364,7 +364,7 @@ int cmd_windowfocus(int argc, char **args) {
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
-    printf("usage: %s wid\n", cmd);
+    fprintf(stderr, "usage: %s wid\n", cmd);
     return 1;
   }
 
@@ -382,7 +382,7 @@ int cmd_windowraise(int argc, char **args) {
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
-    printf("usage: %s wid\n", cmd);
+    fprintf(stderr, "usage: %s wid\n", cmd);
     return 1;
    }
 
@@ -425,7 +425,7 @@ int cmd_windowsize(int argc, char **args) {
   argc -= optind;
 
   if (argc != 3) {
-    printf("usage: %s wid width height\n", cmd);
+    fprintf(stderr, "usage: %s wid width height\n", cmd);
     return 1;
   }
 
@@ -514,12 +514,21 @@ int cmd_getwindowfocus(int argc, char **args) {
   Window wid = 0;
   char *cmd = *args; argc--; args++;
 
-  if (argc != 0) {
-    printf("usage: %s\n", cmd);
+  if (argc > 1) {
+    fprintf(stderr, "usage: %s -f\n", cmd);
     return 1;
   }
 
-  ret = xdo_window_get_focus(xdo, &wid);
+  if (argc == 1) {
+    if (!strcmp(args[0], "-f")) { /* -f was given */
+      ret = xdo_window_get_focus(xdo, &wid);
+    } else {
+      fprintf(stderr, "usage: %s -f\n", cmd);
+    }
+  } else {
+    /* No '-f' flag given, assume sane mode */
+    ret = xdo_window_sane_get_focus(xdo, &wid);
+  }
 
   if (ret) {
     fprintf(stderr, "xdo_window_focus reported an error\n");
@@ -536,7 +545,7 @@ int cmd_getactivewindow(int argc, char **args) {
   char *cmd = *args; argc--; args++;
 
   if (argc != 0) {
-    printf("usage: %s\n", cmd);
+    fprintf(stderr, "usage: %s\n", cmd);
     return 1;
   }
 
@@ -547,6 +556,8 @@ int cmd_getactivewindow(int argc, char **args) {
   } else {
     window_print(wid);
   }
+
+  return ret;
 }
 
 int cmd_windowmap(int argc, char **args) {
@@ -573,7 +584,7 @@ int cmd_windowunmap(int argc, char **args) {
   char *cmd = *args; argc--; args++;
 
   if (argc != 1) {
-    printf("usage: %s wid\n", cmd);
+    fprintf(stderr, "usage: %s wid\n", cmd);
     return 1;
   }
 
@@ -590,7 +601,7 @@ int cmd_set_num_desktops(int argc, char **args) {
   long ndesktops;
 
   if (argc != 1) {
-    printf("usage: %s num_desktops\n", cmd);
+    fprintf(stderr, "usage: %s num_desktops\n", cmd);
     return 1;
   }
 
@@ -605,7 +616,7 @@ int cmd_get_num_desktops(int argc, char **args) {
   long ndesktops = 0;
 
   if (argc != 0) {
-    printf("usage: %s\n", cmd);
+    fprintf(stderr, "usage: %s\n", cmd);
     return 1;
   }
 
@@ -620,7 +631,7 @@ int cmd_set_desktop(int argc, char **args) {
   long desktop;
 
   if (argc != 1) {
-    printf("usage: %s desktop\n", cmd);
+    fprintf(stderr, "usage: %s desktop\n", cmd);
     return 1;
   }
 
@@ -635,7 +646,7 @@ int cmd_get_desktop(int argc, char **args) {
   long desktop = 0;
 
   if (argc != 0) {
-    printf("usage: %s\n", cmd);
+    fprintf(stderr, "usage: %s\n", cmd);
     return 1;
   }
 
@@ -650,7 +661,7 @@ int cmd_set_desktop_for_window(int argc, char **args) {
   Window window = 0;
 
   if (argc != 2) {
-    printf("usage: %s <window> <desktop>\n", cmd);
+    fprintf(stderr, "usage: %s <window> <desktop>\n", cmd);
     return 1;
   }
 
@@ -667,7 +678,7 @@ int cmd_get_desktop_for_window(int argc, char **args) {
   Window window = 0;
 
   if (argc != 1) {
-    printf("usage: %s <window>\n", cmd);
+    fprintf(stderr, "usage: %s <window>\n", cmd);
     return 1;
   }
 

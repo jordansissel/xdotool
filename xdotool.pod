@@ -102,9 +102,16 @@ The options available are:
 
 The default options are C<--title --name --class>
 
-=item B<getwindowfocus>
+=item B<getwindowfocus> [-f]
 
-Prints the window id of the currently focused window
+Prints the window id of the currently focused window. 
+
+If the current window has no WM_CLASS property, we assume it is not a normal
+top-level window and traverse up the parents until we find a window with a
+WM_CLASS set and return that window id.
+
+If you really want the window currently having focus and don't care if it has a
+WM_CLASS setting, then use 'getwindowfocus -f'
 
 =item B<windowsize> [options] windowid width height
 
