@@ -602,7 +602,9 @@ int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed) {
       ret += !XTestFakeKeyEvent(xdo->xdpy, shiftcode, pressed, CurrentTime);
   }
 
-  free(keys);
+  if (keys != NULL) {
+    free(keys);
+  }
   XFlush(xdo->xdpy);
   return ret;
 }
@@ -797,7 +799,7 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
                                      charcodemap_t **keys, int *nkeys) {
   char *tokctx = NULL;
   const char *tok = NULL;
-  char *strptr = NULL;
+  char *keyseq_copy = NULL, *strptr = NULL;
   int i;
   KeyCode shift_keycode;
   
@@ -812,8 +814,8 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
 
   shift_keycode = XKeysymToKeycode(xdo->xdpy, XStringToKeysym("Shift_L"));
 
-  *keys = malloc(keys_size * sizeof(KeyCode));
-  strptr = strdup(keyseq);
+  *keys = malloc(keys_size * sizeof(charcodemap_t));
+  keyseq_copy = strptr = strdup(keyseq);
   while ((tok = strtok_r(strptr, "+", &tokctx)) != NULL) {
     KeySym sym;
     KeyCode key;
@@ -853,7 +855,7 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
     }
   }
 
-  free(strptr);
+  free(keyseq_copy);
 
   return True;
 }
