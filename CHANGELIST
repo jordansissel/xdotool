@@ -1,3 +1,8 @@
+20090330:
+  * Fix bug where we use the wrong type in sizeof() for allocating character
+    code map.
+  * Fix tiny problem where we would try to free() an invalid pointer
+
 20090126:
   * Change the default behavior of 'getwindowfocus' to get the first
     ancestor-or-self window that has WM_CLASS set. WM_CLASS will be set on

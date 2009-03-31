@@ -243,7 +243,7 @@ L<http://code.google.com/p/semicomplete/issues/list>
 xdotool was written by Jordan Sissel.
 
 This manual page was written originally by Daniel Kahn Gillmor
-E<lt>dkg-debian.org@fifthhorseman.netE<gt> for the Debian project (but may be
+E<lt>dkg@fifthhorseman.netE<gt> for the Debian project (but may be
 used by others). It is maintained by Jordan Sissel.
 
 =cut
