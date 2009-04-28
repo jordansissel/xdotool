@@ -271,7 +271,7 @@ int cmd_type(int argc, char **args) {
   }
 
   for (i = 0; i < argc; i++) {
-    int tmp = xdo_type(xdo, args[i]);
+    int tmp = xdo_type(xdo, args[i], 50000); /* 0.05 seconds per keystroke */
 
     if (tmp) {
       fprintf(stderr, "xdo_type reported an error\n");

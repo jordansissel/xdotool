@@ -550,7 +550,7 @@ int xdo_click(xdo_t *xdo, int button) {
 }
 
 /* XXX: Return proper code if errors found */
-int xdo_type(xdo_t *xdo, char *string) {
+int xdo_type(xdo_t *xdo, char *string, useconds_t delay) {
   int i = 0;
   char key = '0';
   int keycode = 0;
@@ -571,6 +571,8 @@ int xdo_type(xdo_t *xdo, char *string) {
 
     /* XXX: Flush here or at the end? */
     XFlush(xdo->xdpy);
+
+    usleep(delay);
   }
 
   return 0;
