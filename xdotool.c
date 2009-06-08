@@ -266,9 +266,11 @@ int cmd_type(int argc, char **args) {
   int c;
   char *cmd = *args;
   Window window = 0;
+  useconds_t delay = 12000; /* 12ms between keystrokes default */
 
   struct option longopts[] = {
     { "window", required_argument, NULL, 'w' },
+    { "delay", required_argument, NULL, 'd' },
     { 0, 0, 0, 0 },
   };
 
@@ -281,6 +283,10 @@ int cmd_type(int argc, char **args) {
       case 'w':
         window = strtoul(optarg, NULL, 0);
         break;
+      case 'd':
+        /* --delay is in milliseconds, convert to microseconds */
+        delay = strtoul(optarg, NULL, 0) * 1000;
+        break;
     }
 
     if (c == -1) {
@@ -292,13 +298,17 @@ int cmd_type(int argc, char **args) {
   argc -= optind;
 
   if (argc == 0) {
-    fprintf(stderr, "usage: %s [--window windowid] <things to type>\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
+    fprintf(stderr, 
+            "usage: %s [--window windowid] [--delay milliseconds] "
+            "<things to type>\n"
+            "--window <windowid>    - specify a window to send keys to\n",
+            "--delay <milliseconds> - delay between keystrokes\n", cmd);
     return 1;
   }
 
   for (i = 0; i < argc; i++) {
-    int tmp = xdo_type(xdo, window, args[i], 50000); /* 0.05 seconds per keystroke */
+    int tmp = xdo_type(xdo, window, args[i], delay);
 
     if (tmp) {
       fprintf(stderr, "xdo_type reported an error\n");

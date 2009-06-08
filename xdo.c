@@ -47,6 +47,8 @@ static unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
                                        long *nitems, Atom *type, int *size);
 static int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature);
 static void _xdo_init_xkeyevent(xdo_t *xdo, XKeyEvent *xk);
+void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
+                   int is_press, useconds_t delay);
 
 static int _is_success(const char *funcname, int code);
 
@@ -559,6 +561,12 @@ int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay) {
   char key = '0';
   int keycode = 0;
   int shiftcode = 0;
+  int modstate = 0;
+
+  /* Since we're doing down/up, the delay should be based on the number
+   * of keys pressed (including shift). Since up/down is two calls,
+   * divide by two. */
+  delay /= 2;
 
   /* XXX: Add error handling */
   for (i = 0; string[i] != '\0'; i++) {
@@ -566,38 +574,17 @@ int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay) {
     keycode = _xdo_keycode_from_char(xdo, key);
     shiftcode = _xdo_get_shiftcode_if_needed(xdo, key);
 
-    if (window == 0) { /* No window, use XTEST */
-      if (shiftcode > 0)
-        XTestFakeKeyEvent(xdo->xdpy, shiftcode, True, CurrentTime);
-      XTestFakeKeyEvent(xdo->xdpy, keycode, True, CurrentTime);
-      XTestFakeKeyEvent(xdo->xdpy, keycode, False, CurrentTime);
-      if (shiftcode > 0)
-        XTestFakeKeyEvent(xdo->xdpy, shiftcode, False, CurrentTime);
-    } else {
-      /* Window given, use XSendEvent */
-      XKeyEvent xk;
-      _xdo_init_xkeyevent(xdo, &xk);
-      xk.window = window;
-      xk.type = KeyPress;
-      if (shiftcode > 0) {
-        xk.keycode = shiftcode;
-        XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
-      }
-      xk.keycode = keycode;
-      XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
-
-      xk.type = KeyRelease;
-      XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
-      if (shiftcode > 0) {
-        xk.keycode = shiftcode;
-        XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
-      }
+    if (shiftcode > 0) {
+      modstate |= ShiftMask;
     }
+      
+    _xdo_send_key(xdo, window, keycode, modstate, True, delay);
+    _xdo_send_key(xdo, window, keycode, modstate, False, delay);
 
     /* XXX: Flush here or at the end? */
     XFlush(xdo->xdpy);
 
-    usleep(delay);
+    //usleep(delay);
   }
 
   return 0;
@@ -1020,4 +1007,37 @@ void _xdo_init_xkeyevent(xdo_t *xdo, XKeyEvent *xk) {
 
   /* Should we set these at all? */
   xk->x = xk->y = xk->x_root = xk->y_root = 1;
+}
+
+void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
+                   int is_press, useconds_t delay) {
+  if (window == 0) {
+    int shift_keycode = 0;
+    shift_keycode = XKeysymToKeycode(xdo->xdpy, XStringToKeysym("Shift_L"));
+
+    /* Key order is important. On 'press' modifiers (shift, etc) should happen
+     * first. On release, modifiers must be released after. */
+    if (is_press) {
+      if (modstate & ShiftMask) {
+        XTestFakeKeyEvent(xdo->xdpy, shift_keycode, is_press, CurrentTime);
+      }
+      XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
+    } else {
+      XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
+      if (modstate & ShiftMask) {
+        XTestFakeKeyEvent(xdo->xdpy, shift_keycode, is_press, CurrentTime);
+      }
+    }
+  } else {
+    /* Since key events have 'state' (shift, etc) in the event, we don't
+     * need to worry about key press ordering. */
+    XKeyEvent xk;
+    _xdo_init_xkeyevent(xdo, &xk);
+    xk.window = window;
+    xk.keycode = keycode;
+    xk.state = modstate;
+    xk.type = (is_press ? KeyPress : KeyRelease);
+    XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
+  }
+  usleep(delay);
 }
