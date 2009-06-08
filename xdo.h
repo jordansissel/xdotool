@@ -5,7 +5,10 @@
  * $Id$
  */
 
+#ifndef __USE_XOPEN
 #define __USE_XOPEN
+#endif /* __USE_XOPEN */
+
 #include <sys/types.h>
 #include <X11/Xlib.h>
 
@@ -55,7 +58,7 @@ int xdo_mouselocation(xdo_t *xdo, int *x, int *y, int *screen_num);
 
 int xdo_click(xdo_t *xdo, int button);
 
-int xdo_type(xdo_t *xdo, char *string, useconds_t delay);
+int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay);
 int xdo_keysequence(xdo_t *xdo, char *keysequence);
 int xdo_keysequence_up(xdo_t *xdo, char *keysequence);
 int xdo_keysequence_down(xdo_t *xdo, char *keysequence);

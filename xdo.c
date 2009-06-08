@@ -7,7 +7,10 @@
  *
  */
 
+#ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 500
+#endif /* _XOPEN_SOURCE */
+
 #include <sys/select.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,6 +46,7 @@ static int _xdo_is_window_visible(xdo_t *xdo, Window wid);
 static unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
                                        long *nitems, Atom *type, int *size);
 static int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature);
+static void _xdo_init_xkeyevent(xdo_t *xdo, XKeyEvent *xk);
 
 static int _is_success(const char *funcname, int code);
 
@@ -550,7 +554,7 @@ int xdo_click(xdo_t *xdo, int button) {
 }
 
 /* XXX: Return proper code if errors found */
-int xdo_type(xdo_t *xdo, char *string, useconds_t delay) {
+int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay) {
   int i = 0;
   char key = '0';
   int keycode = 0;
@@ -562,12 +566,33 @@ int xdo_type(xdo_t *xdo, char *string, useconds_t delay) {
     keycode = _xdo_keycode_from_char(xdo, key);
     shiftcode = _xdo_get_shiftcode_if_needed(xdo, key);
 
-    if (shiftcode > 0)
-      XTestFakeKeyEvent(xdo->xdpy, shiftcode, True, CurrentTime);
-    XTestFakeKeyEvent(xdo->xdpy, keycode, True, CurrentTime);
-    XTestFakeKeyEvent(xdo->xdpy, keycode, False, CurrentTime);
-    if (shiftcode > 0)
-      XTestFakeKeyEvent(xdo->xdpy, shiftcode, False, CurrentTime);
+    if (window == 0) { /* No window, use XTEST */
+      if (shiftcode > 0)
+        XTestFakeKeyEvent(xdo->xdpy, shiftcode, True, CurrentTime);
+      XTestFakeKeyEvent(xdo->xdpy, keycode, True, CurrentTime);
+      XTestFakeKeyEvent(xdo->xdpy, keycode, False, CurrentTime);
+      if (shiftcode > 0)
+        XTestFakeKeyEvent(xdo->xdpy, shiftcode, False, CurrentTime);
+    } else {
+      /* Window given, use XSendEvent */
+      XKeyEvent xk;
+      _xdo_init_xkeyevent(xdo, &xk);
+      xk.window = window;
+      xk.type = KeyPress;
+      if (shiftcode > 0) {
+        xk.keycode = shiftcode;
+        XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
+      }
+      xk.keycode = keycode;
+      XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
+
+      xk.type = KeyRelease;
+      XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
+      if (shiftcode > 0) {
+        xk.keycode = shiftcode;
+        XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
+      }
+    }
 
     /* XXX: Flush here or at the end? */
     XFlush(xdo->xdpy);
@@ -985,4 +1010,14 @@ int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature) {
   }
 
   return False;
+}
+
+void _xdo_init_xkeyevent(xdo_t *xdo, XKeyEvent *xk) {
+  xk->display = xdo->xdpy;
+  xk->subwindow = None;
+  xk->time = CurrentTime;
+  xk->same_screen = True;
+
+  /* Should we set these at all? */
+  xk->x = xk->y = xk->x_root = xk->y_root = 1;
 }

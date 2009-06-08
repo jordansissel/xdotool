@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#define _GNU_SOURCE
 #include <getopt.h>
 #include <string.h>
 #include <strings.h>
@@ -262,16 +263,42 @@ int cmd_click(int argc, char **args) {
 int cmd_type(int argc, char **args) {
   int ret = 0;
   int i;
-  char *cmd = *args; argc--; args++;
+  int c;
+  char *cmd = *args;
+  Window window = 0;
+
+  struct option longopts[] = {
+    { "window", required_argument, NULL, 'w' },
+    { 0, 0, 0, 0 },
+  };
+
+  //for (i = 0; i < argc; i++) { printf("'%s' ", args[i]); }; printf("\n");
+  while (1) {
+    int option_index;
+    c = getopt_long(argc, args, "", longopts, &option_index);
+
+    switch (c) {
+      case 'w':
+        window = strtoul(optarg, NULL, 0);
+        break;
+    }
+
+    if (c == -1) {
+      break;
+    }
+  }
+
+  args += optind;
+  argc -= optind;
 
   if (argc == 0) {
-    fprintf(stderr, "usage: %s <things to type>\n", cmd);
+    fprintf(stderr, "usage: %s [--window windowid] <things to type>\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
 
   for (i = 0; i < argc; i++) {
-    int tmp = xdo_type(xdo, args[i], 50000); /* 0.05 seconds per keystroke */
+    int tmp = xdo_type(xdo, window, args[i], 50000); /* 0.05 seconds per keystroke */
 
     if (tmp) {
       fprintf(stderr, "xdo_type reported an error\n");
