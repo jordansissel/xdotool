@@ -59,9 +59,9 @@ int xdo_mouselocation(xdo_t *xdo, int *x, int *y, int *screen_num);
 int xdo_click(xdo_t *xdo, int button);
 
 int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay);
-int xdo_keysequence(xdo_t *xdo, char *keysequence);
-int xdo_keysequence_up(xdo_t *xdo, char *keysequence);
-int xdo_keysequence_down(xdo_t *xdo, char *keysequence);
+int xdo_keysequence(xdo_t *xdo, Window window, char *keysequence);
+int xdo_keysequence_up(xdo_t *xdo, Window window, char *keysequence);
+int xdo_keysequence_down(xdo_t *xdo, Window window, char *keysequence);
 
 int xdo_window_move(xdo_t *xdo, Window wid, int x, int y);
 int xdo_window_setsize(xdo_t *xdo, Window wid, int w, int h, int flags);

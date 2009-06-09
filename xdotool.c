@@ -277,7 +277,7 @@ int cmd_type(int argc, char **args) {
   //for (i = 0; i < argc; i++) { printf("'%s' ", args[i]); }; printf("\n");
   while (1) {
     int option_index;
-    c = getopt_long(argc, args, "", longopts, &option_index);
+    c = getopt_long(argc, args, "w:d:", longopts, &option_index);
 
     switch (c) {
       case 'w':
@@ -302,7 +302,7 @@ int cmd_type(int argc, char **args) {
     fprintf(stderr, 
             "usage: %s [--window windowid] [--delay milliseconds] "
             "<things to type>\n"
-            "--window <windowid>    - specify a window to send keys to\n",
+            "--window <windowid>    - specify a window to send keys to\n"
             "--delay <milliseconds> - delay between keystrokes\n", cmd);
     return 1;
   }
@@ -323,15 +323,40 @@ int cmd_type(int argc, char **args) {
 int cmd_key(int argc, char **args) {
   int ret = 0;
   int i;
-  char *cmd = *args; argc--; args++;
+  int c;
+  char *cmd = *args;
+  Window window = 0;
+
+  struct option longopts[] = {
+    { "window", required_argument, NULL, 'w' },
+    { 0, 0, 0, 0 },
+  };
+
+  while (1) {
+    int option_index;
+    c = getopt_long(argc, args, "w:", longopts, &option_index);
+
+    switch (c) {
+      case 'w':
+        window = strtoul(optarg, NULL, 0);
+        break;
+    }
+
+    if (c == -1) {
+      break;
+    }
+  }
 
   if (argc == 0) {
-    fprintf(stderr, "usage: %s <keyseq1> [keyseq2 ... keyseqN]\n", cmd);
+    fprintf(stderr, "usage: %s [--window windowid] <keyseq1> [keyseq2 ... keyseqN]\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
 
-  int (*func)(xdo_t *, char *) = NULL;
+  argc -= optind;
+  args += optind;
+
+  int (*func)(xdo_t *, Window, char *) = NULL;
 
   if (!strcmp(cmd, "key")) {
     func = xdo_keysequence;
@@ -345,7 +370,7 @@ int cmd_key(int argc, char **args) {
   }
 
   for (i = 0; i < argc; i++) {
-    int tmp = func(xdo, args[i]);
+    int tmp = func(xdo, window, args[i]);
     if (tmp != 0)
       fprintf(stderr, "xdo_keysequence reported an error for string '%s'\n", args[i]);
     ret += tmp;

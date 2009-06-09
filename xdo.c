@@ -40,7 +40,8 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
 
 static int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
                                             charcodemap_t **keys, int *nkeys);
-static int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed);
+static int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq,
+                               int pressed);
 static int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re);
 static int _xdo_is_window_visible(xdo_t *xdo, Window wid);
 static unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
@@ -590,12 +591,12 @@ int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay) {
   return 0;
 }
 
-int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed) {
+int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq, int pressed) {
   int ret = 0;
   charcodemap_t *keys = NULL;
   int nkeys = 0;
-  int i;
-  KeyCode shiftcode;
+  int i = 0;
+  int modstate = 0;
 
   if (_xdo_keysequence_to_keycode_list(xdo, keyseq, &keys, &nkeys) == False) {
     fprintf(stderr, "Failure converting key sequence '%s' to keycodes\n", keyseq);
@@ -605,15 +606,11 @@ int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed) {
   /* If shiftcode is necessary, send shift before the key if pressed is true,
    * otherwise release the shift key after the key is released */
   for (i = 0; i < nkeys; i++) {
-    shiftcode = keys[i].shift;
+    if (keys[i].shift > 0) {
+      modstate |= ShiftMask;
+    }
 
-    if (pressed > 0 && shiftcode)
-      ret += !XTestFakeKeyEvent(xdo->xdpy, shiftcode, pressed, CurrentTime);
-
-    ret += !XTestFakeKeyEvent(xdo->xdpy, keys[i].code, pressed, CurrentTime);
-
-    if (pressed == 0 && shiftcode)
-      ret += !XTestFakeKeyEvent(xdo->xdpy, shiftcode, pressed, CurrentTime);
+    _xdo_send_key(xdo, window, keys[i].code, modstate, pressed, 0);
   }
 
   if (keys != NULL) {
@@ -623,18 +620,18 @@ int _xdo_keysequence_do(xdo_t *xdo, char *keyseq, int pressed) {
   return ret;
 }
   
-int xdo_keysequence_down(xdo_t *xdo, char *keyseq) {
-  return _xdo_keysequence_do(xdo, keyseq, True);
+int xdo_keysequence_down(xdo_t *xdo, Window window, char *keyseq) {
+  return _xdo_keysequence_do(xdo, window, keyseq, True);
 }
 
-int xdo_keysequence_up(xdo_t *xdo, char *keyseq) {
-  return _xdo_keysequence_do(xdo, keyseq, False);
+int xdo_keysequence_up(xdo_t *xdo, Window window, char *keyseq) {
+  return _xdo_keysequence_do(xdo, window, keyseq, False);
 }
 
-int xdo_keysequence(xdo_t *xdo, char *keyseq) {
+int xdo_keysequence(xdo_t *xdo, Window window, char *keyseq) {
   int ret = 0;
-  ret += _xdo_keysequence_do(xdo, keyseq, True);
-  ret += _xdo_keysequence_do(xdo, keyseq, False);
+  ret += _xdo_keysequence_do(xdo, window, keyseq, True);
+  ret += _xdo_keysequence_do(xdo, window, keyseq, False);
   return ret;
 }
 
