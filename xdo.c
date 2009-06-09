@@ -582,10 +582,8 @@ int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay) {
     _xdo_send_key(xdo, window, keycode, modstate, True, delay);
     _xdo_send_key(xdo, window, keycode, modstate, False, delay);
 
-    /* XXX: Flush here or at the end? */
+    /* XXX: Flush here or at the end? or never? */
     XFlush(xdo->xdpy);
-
-    //usleep(delay);
   }
 
   return 0;
@@ -727,13 +725,14 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
   /* Double size of keycode range because some 
    * keys have "shift" values. ie; 'a' and 'A', '2' and '@' */
   /* Add 2 to the size because the range [low, high] is inclusive */
-  keycodes_length = (xdo->keycode_high - xdo->keycode_low) * 2 + 2;
+  /* Add 2 more for tab (\t) and newline (\n) */
+  keycodes_length = (xdo->keycode_high - xdo->keycode_low) * 2 + (2 + 2);
   xdo->charcodes = malloc(keycodes_length * sizeof(charcodemap_t));
   memset(xdo->charcodes, 0, keycodes_length * sizeof(charcodemap_t));
 
   /* Fetch the keycode for Shift_L */
   /* XXX: Make 'Shift_L' configurable? */
-  shift_keycode = XKeysymToKeycode(xdo->xdpy, XStringToKeysym("Shift_L"));
+  shift_keycode = XKeysymToKeycode(xdo->xdpy, XK_Shift_L);
 
   for (i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
     char *keybuf = 0;
@@ -750,6 +749,18 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
      xdo->charcodes[idx].shift = j ? shift_keycode : 0;
     }
   }
+
+  /* Add special handling so we can translate ASCII newline and tab
+   * to keycodes */
+  j = (xdo->keycode_high - xdo->keycode_low) * 2;
+  xdo->charcodes[j].key = '\n';
+  xdo->charcodes[j].code = XK_Return;
+  xdo->charcodes[j].shift = 0;
+
+  j++;
+  xdo->charcodes[j].key = '\t';
+  xdo->charcodes[j].code = XK_Tab;
+  xdo->charcodes[j].shift = 0;
 }
 
 /* context-free functions */
