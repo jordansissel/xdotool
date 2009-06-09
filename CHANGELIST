@@ -1,3 +1,16 @@
+20090609:
+  * Add '--delay <delay_in_ms>' to xdotool type. Sets the delay between keys.
+  * Add '--window <windowid>' to xdotool type, key, keyup, and keydown.
+    This feature (key events with --window <windowid>) only works if the
+    application does not reject X events that have 'send_event' set to true.
+
+    Special notes:
+    * Firefox appears to ignore all input when it does not have focus.
+    * xterm ignores sendevent by default, ctrl+leftclick menu will let you
+      enable it.
+    * gnome-terminal appears to accept send_event input by default
+
+
 20090330:
   * Fix bug where we use the wrong type in sizeof() for allocating character
     code map.

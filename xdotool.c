@@ -347,14 +347,14 @@ int cmd_key(int argc, char **args) {
     }
   }
 
+  argc -= optind;
+  args += optind;
+
   if (argc == 0) {
     fprintf(stderr, "usage: %s [--window windowid] <keyseq1> [keyseq2 ... keyseqN]\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
-
-  argc -= optind;
-  args += optind;
 
   int (*func)(xdo_t *, Window, char *) = NULL;
 
