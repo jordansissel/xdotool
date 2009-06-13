@@ -571,6 +571,7 @@ int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay) {
 
   /* XXX: Add error handling */
   for (i = 0; string[i] != '\0'; i++) {
+    modstate = 0; /* No modifiers by default */
     key = string[i];
     keycode = _xdo_keycode_from_char(xdo, key);
     shiftcode = _xdo_get_shiftcode_if_needed(xdo, key);
@@ -604,6 +605,8 @@ int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq, int pressed) {
   /* If shiftcode is necessary, send shift before the key if pressed is true,
    * otherwise release the shift key after the key is released */
   for (i = 0; i < nkeys; i++) {
+    modstate = 0; /* No modifiers by default */
+
     if (keys[i].shift > 0) {
       modstate |= ShiftMask;
     }
