@@ -1,3 +1,7 @@
+20090612:
+  * Fixed bug where shift modifier was not reset when 'xdotool type' used.
+    http://code.google.com/p/semicomplete/issues/detail?id=5
+
 20090609:
   * Add '--delay <delay_in_ms>' to xdotool type. Sets the delay between keys.
   * Add '--window <windowid>' to xdotool type, key, keyup, and keydown.

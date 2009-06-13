@@ -1,4 +1,3 @@
-
 xdo: Fake input from the mouse and keyboard very easily
 
 ### See the website for more up-to-date documentation
@@ -33,4 +32,3 @@ Use: The following commands are available:
       Matches test: window title, window name, window class
       See 'xwininfo' output for what each of these are/mean.
 
-$Id$ 
