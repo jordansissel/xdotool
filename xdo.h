@@ -39,6 +39,7 @@ typedef struct xdo {
   Display *xdpy;
   char *display_name;
   charcodemap_t *charcodes;
+  XModifierKeymap *modmap;
   int keycode_high; /* highest and lowest keycodes */
   int keycode_low;  /* used by this X server */
 

@@ -41,7 +41,7 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
 static int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
                                             charcodemap_t **keys, int *nkeys);
 static int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq,
-                               int pressed);
+                               int pressed, int *modifier);
 static int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re);
 static int _xdo_is_window_visible(xdo_t *xdo, Window wid);
 static unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
@@ -50,6 +50,8 @@ static int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature);
 static void _xdo_init_xkeyevent(xdo_t *xdo, XKeyEvent *xk);
 void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
                    int is_press, useconds_t delay);
+
+int _xdo_keycode_to_modifier(xdo_t *xdo, int keycode);
 
 static int _is_success(const char *funcname, int code);
 
@@ -93,9 +95,8 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
     return NULL;
   }
 
-  /* populate the character map? */
   _xdo_populate_charcode_map(xdo);
-
+  xdo->modmap = XGetModifierMapping(xdo->xdpy);
   return xdo;
 }
 
@@ -106,6 +107,9 @@ void xdo_free(xdo_t *xdo) {
     free(xdo->charcodes);
   if (xdo->xdpy && xdo->close_display_when_freed)
     XCloseDisplay(xdo->xdpy);
+  if (xdo->modmap)
+    XFreeModifiermap(xdo->modmap);
+
   free(xdo);
 }
 
@@ -590,49 +594,57 @@ int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay) {
   return 0;
 }
 
-int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq, int pressed) {
+int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq, int pressed, int *modifier) {
   int ret = 0;
   charcodemap_t *keys = NULL;
   int nkeys = 0;
   int i = 0;
   int modstate = 0;
 
+  /* Allow passing NULL for modifier in case we don't care about knowing
+   * the modifier map state after we finish */
+  if (modifier == NULL)
+    modifier = &modstate;
+
   if (_xdo_keysequence_to_keycode_list(xdo, keyseq, &keys, &nkeys) == False) {
     fprintf(stderr, "Failure converting key sequence '%s' to keycodes\n", keyseq);
     return False;
   }
 
-  /* If shiftcode is necessary, send shift before the key if pressed is true,
-   * otherwise release the shift key after the key is released */
   for (i = 0; i < nkeys; i++) {
-    modstate = 0; /* No modifiers by default */
 
-    if (keys[i].shift > 0) {
-      modstate |= ShiftMask;
+    /* If shiftcode is necessary, send shift before the key if pressed is true,
+     * otherwise release the shift key after the key is released */
+    _xdo_send_key(xdo, window, keys[i].code, *modifier, pressed, 0);
+
+    if (pressed) {
+      *modifier |= _xdo_keycode_to_modifier(xdo, keys[i].code);
+    } else {
+      *modifier &= ~(_xdo_keycode_to_modifier(xdo, keys[i].code));
     }
-
-    _xdo_send_key(xdo, window, keys[i].code, modstate, pressed, 0);
   }
 
   if (keys != NULL) {
     free(keys);
   }
+
   XFlush(xdo->xdpy);
   return ret;
 }
   
 int xdo_keysequence_down(xdo_t *xdo, Window window, char *keyseq) {
-  return _xdo_keysequence_do(xdo, window, keyseq, True);
+  return _xdo_keysequence_do(xdo, window, keyseq, True, NULL);
 }
 
 int xdo_keysequence_up(xdo_t *xdo, Window window, char *keyseq) {
-  return _xdo_keysequence_do(xdo, window, keyseq, False);
+  return _xdo_keysequence_do(xdo, window, keyseq, False, NULL);
 }
 
 int xdo_keysequence(xdo_t *xdo, Window window, char *keyseq) {
   int ret = 0;
-  ret += _xdo_keysequence_do(xdo, window, keyseq, True);
-  ret += _xdo_keysequence_do(xdo, window, keyseq, False);
+  int modifier = 0;
+  ret += _xdo_keysequence_do(xdo, window, keyseq, True, &modifier);
+  ret += _xdo_keysequence_do(xdo, window, keyseq, False, &modifier);
   return ret;
 }
 
@@ -861,17 +873,29 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
     }
 
     key = XKeysymToKeycode(xdo->xdpy, sym);
-    (*keys)[*nkeys].code = key;
-    if (XKeycodeToKeysym(xdo->xdpy, key, 0) == sym) {
-      (*keys)[*nkeys].shift = 0;
-    } else  {
-      (*keys)[*nkeys].shift = shift_keycode;
-    }
-
-    if ((*keys)[*nkeys].code == 0) {
+    if (key == 0) {
       fprintf(stderr, "No such key '%s'. Ignoring it.\n", tok);
       continue;
     }
+
+    if (XKeycodeToKeysym(xdo->xdpy, key, 0) == sym) {
+      (*keys)[*nkeys].shift = 0;
+    } else  {
+      /* Inject a 'shift' key item if we should be using shift */
+      fprintf(stderr, "Key '%s' doesn't match first symbol\n", tok);
+      (*keys)[*nkeys].code = shift_keycode;
+      (*keys)[*nkeys].shift = 0;
+
+      (*nkeys)++;
+      if (*nkeys == keys_size) {
+        keys_size *= 2;
+        *keys = realloc(*keys, keys_size * sizeof(KeyCode));
+      }
+
+      (*keys)[*nkeys].shift = shift_keycode;
+    }
+
+    (*keys)[*nkeys].code = key;
 
     (*nkeys)++;
     if (*nkeys == keys_size) {
@@ -1023,22 +1047,7 @@ void _xdo_init_xkeyevent(xdo_t *xdo, XKeyEvent *xk) {
 void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
                    int is_press, useconds_t delay) {
   if (window == 0) {
-    int shift_keycode = 0;
-    shift_keycode = XKeysymToKeycode(xdo->xdpy, XStringToKeysym("Shift_L"));
-
-    /* Key order is important. On 'press' modifiers (shift, etc) should happen
-     * first. On release, modifiers must be released after. */
-    if (is_press) {
-      if (modstate & ShiftMask) {
-        XTestFakeKeyEvent(xdo->xdpy, shift_keycode, is_press, CurrentTime);
-      }
-      XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
-    } else {
-      XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
-      if (modstate & ShiftMask) {
-        XTestFakeKeyEvent(xdo->xdpy, shift_keycode, is_press, CurrentTime);
-      }
-    }
+    XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
   } else {
     /* Since key events have 'state' (shift, etc) in the event, we don't
      * need to worry about key press ordering. */
@@ -1051,4 +1060,29 @@ void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
     XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
   }
   usleep(delay);
+}
+
+int _xdo_keycode_to_modifier(xdo_t *xdo, int keycode) {
+  int i = 0, j = 0;
+  int max = xdo->modmap->max_keypermod;
+
+  for (i = 0; i < 8; i++) { /* 8 modifier types, per XGetModifierMapping(3X) */
+    for (j = 0; j < max && xdo->modmap->modifiermap[(i * max) + j]; j++) {
+      if (keycode == xdo->modmap->modifiermap[(i * max) + j]) {
+        switch (i) {
+          case ShiftMapIndex: return ShiftMask; break;
+          case LockMapIndex: return LockMask; break;
+          case ControlMapIndex: return ControlMask; break;
+          case Mod1MapIndex: return Mod1Mask; break;
+          case Mod2MapIndex: return Mod2Mask; break;
+          case Mod3MapIndex: return Mod3Mask; break;
+          case Mod4MapIndex: return Mod4Mask; break;
+          case Mod5MapIndex: return Mod5Mask; break;
+        }
+      } /* end if */
+    } /* end loop j */
+  } /* end loop i */
+
+  /* No modifier found for this keycode, return no mask */
+  return 0;
 }
