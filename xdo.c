@@ -612,9 +612,6 @@ int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq, int pressed, in
   }
 
   for (i = 0; i < nkeys; i++) {
-
-    /* If shiftcode is necessary, send shift before the key if pressed is true,
-     * otherwise release the shift key after the key is released */
     _xdo_send_key(xdo, window, keys[i].code, *modifier, pressed, 0);
 
     if (pressed) {
