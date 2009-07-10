@@ -18,6 +18,7 @@
 #include <strings.h>
 #include <unistd.h>
 #include <regex.h>
+#include <ctype.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
@@ -878,21 +879,29 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
 
     sym = XStringToKeysym(tok);
     if (sym == NoSymbol) {
-      fprintf(stderr, "(symbol) No such key name '%s'. Ignoring it.\n", tok);
-      continue;
+      /* Accept a number as a explicit keycode */
+      if (isdigit(tok[0])) {
+        key = (unsigned int) atoi(tok);
+      } else {
+        fprintf(stderr, "(symbol) No such key name '%s'. Ignoring it.\n", tok);
+        continue;
+      }
+    } else {
+      key = XKeysymToKeycode(xdo->xdpy, sym);
     }
 
-    key = XKeysymToKeycode(xdo->xdpy, sym);
     if (key == 0) {
       fprintf(stderr, "No such key '%s'. Ignoring it.\n", tok);
       continue;
     }
 
-    if (XKeycodeToKeysym(xdo->xdpy, key, 0) == sym) {
+    if ((XKeycodeToKeysym(xdo->xdpy, key, 0) == sym)
+        || sym == NoSymbol) {
+      /* sym is NoSymbol if we give a keycode to type */
       (*keys)[*nkeys].shift = 0;
     } else  {
       /* Inject a 'shift' key item if we should be using shift */
-      fprintf(stderr, "Key '%s' doesn't match first symbol\n", tok);
+      //fprintf(stderr, "Key '%s' doesn't match first symbol\n", tok);
       (*keys)[*nkeys].code = shift_keycode;
       (*keys)[*nkeys].shift = 0;
 
