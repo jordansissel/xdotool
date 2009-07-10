@@ -12,9 +12,11 @@
     The 'reset' only happens at the beginning of typing and the modifiers are
     restored at the end. If you press a modifier key *during* typing it will 
     act as if --clearmodifiers was not present.
+    (http://code.google.com/p/semicomplete/issues/detail?id=6)
 
   * You can now specify literal keycodes for any key command.
     Example: xdotool key 38   (types 'a' with my keyboard)
+    (requested via mailing list)
 
   * Regression fix: 'xdotool type' now properly obeys capitalization, again.
   * Bug fix: 'xdotool key --window' now works properly
