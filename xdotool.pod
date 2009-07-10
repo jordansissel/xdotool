@@ -30,6 +30,10 @@ Options:
 =item B<--window windowid> - Send keystrokes to a specific window id. See
 SENDEVENT below.
 
+=item B<--clearmodifiers> - Clear modifiers before sending keystrokes. This
+allows you to send keystrokes ignorant of any active modifier keys from your
+physical keyboard (alt, control, shift, super, etc)
+
 =back
 
 Type a given keystroke. Examples being "alt+r", "Control_L+J",
@@ -60,6 +64,10 @@ Options:
 SENDEVENT below.
 
 =item B<--delay milliseconds> - Delay between keystrokes. Default is 12ms.
+
+=item B<--clearmodifiers> - Clear modifiers before sending keystrokes. This
+allows you to type ignorant of any active modifier keys from your physical
+keyboard (alt, control, shift, super, etc).
 
 =back
 

@@ -42,7 +42,8 @@ static int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
                                             charcodemap_t **keys, int *nkeys);
 static int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq,
                                int pressed, int *modifier);
-static int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re);
+static int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags,
+                                   regex_t *re);
 static int _xdo_is_window_visible(xdo_t *xdo, Window wid);
 static unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
                                        long *nitems, Atom *type, int *size);
@@ -51,7 +52,9 @@ static void _xdo_init_xkeyevent(xdo_t *xdo, XKeyEvent *xk);
 void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
                    int is_press, useconds_t delay);
 
-int _xdo_keycode_to_modifier(xdo_t *xdo, int keycode);
+static int _xdo_query_keycode_to_modifier(xdo_t *xdo, KeyCode keycode);
+static int _xdo_cached_keycode_to_modifier(xdo_t *xdo, KeyCode keycode);
+static int _xdo_cached_modifier_to_keycode(xdo_t *xdo, int modmask);
 
 static int _is_success(const char *funcname, int code);
 
@@ -95,8 +98,8 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
     return NULL;
   }
 
-  _xdo_populate_charcode_map(xdo);
   xdo->modmap = XGetModifierMapping(xdo->xdpy);
+  _xdo_populate_charcode_map(xdo);
   return xdo;
 }
 
@@ -548,7 +551,6 @@ int xdo_mouselocation(xdo_t *xdo, int *x_ret, int *y_ret, int *screen_num_ret) {
   }
 
   return _is_success("XQueryPointer", ret == False);
-
 }
 
 int xdo_click(xdo_t *xdo, int button) {
@@ -579,11 +581,10 @@ int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay) {
     key = string[i];
     keycode = _xdo_keycode_from_char(xdo, key);
     shiftcode = _xdo_get_shiftcode_if_needed(xdo, key);
-
-    if (shiftcode > 0) {
+    if (shiftcode) {
       modstate |= ShiftMask;
     }
-      
+
     _xdo_send_key(xdo, window, keycode, modstate, True, delay);
     _xdo_send_key(xdo, window, keycode, modstate, False, delay);
 
@@ -598,6 +599,22 @@ int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq, int pressed, in
   int ret = 0;
   charcodemap_t *keys = NULL;
   int nkeys = 0;
+
+  if (_xdo_keysequence_to_keycode_list(xdo, keyseq, &keys, &nkeys) == False) {
+    fprintf(stderr, "Failure converting key sequence '%s' to keycodes\n", keyseq);
+    return 1;
+  }
+
+  ret = xdo_keysequence_list_do(xdo, window, keys, nkeys, pressed, modifier);
+  if (keys != NULL) {
+    free(keys);
+  }
+
+  return ret;
+}
+
+int xdo_keysequence_list_do(xdo_t *xdo, Window window, charcodemap_t *keys, 
+                            int nkeys, int pressed, int *modifier) {
   int i = 0;
   int modstate = 0;
 
@@ -606,28 +623,21 @@ int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq, int pressed, in
   if (modifier == NULL)
     modifier = &modstate;
 
-  if (_xdo_keysequence_to_keycode_list(xdo, keyseq, &keys, &nkeys) == False) {
-    fprintf(stderr, "Failure converting key sequence '%s' to keycodes\n", keyseq);
-    return False;
-  }
-
   for (i = 0; i < nkeys; i++) {
     _xdo_send_key(xdo, window, keys[i].code, *modifier, pressed, 0);
 
     if (pressed) {
-      *modifier |= _xdo_keycode_to_modifier(xdo, keys[i].code);
+      *modifier |= _xdo_cached_keycode_to_modifier(xdo, keys[i].code);
     } else {
-      *modifier &= ~(_xdo_keycode_to_modifier(xdo, keys[i].code));
+      *modifier &= ~(_xdo_cached_keycode_to_modifier(xdo, keys[i].code));
     }
   }
 
-  if (keys != NULL) {
-    free(keys);
-  }
-
+  /* Necessary? */
   XFlush(xdo->xdpy);
-  return ret;
+  return 0;
 }
+
   
 int xdo_keysequence_down(xdo_t *xdo, Window window, char *keyseq) {
   return _xdo_keysequence_do(xdo, window, keyseq, True, NULL);
@@ -759,6 +769,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
      xdo->charcodes[idx].key = _keysym_to_char(keybuf);
      xdo->charcodes[idx].code = i;
      xdo->charcodes[idx].shift = j ? shift_keycode : 0;
+     xdo->charcodes[idx].modmask = _xdo_query_keycode_to_modifier(xdo, i);
     }
   }
 
@@ -766,13 +777,15 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
    * to keycodes */
   j = (xdo->keycode_high - xdo->keycode_low) * 2;
   xdo->charcodes[j].key = '\n';
-  xdo->charcodes[j].code = XK_Return;
+  xdo->charcodes[j].code = XKeysymToKeycode(xdo->xdpy, XK_Return);
   xdo->charcodes[j].shift = 0;
+  xdo->charcodes[j].modmask = 0;
 
   j++;
   xdo->charcodes[j].key = '\t';
-  xdo->charcodes[j].code = XK_Tab;
+  xdo->charcodes[j].code = XKeysymToKeycode(xdo->xdpy, XK_Tab);
   xdo->charcodes[j].shift = 0;
+  xdo->charcodes[j].modmask = 0;
 }
 
 /* context-free functions */
@@ -835,7 +848,7 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
   const char *tok = NULL;
   char *keyseq_copy = NULL, *strptr = NULL;
   int i;
-  KeyCode shift_keycode;
+  int shift_keycode;
   
   /* Array of keys to press, in order given by keyseq */
   int keys_size = 10;
@@ -886,7 +899,7 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
       (*nkeys)++;
       if (*nkeys == keys_size) {
         keys_size *= 2;
-        *keys = realloc(*keys, keys_size * sizeof(KeyCode));
+        *keys = realloc(*keys, keys_size * sizeof(charcodemap_t));
       }
 
       (*keys)[*nkeys].shift = shift_keycode;
@@ -1044,6 +1057,21 @@ void _xdo_init_xkeyevent(xdo_t *xdo, XKeyEvent *xk) {
 void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
                    int is_press, useconds_t delay) {
   if (window == 0) {
+    /* Properly ensure the modstate is set by finding a key
+     * that activates each bit in the modifier state */
+    int masks[] = { ShiftMask, LockMask, ControlMask, Mod1Mask, Mod2Mask,
+                    Mod3Mask, Mod4Mask, Mod5Mask };
+    unsigned int i = 0;
+    if (modstate != 0) {
+      for (i = 0; i < 8; i++) { /* 8 == number of masks */
+        if (modstate & masks[i]) {
+          KeyCode key;
+          key = _xdo_cached_modifier_to_keycode(xdo, masks[i]),
+          XTestFakeKeyEvent(xdo->xdpy, key, is_press, CurrentTime);
+        }
+      }
+    }
+
     XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
   } else {
     /* Since key events have 'state' (shift, etc) in the event, we don't
@@ -1059,7 +1087,7 @@ void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
   usleep(delay);
 }
 
-int _xdo_keycode_to_modifier(xdo_t *xdo, int keycode) {
+int _xdo_query_keycode_to_modifier(xdo_t *xdo, KeyCode keycode) {
   int i = 0, j = 0;
   int max = xdo->modmap->max_keypermod;
 
@@ -1082,4 +1110,57 @@ int _xdo_keycode_to_modifier(xdo_t *xdo, int keycode) {
 
   /* No modifier found for this keycode, return no mask */
   return 0;
+}
+
+int _xdo_cached_keycode_to_modifier(xdo_t *xdo, KeyCode keycode) {
+  int i = 0;
+  int len = xdo->keycode_high - xdo->keycode_low;
+
+  for (i = 0; i < len; i++)
+    if (xdo->charcodes[i].code == keycode)
+      return xdo->charcodes[i].modmask;
+
+  return 0;
+}
+
+int _xdo_cached_modifier_to_keycode(xdo_t *xdo, int modmask) {
+  int i = 0;
+  int len = xdo->keycode_high - xdo->keycode_low;
+
+  for (i = 0; i < len; i++)
+    if (xdo->charcodes[i].modmask == modmask)
+      return xdo->charcodes[i].code;
+
+  return 0;
+}
+
+int xdo_active_modifiers_to_keycode_list(xdo_t *xdo, charcodemap_t **keys,
+                                          int *nkeys) {
+  /* For each keyboard device, if an active key is a modifier,
+   * then add the keycode to the keycode list */
+
+  char keymap[32]; /* keycode map: 256 bits */
+  int keys_size = 10;
+  int keycode = 0;
+  *nkeys = 0;
+  *keys = malloc(keys_size * sizeof(charcodemap_t));
+
+  XQueryKeymap(xdo->xdpy, keymap);
+
+  for (keycode = 0; keycode < 256; keycode++) {
+    if ((keymap[(keycode / 8)] & (1 << (keycode % 8))) \
+        && _xdo_cached_keycode_to_modifier(xdo, keycode)) {
+      /* This keycode is active and is a modifier */
+
+      (*keys)[*nkeys].code = keycode;
+      (*nkeys)++;
+
+      if (*nkeys == keys_size) {
+        keys_size *= 2;
+        *keys = malloc(keys_size * sizeof(charcodemap_t));
+      }
+    }
+  } 
+
+  return True;
 }

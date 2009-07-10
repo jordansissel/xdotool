@@ -31,8 +31,9 @@ typedef struct keysymcharmap {
 /* map character to keycode */
 typedef struct charcodemap {
   char key;
-  int code;
+  KeyCode code;
   int shift;
+  int modmask;
 } charcodemap_t;
 
 typedef struct xdo {
@@ -63,6 +64,10 @@ int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay);
 int xdo_keysequence(xdo_t *xdo, Window window, char *keysequence);
 int xdo_keysequence_up(xdo_t *xdo, Window window, char *keysequence);
 int xdo_keysequence_down(xdo_t *xdo, Window window, char *keysequence);
+int xdo_keysequence_list_do(xdo_t *xdo, Window window, charcodemap_t *keys,
+                             int nkeys, int pressed, int *modifier);
+int xdo_active_modifiers_to_keycode_list(xdo_t *xdo, charcodemap_t **keys,
+                                         int *nkeys);
 
 int xdo_window_move(xdo_t *xdo, Window wid, int x, int y);
 int xdo_window_setsize(xdo_t *xdo, Window wid, int w, int h, int flags);

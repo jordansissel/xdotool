@@ -265,19 +265,25 @@ int cmd_type(int argc, char **args) {
   int i;
   int c;
   char *cmd = *args;
+  charcodemap_t *keymods;
+  int nkeymods;
+
+  /* Options */
+  int clear_modifiers = 0;
   Window window = 0;
   useconds_t delay = 12000; /* 12ms between keystrokes default */
 
   struct option longopts[] = {
     { "window", required_argument, NULL, 'w' },
     { "delay", required_argument, NULL, 'd' },
+    { "clearmodifiers", no_argument, NULL, 'c' },
     { 0, 0, 0, 0 },
   };
 
   //for (i = 0; i < argc; i++) { printf("'%s' ", args[i]); }; printf("\n");
   while (1) {
     int option_index;
-    c = getopt_long(argc, args, "w:d:", longopts, &option_index);
+    c = getopt_long(argc, args, "w:d:c", longopts, &option_index);
 
     switch (c) {
       case 'w':
@@ -286,6 +292,9 @@ int cmd_type(int argc, char **args) {
       case 'd':
         /* --delay is in milliseconds, convert to microseconds */
         delay = strtoul(optarg, NULL, 0) * 1000;
+        break;
+      case 'c':
+        clear_modifiers = 1;
         break;
     }
 
@@ -303,8 +312,15 @@ int cmd_type(int argc, char **args) {
             "usage: %s [--window windowid] [--delay milliseconds] "
             "<things to type>\n"
             "--window <windowid>    - specify a window to send keys to\n"
-            "--delay <milliseconds> - delay between keystrokes\n", cmd);
+            "--delay <milliseconds> - delay between keystrokes\n"
+            "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
+            , cmd);
     return 1;
+  }
+
+  if (clear_modifiers) {
+    xdo_active_modifiers_to_keycode_list(xdo, &keymods, &nkeymods);
+    xdo_keysequence_list_do(xdo, window, keymods, nkeymods, False, NULL);
   }
 
   for (i = 0; i < argc; i++) {
@@ -317,6 +333,12 @@ int cmd_type(int argc, char **args) {
     ret += tmp;
   }
 
+  if (clear_modifiers) {
+    /* Re-activate any modifiers we disabled previously */
+    xdo_keysequence_list_do(xdo, window, keymods, nkeymods, True, NULL);
+    free(keymods);
+  }
+
   return ret > 0;
 }
 
@@ -325,10 +347,16 @@ int cmd_key(int argc, char **args) {
   int i;
   int c;
   char *cmd = *args;
+  charcodemap_t *keymods;
+  int nkeymods;
+
+  /* Options */
   Window window = 0;
+  int clear_modifiers = 0;
 
   struct option longopts[] = {
     { "window", required_argument, NULL, 'w' },
+    { "clearmodifiers", no_argument, NULL, 'c' },
     { 0, 0, 0, 0 },
   };
 
@@ -339,6 +367,9 @@ int cmd_key(int argc, char **args) {
     switch (c) {
       case 'w':
         window = strtoul(optarg, NULL, 0);
+        break;
+      case 'c':
+        clear_modifiers = 1;
         break;
     }
 
@@ -351,7 +382,7 @@ int cmd_key(int argc, char **args) {
   args += optind;
 
   if (argc == 0) {
-    fprintf(stderr, "usage: %s [--window windowid] <keyseq1> [keyseq2 ... keyseqN]\n", cmd);
+    fprintf(stderr, "usage: %s [--window windowid] [--clearmodifiers] <keyseq1> [keyseq2 ... keyseqN]\n", cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
@@ -369,11 +400,22 @@ int cmd_key(int argc, char **args) {
     return 1;
   }
 
+  if (clear_modifiers) {
+    xdo_active_modifiers_to_keycode_list(xdo, &keymods, &nkeymods);
+    xdo_keysequence_list_do(xdo, window, keymods, nkeymods, False, NULL);
+  }
+
   for (i = 0; i < argc; i++) {
     int tmp = func(xdo, window, args[i]);
     if (tmp != 0)
       fprintf(stderr, "xdo_keysequence reported an error for string '%s'\n", args[i]);
     ret += tmp;
+  }
+
+  if (clear_modifiers) {
+    /* Re-activate any modifiers we disabled previously */
+    xdo_keysequence_list_do(xdo, window, keymods, nkeymods, True, NULL);
+    free(keymods);
   }
 
   return ret;
