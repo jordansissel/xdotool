@@ -1,3 +1,24 @@
+20090710:
+  * You can clear keyboard modifiers during typing now with --clearmodifiers
+    When used, this flag causes physical keyboard modifiers (alt, control, etc)
+    that are currently active to be ignored during typing.
+    This is supported in: xdotool key, keyup, keydown, and type.
+    
+    Example: 
+      xdotool type 'hello world' results in 'HELLO WORLD' while holding shift.
+      xdotool type --clearmodifiers 'hello world' results in 'hello world'
+        regardless of you holding shift.
+
+    The 'reset' only happens at the beginning of typing and the modifiers are
+    restored at the end. If you press a modifier key *during* typing it will 
+    act as if --clearmodifiers was not present.
+
+  * You can now specify literal keycodes for any key command.
+    Example: xdotool key 38   (types 'a' with my keyboard)
+
+  * Regression fix: 'xdotool type' now properly obeys capitalization, again.
+  * Bug fix: 'xdotool key --window' now works properly
+
 20090612:
   * Fixed bug where shift modifier was not reset when 'xdotool type' used.
     http://code.google.com/p/semicomplete/issues/detail?id=5
