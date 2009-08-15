@@ -1,0 +1,16 @@
+#!/bin/sh
+
+try () {
+  "$@" > /dev/null 2>&1
+
+  if [ $? -ne 0 ]; then
+    echo "FAILURE: $@"
+  else
+    echo "SUCCESS: $@"
+  fi
+}
+
+mkwindow () {
+  xterm -T xdotool_test_window -e 'sleep 300' &
+  windowpid="$!"
+}
