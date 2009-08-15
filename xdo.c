@@ -21,6 +21,7 @@
 #include <ctype.h>
 
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
@@ -34,7 +35,7 @@ static int _xdo_has_xtest(xdo_t *xdo);
 static int _xdo_keycode_from_char(xdo_t *xdo, char key);
 static int _xdo_get_shiftcode_if_needed(xdo_t *xdo, char key);
 
-static void _xdo_get_child_windows(xdo_t *xdo, Window window,
+static void _xdo_get_child_windows(xdo_t *xdo, Window window, int max_depth,
                                    Window **total_window_list, 
                                    int *ntotal_windows, 
                                    int *window_list_size);
@@ -131,7 +132,7 @@ int xdo_window_unmap(xdo_t *xdo, Window wid) {
   return _is_success("XUnmapWindow", ret == 0);
 }
 
-int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
+int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags, int max_depth,
                               Window **windowlist, int *nwindows) {
   regex_t re;
   Window *total_window_list = NULL;
@@ -160,7 +161,7 @@ int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
   *nwindows = 0;
   *windowlist = malloc(matched_window_list_size * sizeof(Window));
 
-  _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, 0),
+  _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, 0), max_depth,
                          &total_window_list, &ntotal_windows,
                          &window_list_size);
   for (i = 0; i < ntotal_windows; i++) {
@@ -229,6 +230,39 @@ int xdo_window_setsize(xdo_t *xdo, Window wid, int width, int height, int flags)
   ret = XConfigureWindow(xdo->xdpy, wid, cw_flags, &wc);
   XFlush(xdo->xdpy);
   return _is_success("XConfigureWindow", ret == 0);
+}
+
+int xdo_window_setclass (xdo_t *xdo, Window wid, const char *name, const char *class) {
+
+  XClassHint *hint = XAllocClassHint();
+  
+  XGetClassHint(xdo->xdpy, wid, hint);
+
+  if (name != NULL)
+    hint->res_name = (char*)name;
+
+  if(class != NULL)
+    hint->res_class = (char*)class;
+
+  XSetClassHint(xdo->xdpy, wid, hint);
+
+  XFree(hint);
+  return 0;
+}
+
+int xdo_window_setprop (xdo_t *xdo, Window wid, const char *property, const char *value) {
+  
+  char netwm_property[256] = "_NET_";
+  strncat(netwm_property, property, strlen(property));
+
+  XChangeProperty(xdo->xdpy, wid, XInternAtom(xdo->xdpy, property, False), 
+                  XInternAtom(xdo->xdpy, "STRING", False), 8, PropModeReplace,
+                  (unsigned char*)value, strlen(value));
+
+  XChangeProperty(xdo->xdpy, wid, XInternAtom(xdo->xdpy, netwm_property, False), 
+                  XInternAtom(xdo->xdpy, "STRING", False), 8, PropModeReplace,
+                  (unsigned char*)value, strlen(value));
+  return 0;
 }
 
 int xdo_window_focus(xdo_t *xdo, Window wid) {
@@ -808,15 +842,17 @@ char _keysym_to_char(const char *keysym) {
   return -1;
 }
 
-  /* regexec(&re, string, 0, NULL, 0) == 0 means MATCH */
-
-static void _xdo_get_child_windows(xdo_t *xdo, Window window,
+static void _xdo_get_child_windows(xdo_t *xdo, Window window, int max_depth,
                                    Window **total_window_list, 
                                    int *ntotal_windows,
                                    int *window_list_size) {
   Window dummy;
   Window *children;
   unsigned int i, nchildren;
+
+  if (max_depth == 0) {
+    return;
+  }
 
   if (*window_list_size == 0) {
     *ntotal_windows = 0;
@@ -836,7 +872,7 @@ static void _xdo_get_child_windows(xdo_t *xdo, Window window,
       *total_window_list = realloc(*total_window_list,
                                    *window_list_size * sizeof(Window));
     }
-    _xdo_get_child_windows(xdo, w, total_window_list,
+    _xdo_get_child_windows(xdo, w, max_depth - 1, total_window_list,
                            ntotal_windows, window_list_size);
   }
 

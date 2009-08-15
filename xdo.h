@@ -71,6 +71,8 @@ int xdo_active_modifiers_to_keycode_list(xdo_t *xdo, charcodemap_t **keys,
 
 int xdo_window_move(xdo_t *xdo, Window wid, int x, int y);
 int xdo_window_setsize(xdo_t *xdo, Window wid, int w, int h, int flags);
+int xdo_window_setprop (xdo_t *xdo, Window wid, const char *property, const char *value);
+int xdo_window_setclass(xdo_t *xdo, Window wid, const char *name, const char *class);
 int xdo_window_focus(xdo_t *xdo, Window wid);
 int xdo_window_raise(xdo_t *xdo, Window wid);
 int xdo_window_get_focus(xdo_t *xdo, Window *window_ret);
@@ -90,5 +92,5 @@ int xdo_set_desktop_for_window(xdo_t *xdo, Window wid, long desktop);
 int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop);
 
 /* Returns: windowlist and nwindows */
-int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags,
+int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags, int max_depth,
                              Window **windowlist, int *nwindows);

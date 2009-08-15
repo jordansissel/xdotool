@@ -12,7 +12,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#define _GNU_SOURCE
+#define _GNU_SOURCE 1
+#define __USE_BSD /* for strdup on linux/glibc */
 #include <getopt.h>
 #include <string.h>
 #include <strings.h>
@@ -39,6 +40,7 @@ int cmd_windowmove(int argc, char **args);
 int cmd_windowraise(int argc, char **args);
 int cmd_windowsize(int argc, char **args);
 int cmd_windowunmap(int argc, char **args);
+int cmd_set_window(int argc, char** args);
 
 /* pager-like commands */
 int cmd_set_num_desktops(int argc, char **args);
@@ -82,6 +84,8 @@ struct dispatch {
   { "windowraise", cmd_windowraise, },
   { "windowsize", cmd_windowsize, },
   { "windowunmap", cmd_windowunmap, },
+
+  { "set_window", cmd_set_window, },
 
   { "set_num_desktops", cmd_set_num_desktops, },
   { "get_num_desktops", cmd_get_num_desktops, },
@@ -543,6 +547,71 @@ int cmd_windowsize(int argc, char **args) {
   return ret;
 }
 
+int cmd_set_window(int argc, char** args) {
+  char *cmd = *args;
+  int c;
+  char *role = NULL, *icon = NULL, *name = NULL, *class = NULL, *classname = NULL;
+
+  struct option longopts[] = {
+    { "name", required_argument, NULL, 'n' },
+    { "icon-name", required_argument, NULL, 'i' },
+    { "role", required_argument, NULL, 'r' },
+    { "class", required_argument, NULL, 'C' },
+    { "classname", required_argument, NULL, 'N' },
+    { 0, 0, 0, 0 },
+  };
+
+  while (1) {
+    int option_index;
+    c = getopt_long_only(argc, args, "n:i:r:C:", longopts, &option_index);
+
+    switch(c) {
+      case 'n': 
+        name = strdup(optarg); 
+        break;
+      case 'i':
+        icon = strdup(optarg);
+        break;
+      case 'r':
+        role = strdup(optarg);
+        break;
+      case 'C':
+        class = strdup(optarg);
+        break;
+      case 'N':
+        classname = strdup(optarg);
+        break;
+    }    
+    
+    if (c == -1)
+      break;
+
+  }
+
+  /* adjust argc, argv */
+  args += optind;
+  argc -= optind;
+
+  if (argc != 1) {
+    fprintf(stderr, "usage: %s [--name name] [--icon-name name] "
+            "[--role role] [--classname classname] [--class class] wid\n", cmd);
+    return 1;
+  }
+
+  Window wid  = (Window)strtol(args[0], NULL, 0);
+
+  if (name)
+    xdo_window_setprop(xdo, wid, "WM_NAME", name);
+  if (icon)
+    xdo_window_setprop(xdo, wid, "WM_ICON_NAME", icon);
+  if (role)
+    xdo_window_setprop(xdo, wid, "WM_WINDOW_ROLE", role);
+  if (classname || class)
+    xdo_window_setclass(xdo, wid, classname, class);
+
+  return 0;
+}
+
 int cmd_search(int argc, char **args) {
   Window *list;
   int nwindows;
@@ -553,11 +622,13 @@ int cmd_search(int argc, char **args) {
   int search_title = 0;
   int search_name = 0;
   int search_class = 0;
+  int max_depth = -1;
   struct option longopts[] = {
     { "onlyvisible", 0, &only_visible, 1 },
     { "title", 0, &search_title, 1 },
     { "name", 0, &search_name, 1 },
     { "class", 0, &search_class, 1 },
+    { "maxdepth", required_argument, NULL, 1 },
     { 0, 0, 0, 0 },
   };
 
@@ -569,9 +640,13 @@ int cmd_search(int argc, char **args) {
     int option_index;
 
     c = getopt_long_only(argc, args, "", longopts, &option_index);
-
     if (c == -1)
       break;
+
+    if (!strcmp(longopts[option_index].name, "maxdepth")) {
+      if (optarg) 
+        max_depth = atoi(optarg);
+    }
   }
 
   if (only_visible)
@@ -589,11 +664,13 @@ int cmd_search(int argc, char **args) {
   if (argc != 1) {
     printf(
       "Usage: xdotool %s "
-      "[--onlyvisible] [--title --class --name] regexp_pattern\n"
+      "[--onlyvisible --title --class --name --maxdepth N] regexp_pattern\n"
       " --onlyvisible   matches only windows currently visible\n"
       " --title         check regexp_pattern agains the window title\n"
       " --class         check regexp_pattern agains the window class\n"
       " --name          check regexp_pattern agains the window name\n"
+      " --maxdepth <N>  set child window depth level to N. Default is infinite.\n"
+      "                 -1 also means infinite."
       "\n"
       "* If none of --title, --class, and --name are specified,\n"
       "the defaults are to match any of them.\n", 
@@ -601,7 +678,7 @@ int cmd_search(int argc, char **args) {
     return 1;
   }
 
-  xdo_window_list_by_regex(xdo, *args, search_flags, &list, &nwindows);
+  xdo_window_list_by_regex(xdo, *args, search_flags, max_depth, &list, &nwindows);
   for (i = 0; i < nwindows; i++)
     window_print(list[i]);
 

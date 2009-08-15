@@ -1,25 +1,9 @@
 #!/bin/sh
 
-try () {
-  "$@" > /dev/null
-
-  if [ $? -ne 0 ]; then
-    echo "FAILURE: $@"
-  else
-    echo "SUCCESS: $@"
-  fi
-}
-
-make -C ../ clean xdotool
-if [ $?  -ne 0 ] ; then
-  echo "Failure building xdotool."
-  exit 1
-fi
+. ./test.rc
 
 xdotool="../xdotool"
-
-xterm -T xdotool_test_window -e 'sleep 300' &
-xterm_pid="$!"
+mkwindow
 
 sleep 1
 
@@ -58,5 +42,4 @@ try $xdotool set_desktop $cur_desktop
 desktop=`$xdotool get_desktop_for_window $wid`
 try $xdotool set_desktop_for_window $wid $desktop
 
-#pkill -f xdotool_test_window
-kill $xterm_pid
+kill $windowpid

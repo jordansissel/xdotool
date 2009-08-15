@@ -1,3 +1,9 @@
+????????:
+  * Incorporate patch from Henning Bekel which adds a new ability to change
+    window properties such as window name, icon name, class, role, etc.
+    New command: xdotool set_window
+  * Add --maxdepth to 'xdotool search' to limit the traversal depth
+
 20090710:
   * You can clear keyboard modifiers during typing now with --clearmodifiers
     When used, this flag causes physical keyboard modifiers (alt, control, etc)
