@@ -1,4 +1,4 @@
-????????:
+20090815:
   * Incorporate patch from Henning Bekel which adds a new ability to change
     window properties such as window name, icon name, class, role, etc.
     New command: xdotool set_window
