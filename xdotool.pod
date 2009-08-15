@@ -127,6 +127,8 @@ The options available are:
 
 =item B<--class> - Match against the window class
 
+=item B<--maxdepth> N - Set recursion/child search depth. Default is -1, meaning infinite. 0 means no depth, aka no results. If you only want toplevel windows, set maxdepth of 1.
+
 =back
 
 The default options are C<--title --name --class>
@@ -178,6 +180,36 @@ Raise the window to the top of the stack. This may not work on all window manage
 =item B<windowunmap> I<window_id>
 
 Unmap a window, making it no longer appear on your screen.
+
+=item B<set_window> I<[options]> I<windowid>
+
+Set properties about a window.
+
+Options:
+
+=over
+
+=item B<--name newname> 
+
+Set window WM_NAME (the window title, usually)
+
+=item B<--icon-name newiconname> 
+
+Set window WM_ICON_NAME (the window title when minimized, usually)
+
+=item B<--role newrole>
+
+Set window WM_WINDOW_ROLE
+
+=item B<--classname newclassname>
+
+Set window class name (not to be confused with window class)
+
+=item B<--class newclass>
+
+Set window class (not to be confused with window class name)
+
+=back
 
 =back
 
