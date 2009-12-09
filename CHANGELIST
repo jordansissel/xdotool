@@ -1,3 +1,9 @@
+20091208:
+  * Added documentation about 'search --maxdepth' and new command 'set_window'
+  * Added building of libxdo.so so other tools can link against it. This
+    change requested by Debian:
+      http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=560103
+
 20090815:
   * Incorporate patch from Henning Bekel which adds a new ability to change
     window properties such as window name, icon name, class, role, etc.
