@@ -1,5 +1,6 @@
 PREFIX?=/usr/local
 INSTALLBIN?=$(PREFIX)/bin
+INSTALLLIB?=$(PREFIX)/lib
 INSTALLMAN?=$(PREFIX)/man
 
 WARNFLAGS+=-pedantic -Wall -W -Wundef \
@@ -21,10 +22,13 @@ LDFLAGS+=$(LIBS)
 
 all: xdotool xdotool.1
 
-install: installprog installman
+install: installlib installprog installman
 
 installprog: xdotool
 	install -m 755 xdotool $(INSTALLBIN)/
+
+installlib: libxdo.so
+	install libxdo.so $(INSTALLLIB)/
 
 installman: xdotool.1
 	[ -d $(INSTALLMAN) ] || mkdir $(INSTALLMAN)
@@ -40,13 +44,16 @@ clean:
 	rm -f *.o xdotool xdotool.1 || true
 
 xdo.o: xdo.c
-	$(CC) $(CFLAGS) -c xdo.c
+	$(CC) $(CFLAGS) -fPIC -c xdo.c
 
 xdotool.o: xdotool.c
 	$(CC) $(CFLAGS) -c xdotool.c
 
 xdo.c: xdo.h
 xdotool.c: xdo.h
+
+libxdo.so: xdo.o
+	$(CC) $(LDFLAGS) -fPIC -shared $< -o $@
 
 xdotool: xdotool.o xdo.o
 	$(CC) $(CFLAGS) $(LDFLAGS) xdotool.o xdo.o -o $@
