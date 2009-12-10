@@ -180,6 +180,7 @@ int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags, int max_depth,
                             matched_window_list_size * sizeof(Window));
     }
   }
+  free(total_window_list);
 
   regfree(&re);
   return 0;
@@ -367,6 +368,7 @@ int xdo_get_number_of_desktops(xdo_t *xdo, long *ndesktops) {
     *ndesktops = *((long*)data);
   else
     *ndesktops = 0;
+  free(data);
 
   return _is_success("XGetWindowProperty[_NET_NUMBER_OF_DESKTOPS]",
                      *ndesktops == 0);
@@ -430,6 +432,7 @@ int xdo_get_current_desktop(xdo_t *xdo, long *desktop) {
     *desktop = *((long*)data);
   else
     *desktop = -1;
+  free(data);
 
   return _is_success("XGetWindowProperty[_NET_CURRENT_DESKTOP]",
                      *desktop == -1);
@@ -489,6 +492,7 @@ int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop) {
     *desktop = *((long*)data);
   else
     *desktop = -1;
+  free(data);
 
   return _is_success("XGetWindowProperty[_NET_WM_DESKTOP]",
                      *desktop == -1);
@@ -517,6 +521,7 @@ int xdo_window_get_active(xdo_t *xdo, Window *window_ret) {
     *window_ret = *((Window*)data);
   else
     *window_ret = 0;
+  free(data);
 
   return _is_success("XGetWindowProperty[_NET_ACTIVE_WINDOW]",
                      *window_ret == 0);
@@ -972,7 +977,6 @@ int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re) {
 
   XGetWindowAttributes(xdo->xdpy, window, &attr);
 
-  /* XXX: Memory leak here according to valgrind? */
   XGetWMName(xdo->xdpy, window, &tp);
 
   if (flags & SEARCH_TITLE) {
@@ -983,12 +987,14 @@ int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re) {
       for (i = 0; i < count; i++) {
         if (regexec(re, list[i], 0, NULL, 0) == 0) {
           XFreeStringList(list);
+          XFree(tp.value);
           return True;
         }
-        XFreeStringList(list);
       }
+      XFreeStringList(list);
     }
   }
+  XFree(tp.value);
 
   if (XGetClassHint(xdo->xdpy, window, &classhint)) {
     if ((flags & SEARCH_NAME) && classhint.res_name) {
@@ -1085,6 +1091,7 @@ int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature) {
     if (results[i] == feature_atom)
       return True;
   }
+  free(results);
 
   return False;
 }
