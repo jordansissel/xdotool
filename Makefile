@@ -42,6 +42,8 @@ deinstall: uninstall
 uninstall: 
 	rm -f $(INSTALLBIN)/xdotool
 	rm -f $(INSTALLMAN)/man1/xdotool.1
+	rm -f $(INSTALLLIB)/libxdo.so
+	rm -f $(INSTALLLIB)/libxdo.so.$(MINOR)
 
 clean:
 	rm -f *.o xdotool xdotool.1 || true
