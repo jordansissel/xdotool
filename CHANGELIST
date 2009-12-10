@@ -1,3 +1,8 @@
+20091210:
+  * No functional changes.
+  * Added 'soname' (shared library name/version) to libxdo.so for better linkage.
+    This change may break linking with non-gnu ld(1), I don't know.
+
 20091208:
   * Added documentation about 'search --maxdepth' and new command 'set_window'
   * Added building of libxdo.so so other tools can link against it. This
