@@ -1,3 +1,11 @@
+20091210.01:
+  * No functional changes.
+  * Added a few patches from Russel Harmon which:
+    + fix some memory leaks
+    + add use of getopt in all the command functions
+    + some makefile fixes
+    + accept more variations of someone asking for help (-help and --help)
+
 20091210:
   * No functional changes.
   * Added 'soname' (shared library name/version) to libxdo.so for better linkage.
