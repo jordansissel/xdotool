@@ -12,8 +12,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #define _GNU_SOURCE 1
+#ifndef __USE_BSD
 #define __USE_BSD /* for strdup on linux/glibc */
+#endif /* __USE_BSD */
+
 #include <getopt.h>
 #include <string.h>
 #include <strings.h>
