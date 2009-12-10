@@ -19,8 +19,6 @@ See the L</EXTENDED WINDOW MANAGER HINTS> section for more information.
 
 =head1 KEYBOARD COMMANDS
 
-=over
-
 =item B<key> I<[options]> I<keystroke>
 
 Options:
