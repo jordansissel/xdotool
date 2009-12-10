@@ -3,6 +3,8 @@ INSTALLBIN?=$(PREFIX)/bin
 INSTALLLIB?=$(PREFIX)/lib
 INSTALLMAN?=$(PREFIX)/man
 
+MINOR=0
+
 WARNFLAGS+=-pedantic -Wall -W -Wundef \
            -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast \
            -Wcast-align -Wwrite-strings -Wstrict-prototypes \
@@ -28,7 +30,8 @@ installprog: xdotool
 	install -m 755 xdotool $(INSTALLBIN)/
 
 installlib: libxdo.so
-	install libxdo.so $(INSTALLLIB)/
+	install libxdo.so $(INSTALLLIB)/libxdo.so.$(MINOR); \
+	ln -sf libxdo.so.$(MINOR) $(INSTALLLIB)/libxdo.so
 
 installman: xdotool.1
 	[ -d $(INSTALLMAN) ] || mkdir $(INSTALLMAN)
@@ -53,7 +56,7 @@ xdo.c: xdo.h
 xdotool.c: xdo.h
 
 libxdo.so: xdo.o
-	$(CC) $(LDFLAGS) -fPIC -shared $< -o $@
+	$(LD) $(LDFLAGS) -shared -soname=libxdo.so.$(MINOR) $< -o $@
 
 xdotool: xdotool.o xdo.o
 	$(CC) $(CFLAGS) $(LDFLAGS) xdotool.o xdo.o -o $@
@@ -67,10 +70,12 @@ test:
 	cd t/; sh run.sh
 
 create-package: 
-	@NAME=xdotool-`date +%Y%m%d`; \
+	@RELEASE=`date +%Y%m%d`; \
+	NAME=xdotool-$$RELEASE; \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
 	rsync --exclude .svn -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* 2> /dev/null` $${NAME}/; \
+	echo $$RELEASE > $${NAME}/RELEASE; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -rf $${NAME}/
 
