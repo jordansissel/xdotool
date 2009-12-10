@@ -65,6 +65,8 @@ struct dispatch {
   /* Help me! */
   { "help", cmd_help, },
   { "-h", cmd_help, },
+  { "-help", cmd_help, },
+  { "--help", cmd_help, },
 
   /* Action functions */
   { "click", cmd_click, },
