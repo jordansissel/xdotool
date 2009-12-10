@@ -11,15 +11,15 @@ WARNFLAGS+=-pedantic -Wall -W -Wundef \
            -Wmissing-prototypes -Wnested-externs -Winline \
            -Wdisabled-optimization -Wno-missing-field-initializers
 
-CFLAGS?=-pipe -std=c99 $(WARNFLAGS)
+CFLAGS?=-pipe $(WARNFLAGS)
 
 DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst
 DEFAULT_INC=-I/usr/X11R6/include -I/usr/local/include
 
-LIBS=`pkg-config --libs x11 xtst 2> /dev/null || echo "$(DEFAULT_LIBS)"`
-INC=`pkg-config --cflags x11 xtst 2> /dev/null || echo "$(DEFAULT_INC)"`
+LIBS=$(shell pkg-config --libs x11 xtst 2> /dev/null || echo "$(DEFAULT_LIBS)")
+INC=$(shell pkg-config --cflags x11 xtst 2> /dev/null || echo "$(DEFAULT_INC)")
 
-CFLAGS+=$(INC)
+CFLAGS+=-std=c99 $(INC)
 LDFLAGS+=$(LIBS)
 
 all: xdotool xdotool.1
@@ -61,7 +61,7 @@ libxdo.so: xdo.o
 	$(LD) $(LDFLAGS) -shared -soname=libxdo.so.$(MINOR) $< -o $@
 
 xdotool: xdotool.o xdo.o
-	$(CC) $(CFLAGS) $(LDFLAGS) xdotool.o xdo.o -o $@
+	$(CC) $(CFLAGS) xdotool.o xdo.o $(LDFLAGS) -o $@
 
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@
