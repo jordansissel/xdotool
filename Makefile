@@ -4,6 +4,7 @@ INSTALLLIB?=$(PREFIX)/lib
 INSTALLMAN?=$(PREFIX)/man
 
 MINOR=0
+MICROVERSION?=00
 
 WARNFLAGS+=-pedantic -Wall -W -Wundef \
            -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast \
@@ -72,7 +73,7 @@ test:
 	cd t/; sh run.sh
 
 create-package: 
-	@RELEASE=`date +%Y%m%d`; \
+	@RELEASE=`date +%Y%m%d`.$(MICROVERSION); \
 	NAME=xdotool-$$RELEASE; \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
@@ -83,7 +84,8 @@ create-package:
 
 # Make sure the package we're building compiles.
 test-package-build: create-package
-	@NAME=xdotool-`date +%Y%m%d`; \
+	@RELEASE=`date +%Y%m%d`.$(MICROVERSION); \
+	NAME=xdotool-$$RELEASE; \
 	echo "Testing package $$NAME"; \
 	tar -zxf $${NAME}.tar.gz; \
 	make -C $${NAME} xdotool; \
