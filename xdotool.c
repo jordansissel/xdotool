@@ -102,11 +102,29 @@ int main(int argc, char **argv) {
   int ret = 0;
   int cmd_found = 0;
   int i;
+  int opt;
+  int option_index;
+  const char *usage = "Usage: %s <cmd> <args>\n";
+  static struct option long_options[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 }
+  };
 
   if (argc < 2) {
-    fprintf(stderr, "usage: %s <cmd> <args>\n", argv[0]);
+    fprintf(stderr, usage, argv[0]);
     cmd_help(0, NULL);
     exit(1);
+  }
+
+  while ((opt = getopt_long_only(argc, argv, "+h", long_options, &option_index)) != -1) {
+    switch (opt) {
+      case 'h':
+        cmd_help(0, NULL);
+        exit(EXIT_SUCCESS);
+      default:
+        fprintf(stderr, usage, argv[0]);
+        exit(EXIT_FAILURE);
+    }
   }
 
   prog = *argv;
@@ -153,10 +171,33 @@ int cmd_help(int unused_argc, char **unused_args) {
 int cmd_mousemove(int argc, char **args) {
   int ret = 0;
   int x, y;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s <xcoord> <ycoord>\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 2) {
-    fprintf(stderr, "usage: %s <xcoord> <ycoord>\n", cmd);
+    fprintf(stderr, usage, cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
@@ -175,10 +216,33 @@ int cmd_mousemove(int argc, char **args) {
 int cmd_mousemove_relative(int argc, char **args) {
   int x, y;
   int ret = 0;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s <xcoord> <ycoord>\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 2) {
-    fprintf(stderr, "usage: %s <xcoord> <ycoord>\n", cmd);
+    fprintf(stderr, usage, cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
@@ -197,10 +261,33 @@ int cmd_mousemove_relative(int argc, char **args) {
 int cmd_mousedown(int argc, char **args) {
   int ret = 0;
   int button;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s <button>\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 1) {
-    fprintf(stderr, "usage: %s <button>\n", cmd);
+    fprintf(stderr, usage, cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
@@ -218,10 +305,33 @@ int cmd_mousedown(int argc, char **args) {
 int cmd_mouseup(int argc, char **args) {
   int ret = 0;
   int button;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s <button>\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 1) {
-    fprintf(stderr, "usage: %s <button>\n", cmd);
+    fprintf(stderr, usage, cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
@@ -238,10 +348,33 @@ int cmd_mouseup(int argc, char **args) {
 int cmd_getmouselocation(int argc, char **args) {
   int x, y, screen_num;
   int ret;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 0) {
-    fprintf(stderr, "usage: %s\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -252,10 +385,33 @@ int cmd_getmouselocation(int argc, char **args) {
 
 int cmd_click(int argc, char **args) {
   int button;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s <button>\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 1) {
-    fprintf(stderr, "usage: %s <button>\n", cmd);
+    fprintf(stderr, usage, cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
@@ -281,14 +437,20 @@ int cmd_type(int argc, char **args) {
     { "window", required_argument, NULL, 'w' },
     { "delay", required_argument, NULL, 'd' },
     { "clearmodifiers", no_argument, NULL, 'c' },
+    { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
 
-  //for (i = 0; i < argc; i++) { printf("'%s' ", args[i]); }; printf("\n");
-  while (1) {
-    int option_index;
-    c = getopt_long(argc, args, "w:d:c", longopts, &option_index);
+  static const char *usage =
+            "Usage: %s [--window windowid] [--delay milliseconds] "
+            "<things to type>\n"
+            "--window <windowid>    - specify a window to send keys to\n"
+            "--delay <milliseconds> - delay between keystrokes\n"
+            "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
+            "-h, --help             - show this help output\n";
+  int option_index;
 
+  while ((c = getopt_long_only(argc, args, "w:d:ch", longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':
         window = strtoul(optarg, NULL, 0);
@@ -300,10 +462,13 @@ int cmd_type(int argc, char **args) {
       case 'c':
         clear_modifiers = 1;
         break;
-    }
-
-    if (c == -1) {
-      break;
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
     }
   }
 
@@ -312,13 +477,7 @@ int cmd_type(int argc, char **args) {
 
   if (argc == 0) {
     fprintf(stderr, "You specified the wrong number of args.\n");
-    fprintf(stderr, 
-            "usage: %s [--window windowid] [--delay milliseconds] "
-            "<things to type>\n"
-            "--window <windowid>    - specify a window to send keys to\n"
-            "--delay <milliseconds> - delay between keystrokes\n"
-            "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
-            , cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -358,16 +517,17 @@ int cmd_key(int argc, char **args) {
   Window window = 0;
   int clear_modifiers = 0;
 
-  struct option longopts[] = {
+  static struct option longopts[] = {
     { "window", required_argument, NULL, 'w' },
     { "clearmodifiers", no_argument, NULL, 'c' },
+    { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
 
-  while (1) {
-    int option_index;
-    c = getopt_long(argc, args, "w:", longopts, &option_index);
+  static const char *usage = "Usage: %s [--window windowid] [--clearmodifiers] <keyseq1> [keyseq2 ... keyseqN]\n";
+  int option_index;
 
+  while ((c = getopt_long_only(argc, args, "hw:", longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':
         window = strtoul(optarg, NULL, 0);
@@ -375,10 +535,13 @@ int cmd_key(int argc, char **args) {
       case 'c':
         clear_modifiers = 1;
         break;
-    }
-
-    if (c == -1) {
-      break;
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
     }
   }
 
@@ -386,7 +549,7 @@ int cmd_key(int argc, char **args) {
   args += optind;
 
   if (argc == 0) {
-    fprintf(stderr, "usage: %s [--window windowid] [--clearmodifiers] <keyseq1> [keyseq2 ... keyseqN]\n", cmd);
+    fprintf(stderr, usage, cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
@@ -429,10 +592,33 @@ int cmd_windowmove(int argc, char **args) {
   int ret = 0;
   int x, y;
   Window wid;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s wid x y\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 3) {
-    fprintf(stderr, "usage: %s wid x y\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -450,10 +636,33 @@ int cmd_windowmove(int argc, char **args) {
 int cmd_windowactivate(int argc, char **args) {
   int ret = 0;
   Window wid;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s wid\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 1) {
-    fprintf(stderr, "usage: %s wid\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -469,10 +678,33 @@ int cmd_windowactivate(int argc, char **args) {
 int cmd_windowfocus(int argc, char **args) {
   int ret = 0;
   Window wid;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s wid\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 1) {
-    fprintf(stderr, "usage: %s wid\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -487,10 +719,33 @@ int cmd_windowfocus(int argc, char **args) {
 int cmd_windowraise(int argc, char **args) {
   int ret = 0;
   Window wid;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s wid\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 1) {
-    fprintf(stderr, "usage: %s wid\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
    }
 
@@ -511,19 +766,24 @@ int cmd_windowsize(int argc, char **args) {
   int use_hints = 0;
   struct option longopts[] = {
     { "usehints", 0, &use_hints, 1 },
+    { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
 
   int size_flags = 0;
   char *cmd = *args;
+  int option_index;
+  static const char* usage = "Usage: %s wid width height\n";
 
-  while (1) {
-    int option_index;
-
-    c = getopt_long_only(argc, args, "", longopts, &option_index);
-
-    if (c == -1)
-      break;
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
   }
 
   if (use_hints)
@@ -533,7 +793,7 @@ int cmd_windowsize(int argc, char **args) {
   argc -= optind;
 
   if (argc != 3) {
-    fprintf(stderr, "usage: %s wid width height\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -558,13 +818,14 @@ int cmd_set_window(int argc, char** args) {
     { "role", required_argument, NULL, 'r' },
     { "class", required_argument, NULL, 'C' },
     { "classname", required_argument, NULL, 'N' },
+    { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
+  int option_index;
+  static const char *usage = "Usage: %s [--name name] [--icon-name name] "
+            "[--role role] [--classname classname] [--class class] wid\n";
 
-  while (1) {
-    int option_index;
-    c = getopt_long_only(argc, args, "n:i:r:C:", longopts, &option_index);
-
+  while ((c = getopt_long_only(argc, args, "hn:i:r:C:", longopts, &option_index)) != -1) {
     switch(c) {
       case 'n': 
         name = strdup(optarg); 
@@ -581,11 +842,13 @@ int cmd_set_window(int argc, char** args) {
       case 'N':
         classname = strdup(optarg);
         break;
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
     }    
-    
-    if (c == -1)
-      break;
-
   }
 
   /* adjust argc, argv */
@@ -593,8 +856,7 @@ int cmd_set_window(int argc, char** args) {
   argc -= optind;
 
   if (argc != 1) {
-    fprintf(stderr, "usage: %s [--name name] [--icon-name name] "
-            "[--role role] [--classname classname] [--class class] wid\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -629,23 +891,42 @@ int cmd_search(int argc, char **args) {
     { "name", 0, &search_name, 1 },
     { "class", 0, &search_class, 1 },
     { "maxdepth", required_argument, NULL, 1 },
+    { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
+  static const char *usage = 
+      "Usage: xdotool %s "
+      "[--onlyvisible --title --class --name --maxdepth N] regexp_pattern\n"
+      " --onlyvisible   matches only windows currently visible\n"
+      " --title         check regexp_pattern agains the window title\n"
+      " --class         check regexp_pattern agains the window class\n"
+      " --name          check regexp_pattern agains the window name\n"
+      " --maxdepth <N>  set child window depth level to N. Default is infinite.\n"
+      "                 -1 also means infinite.\n"
+      " -h, --help      show this help output\n"
+      "\n"
+      "* If none of --title, --class, and --name are specified,\n"
+      "the defaults are to match any of them.\n";
 
   int search_flags = 0;
 
   char *cmd = *args;
+  int option_index;
 
-  while (1) {
-    int option_index;
-
-    c = getopt_long_only(argc, args, "", longopts, &option_index);
-    if (c == -1)
-      break;
-
-    if (!strcmp(longopts[option_index].name, "maxdepth")) {
-      if (optarg) 
-        max_depth = atoi(optarg);
+  while (c = getopt_long_only(argc, args, "h", longopts, &option_index) != -1) {
+    switch (c) {
+      case 0:
+        break;
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+      case 1:
+        if (optarg) 
+          max_depth = atoi(optarg);
+        break;
+      default:
+        printf(usage, cmd);
+        return 1;
     }
   }
 
@@ -662,19 +943,7 @@ int cmd_search(int argc, char **args) {
   argc -= optind;
 
   if (argc != 1) {
-    printf(
-      "Usage: xdotool %s "
-      "[--onlyvisible --title --class --name --maxdepth N] regexp_pattern\n"
-      " --onlyvisible   matches only windows currently visible\n"
-      " --title         check regexp_pattern agains the window title\n"
-      " --class         check regexp_pattern agains the window class\n"
-      " --name          check regexp_pattern agains the window name\n"
-      " --maxdepth <N>  set child window depth level to N. Default is infinite.\n"
-      "                 -1 also means infinite."
-      "\n"
-      "* If none of --title, --class, and --name are specified,\n"
-      "the defaults are to match any of them.\n", 
-      cmd);
+    printf(usage, cmd);
     return 1;
   }
 
@@ -693,10 +962,33 @@ int cmd_search(int argc, char **args) {
 int cmd_getwindowfocus(int argc, char **args) {
   int ret = 0;
   Window wid = 0;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s -f\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc > 1) {
-    fprintf(stderr, "usage: %s -f\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -704,7 +996,7 @@ int cmd_getwindowfocus(int argc, char **args) {
     if (!strcmp(args[0], "-f")) { /* -f was given */
       ret = xdo_window_get_focus(xdo, &wid);
     } else {
-      fprintf(stderr, "usage: %s -f\n", cmd);
+      fprintf(stderr, usage, cmd);
     }
   } else {
     /* No '-f' flag given, assume sane mode */
@@ -723,10 +1015,33 @@ int cmd_getwindowfocus(int argc, char **args) {
 int cmd_getactivewindow(int argc, char **args) {
   Window wid = 0;
   int ret;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 0) {
-    fprintf(stderr, "usage: %s\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -744,10 +1059,33 @@ int cmd_getactivewindow(int argc, char **args) {
 int cmd_windowmap(int argc, char **args) {
   int ret = 0;
   Window wid;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s wid\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 1) {
-    printf("usage: %s wid\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -762,10 +1100,33 @@ int cmd_windowmap(int argc, char **args) {
 int cmd_windowunmap(int argc, char **args) {
   int ret = 0;
   Window wid;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
+
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s wid\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
 
   if (argc != 1) {
-    fprintf(stderr, "usage: %s wid\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -778,11 +1139,34 @@ int cmd_windowunmap(int argc, char **args) {
 }
 
 int cmd_set_num_desktops(int argc, char **args) {
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
   long ndesktops;
 
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s num_desktops\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
+
   if (argc != 1) {
-    fprintf(stderr, "usage: %s num_desktops\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -793,11 +1177,34 @@ int cmd_set_num_desktops(int argc, char **args) {
 
 int cmd_get_num_desktops(int argc, char **args) {
   int ret = 0;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
   long ndesktops = 0;
 
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
+
   if (argc != 0) {
-    fprintf(stderr, "usage: %s\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -808,11 +1215,34 @@ int cmd_get_num_desktops(int argc, char **args) {
 }
 
 int cmd_set_desktop(int argc, char **args) {
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
   long desktop;
 
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s desktop\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
+
   if (argc != 1) {
-    fprintf(stderr, "usage: %s desktop\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -823,11 +1253,34 @@ int cmd_set_desktop(int argc, char **args) {
 
 int cmd_get_desktop(int argc, char **args) {
   int ret = 0;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
   long desktop = 0;
 
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
+
   if (argc != 0) {
-    fprintf(stderr, "usage: %s\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -837,12 +1290,35 @@ int cmd_get_desktop(int argc, char **args) {
 }
 
 int cmd_set_desktop_for_window(int argc, char **args) {
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
   long desktop = 0;
   Window window = 0;
 
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s <window> <desktop>\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
+
   if (argc != 2) {
-    fprintf(stderr, "usage: %s <window> <desktop>\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -854,12 +1330,35 @@ int cmd_set_desktop_for_window(int argc, char **args) {
 
 int cmd_get_desktop_for_window(int argc, char **args) {
   int ret = 0;
-  char *cmd = *args; argc--; args++;
+  char *cmd = *args;
   long desktop = 0;
   Window window = 0;
 
+  int c;
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s <window>\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
+
   if (argc != 1) {
-    fprintf(stderr, "usage: %s <window>\n", cmd);
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 
@@ -869,3 +1368,5 @@ int cmd_get_desktop_for_window(int argc, char **args) {
   printf("%ld\n", desktop);
   return ret;
 }
+
+// vim:expandtab shiftwidth=2 softtabstop=2
