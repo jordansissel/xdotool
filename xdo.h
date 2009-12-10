@@ -11,6 +11,7 @@
 
 #include <sys/types.h>
 #include <X11/Xlib.h>
+#include <unistd.h>
 
 #define SEARCH_VISIBLEONLY (1L << 0)
 #define SEARCH_TITLE (1L << 1)
