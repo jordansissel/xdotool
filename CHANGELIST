@@ -1,4 +1,4 @@
-20091231.00:
+20091231.01:
   No xdotool changes.
   libxdo changes:
     * Rename keysymcharmap -> keysym_charmap
