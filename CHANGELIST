@@ -1,3 +1,10 @@
+20091231.00:
+  No xdotool changes.
+  libxdo changes:
+    * Rename keysymcharmap -> keysym_charmap
+    * Expose keysym_charmap and symbol_map as xdo_keysym_charmap() 
+      and xdo_symbol_map()
+
 20091210.01:
   * No functional changes.
   * Added a few patches from Russel Harmon which:
