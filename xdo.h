@@ -4,6 +4,8 @@
  *
  * $Id$
  */
+#ifndef _XDO_H_
+#define _XDO_H_
 
 #ifndef __USE_XOPEN
 #define __USE_XOPEN
@@ -24,10 +26,10 @@
 #define SIZE_USEHINTS (1L << 0)
 
 /* Map keysym name to actual ascii */
-typedef struct keysymcharmap {
+typedef struct keysym_charmap {
   const char *keysym;
   char key;
-} keysymcharmap_t;
+} keysym_charmap_t;
 
 /* map character to keycode */
 typedef struct charcodemap {
@@ -95,3 +97,8 @@ int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop);
 /* Returns: windowlist and nwindows */
 int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags, int max_depth,
                              Window **windowlist, int *nwindows);
+
+const keysym_charmap_t *xdo_keysym_charmap(void);
+const char **xdo_symbol_map(void);
+
+#endif /* ifndef _XDO_H_ */

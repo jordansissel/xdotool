@@ -2,6 +2,7 @@ PREFIX?=/usr/local
 INSTALLBIN?=$(PREFIX)/bin
 INSTALLLIB?=$(PREFIX)/lib
 INSTALLMAN?=$(PREFIX)/man
+INSTALLINCLUDE?=$(PREFIX)/include
 
 MINOR=0
 MICROVERSION?=00
@@ -25,14 +26,17 @@ LDFLAGS+=$(LIBS)
 
 all: xdotool xdotool.1
 
-install: installlib installprog installman
+install: installlib installprog installman installheader
 
 installprog: xdotool
 	install -m 755 xdotool $(INSTALLBIN)/
 
 installlib: libxdo.so
-	install libxdo.so $(INSTALLLIB)/libxdo.so.$(MINOR); \
+	install libxdo.so $(INSTALLLIB)/libxdo.so.$(MINOR)
 	ln -sf libxdo.so.$(MINOR) $(INSTALLLIB)/libxdo.so
+
+installheader: xdo.h
+	install xdo.h $(INSTALLINCLUDE)/xdo.h
 
 installman: xdotool.1
 	[ -d $(INSTALLMAN) ] || mkdir $(INSTALLMAN)

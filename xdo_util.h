@@ -3,6 +3,11 @@
  * $Id$
  */
 
+#ifndef _XDO_UTIL_H_
+#define _XDO_UTIL_H_
+
+#include "xdo.h"
+
 /* human to Keysym string mapping */
 const char *symbol_map[] = {
   "alt", "Alt_L",
@@ -14,7 +19,7 @@ const char *symbol_map[] = {
   NULL, NULL,
 };
 
-keysymcharmap_t keysymcharmap[] = {
+keysym_charmap_t keysym_charmap[] = {
   { "Return", '\n', },
   { "ampersand", '&', },
   { "apostrophe", '\'', },
@@ -53,3 +58,4 @@ keysymcharmap_t keysymcharmap[] = {
   { NULL, 0, },
 };
 
+#endif /* ifndef _XDO_UTIL_H_ */

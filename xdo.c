@@ -835,10 +835,10 @@ char _keysym_to_char(const char *keysym) {
   if (keysym == NULL)
     return -1;
 
-  /* keysymcharmap comes from xdo_util.h */
-  for (i = 0; keysymcharmap[i].keysym; i++) {
-    if (!strcmp(keysymcharmap[i].keysym, keysym))
-      return keysymcharmap[i].key;
+  /* keysym_charmap comes from xdo_util.h */
+  for (i = 0; keysym_charmap[i].keysym; i++) {
+    if (!strcmp(keysym_charmap[i].keysym, keysym))
+      return keysym_charmap[i].key;
   }
 
   if (strlen(keysym) == 1)
@@ -1215,4 +1215,12 @@ int xdo_active_modifiers_to_keycode_list(xdo_t *xdo, charcodemap_t **keys,
   } 
 
   return True;
+}
+
+const keysym_charmap_t *xdo_keysym_charmap(void) {
+  return keysym_charmap;
+}
+
+const char **xdo_symbol_map(void) {
+  return symbol_map;
 }
