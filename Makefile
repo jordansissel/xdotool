@@ -63,10 +63,10 @@ xdo.c: xdo.h
 xdotool.c: xdo.h
 
 libxdo.so: xdo.o
-	$(LD) $(LDFLAGS) -shared -soname=libxdo.so.$(MINOR) $< -o $@
+	$(CC) $(LDFLAGS) -shared -Wl,-soname=libxdo.so.$(MINOR) $< -o $@
 
-xdotool: xdotool.o xdo.o
-	$(CC) $(CFLAGS) xdotool.o xdo.o $(LDFLAGS) -o $@
+xdotool: xdotool.o libxdo.so
+	$(CC) -o $@ xdotool.o -L. -lxdo $(LDFLAGS) 
 
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@
