@@ -1,3 +1,9 @@
+20091231.02:
+  No functional changes.
+  - fix linking problems and just use $(CC) for build and linking
+  - Make the tests headless (requires Xvfb and GNOME)
+  - Make the t/run.sh test runner exit-code friendly
+
 20091231.01:
   No xdotool changes.
   libxdo changes:
