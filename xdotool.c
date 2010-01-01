@@ -919,7 +919,7 @@ int cmd_search(int argc, char **args) {
   char *cmd = *args;
   int option_index;
 
-  while (c = getopt_long_only(argc, args, "h", longopts, &option_index) != -1) {
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
     switch (c) {
       case 0:
         break;
