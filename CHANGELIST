@@ -1,3 +1,7 @@
+20091231.03:
+  - Fix regression in 'windowsize' command: --useflags stopped being accepted,
+    now works again. Reported by Evangelos Foutras in bug/issue #15.
+
 20091231.02:
   No functional changes.
   - fix linking problems and just use $(CC) for build and linking
