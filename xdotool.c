@@ -771,7 +771,7 @@ int cmd_windowsize(int argc, char **args) {
 
   int use_hints = 0;
   struct option longopts[] = {
-    { "usehints", 0, &use_hints, 1 },
+    { "usehints", 0, NULL, 'u' },
     { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
@@ -779,13 +779,18 @@ int cmd_windowsize(int argc, char **args) {
   int size_flags = 0;
   char *cmd = *args;
   int option_index;
-  static const char* usage = "Usage: %s wid width height\n";
+  static const char *usage =
+            "Usage: %s [--usehints] windowid width height\n" \
+            "--usehints  - Use window sizing hints (like characters in terminals)";
 
-  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(argc, args, "uh", longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
         return EXIT_SUCCESS;
+      case 'u':
+        use_hints = 1;
+        break;
       default:
         fprintf(stderr, usage, cmd);
         return EXIT_FAILURE;
