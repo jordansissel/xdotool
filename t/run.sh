@@ -5,7 +5,8 @@
 LD_LIBRARY_PATH=$(pwd)/..
 export LD_LIBRARY_PATH
 
-XSERVER="Xephyr"
+# default to use Xephyr as xserver
+: ${XSERVER=:Xephyr}
 
 if ! which $XSERVER > /dev/null 2>&1 ; then
   echo "$XSERVER not found, but it is needed for the tests."
@@ -20,7 +21,6 @@ else
     session="gnome-session"
 fi
 
-#startx -- `which $XSERVER` $_DISPLAY &
 $XSERVER $_DISPLAY &
 server_pid="$!"
 export DISPLAY=$_DISPLAY
@@ -49,7 +49,6 @@ echo "$(grep -c "^SUCCESS:" $results) tests passed"
 
 rm $results
 kill $server_pid $session_pid
-
 wait
 
 exit $exitcode
