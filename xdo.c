@@ -662,6 +662,7 @@ int xdo_keysequence_list_do(xdo_t *xdo, Window window, charcodemap_t *keys,
                             int nkeys, int pressed, int *modifier) {
   int i = 0;
   int modstate = 0;
+  int keymapchanged;
 
   /* Find an unused keycode in case we need to bind unmapped keysyms */
   KeySym *keysyms = NULL;
@@ -703,29 +704,34 @@ int xdo_keysequence_list_do(xdo_t *xdo, Window window, charcodemap_t *keys,
       XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
       /* override the code in our current key to use the scratch_keycode */
       keys[i].code = scratch_keycode;
-      //fprintf(stderr, "Adding keysym binding on keycode %d => %d\n",
-              //scratch_keycode, keysym_list[0]);
-      //XSync(xdo->xdpy, False);
+      keymapchanged = 1;
     }
 
     _xdo_send_key(xdo, window, keys[i].code, *modifier, pressed, 0);
+
+    if (keys[i].needs_binding == 1) {
+      /* If we needed to make a new keymapping for this keystroke, we
+       * should sync with the server now, after the keypress, so that
+       * the next mapping or removal doesn't conflict. */
+      XSync(xdo->xdpy, False);
+    }
 
     if (pressed) {
       *modifier |= _xdo_cached_keycode_to_modifier(xdo, keys[i].code);
     } else {
       *modifier &= ~(_xdo_cached_keycode_to_modifier(xdo, keys[i].code));
     }
+  }
 
-    if (keys[i].needs_binding == 1) {
-      KeySym keysym_list[] = { 0 };
-      //fprintf(stderr, "Removing keysym binding on keycode %d\n", scratch_keycode);
-      XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
-      //XSync(xdo->xdpy, False);
-    }
+
+  //if (keys[i].needs_binding == 1) {
+  if (keymapchanged) {
+    KeySym keysym_list[] = { 0 };
+    XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
   }
 
   /* Necessary? */
-  XFlush(xdo->xdpy);
+  //XFlush(xdo->xdpy);
   return 0;
 }
 
@@ -1187,8 +1193,11 @@ void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
     xk.type = (is_press ? KeyPress : KeyRelease);
     XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
   }
-  XSync(xdo->xdpy, False);
-  usleep(delay);
+
+  /* Skipping the usleep if delay is 0 is much faster than calling usleep(0) */
+  if (delay > 0) {
+    usleep(delay);
+  }
 }
 
 int _xdo_query_keycode_to_modifier(xdo_t *xdo, KeyCode keycode) {
