@@ -731,7 +731,7 @@ int xdo_keysequence_list_do(xdo_t *xdo, Window window, charcodemap_t *keys,
   }
 
   /* Necessary? */
-  //XFlush(xdo->xdpy);
+  XFlush(xdo->xdpy);
   return 0;
 }
 
@@ -1195,6 +1195,7 @@ void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
   }
 
   /* Skipping the usleep if delay is 0 is much faster than calling usleep(0) */
+  XFlush(xdo->xdpy);
   if (delay > 0) {
     usleep(delay);
   }
