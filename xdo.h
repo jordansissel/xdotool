@@ -55,6 +55,8 @@ typedef struct xdo {
 xdo_t* xdo_new(char *display);
 xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
                                    int close_display_when_freed);
+
+const char *xdo_version(void);
 void xdo_free(xdo_t *xdo);
 
 int xdo_mousemove(xdo_t *xdo, int x, int y);
