@@ -4,8 +4,8 @@ INSTALLLIB?=$(PREFIX)/lib
 INSTALLMAN?=$(PREFIX)/man
 INSTALLINCLUDE?=$(PREFIX)/include
 
-MINOR=0
-MICROVERSION?=00
+MAJOR=$(shell sh version.sh --major)
+VERSION=$(shell sh version.sh)
 
 WARNFLAGS+=-pedantic -Wall -W -Wundef \
            -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast \
@@ -24,7 +24,7 @@ INC=$(shell pkg-config --cflags x11 xtst 2> /dev/null || echo "$(DEFAULT_INC)")
 CFLAGS+=-std=c99 $(INC)
 LDFLAGS+=$(LIBS)
 
-all: xdotool xdotool.1
+all: xdotool xdotool.1 libxdo.so libxdo.so.$(MAJOR)
 
 install: installlib installprog installman installheader
 
@@ -32,8 +32,8 @@ installprog: xdotool
 	install -m 755 xdotool $(INSTALLBIN)/
 
 installlib: libxdo.so
-	install libxdo.so $(INSTALLLIB)/libxdo.so.$(MINOR)
-	ln -sf libxdo.so.$(MINOR) $(INSTALLLIB)/libxdo.so
+	install libxdo.so $(INSTALLLIB)/libxdo.so.$(MAJOR)
+	ln -sf libxdo.so.$(MAJOR) $(INSTALLLIB)/libxdo.so
 
 installheader: xdo.h
 	install xdo.h $(INSTALLINCLUDE)/xdo.h
@@ -48,22 +48,25 @@ uninstall:
 	rm -f $(INSTALLBIN)/xdotool
 	rm -f $(INSTALLMAN)/man1/xdotool.1
 	rm -f $(INSTALLLIB)/libxdo.so
-	rm -f $(INSTALLLIB)/libxdo.so.$(MINOR)
+	rm -f $(INSTALLLIB)/libxdo.so.$(MAJOR)
 
 clean:
-	rm -f *.o xdotool xdotool.1 libxdo.so libxdo.so.$(MINOR) || true
+	rm -f *.o xdotool xdotool.1 libxdo.so libxdo.so.$(MAJOR) || true
 
-xdo.o: xdo.c
+xdo.o: xdo.c xdo_version.h
 	$(CC) $(CFLAGS) -fPIC -c xdo.c
 
-xdotool.o: xdotool.c
+xdotool.o: xdotool.c xdo_version.h
 	$(CC) $(CFLAGS) -c xdotool.c
 
 xdo.c: xdo.h
 xdotool.c: xdo.h
 
 libxdo.so: xdo.o
-	$(CC) $(LDFLAGS) -shared -Wl,-soname=libxdo.so.$(MINOR) $< -o $@
+	$(CC) $(LDFLAGS) -shared -Wl,-soname=libxdo.so.$(MAJOR) $< -o $@
+
+libxdo.so.$(MAJOR): libxdo.so
+	ln -s $< $@
 
 xdotool: xdotool.o libxdo.so
 	$(CC) -o $@ xdotool.o -L. -lxdo $(LDFLAGS) 
@@ -76,20 +79,27 @@ package: test-package-build create-package
 test:
 	cd t/; sh run.sh
 
-create-package: 
-	@RELEASE=`date +%Y%m%d`.$(MICROVERSION); \
-	NAME=xdotool-$$RELEASE; \
+xdo_version.h:
+	sh version.sh --header > $@
+
+VERSION:
+	sh version.sh --shell > $@
+
+pre-create-package:
+	rm -f VERSION xdo_version.h
+
+create-package: pre-create-package VERSION xdo_version.h
+	@NAME=xdotool-$(VERSION); \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
-	rsync --exclude .svn -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* 2> /dev/null` $${NAME}/; \
-	echo $$RELEASE > $${NAME}/RELEASE; \
+	rsync --exclude .svn -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* version.sh VERSION 2> /dev/null` $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -rf $${NAME}/
+	rm VERSION
 
 # Make sure the package we're building compiles.
 test-package-build: create-package
-	@RELEASE=`date +%Y%m%d`.$(MICROVERSION); \
-	NAME=xdotool-$$RELEASE; \
+	@NAME=xdotool-$(VERSION); \
 	echo "Testing package $$NAME"; \
 	tar -zxf $${NAME}.tar.gz; \
 	make -C $${NAME} xdotool; \
