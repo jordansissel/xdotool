@@ -1,4 +1,9 @@
-???????????:
+0.20100118.*:
+  - Slight change in how we present versions. Now versions have major, date,
+    and svn revision. The main addition was to add the major which maps to the
+    libxdo library abi version (libxdo.so.0).
+  - Add 'xdotool version' for querying version
+  - libxdo now has xdo_version function for fetching the library version.
   - Allow typing keys that are not mapped to any keyboard button. 
     For example, you can type the euro symbol like this, even if you don't have
     a key on your keyboard that can do it:
