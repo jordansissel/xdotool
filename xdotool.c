@@ -68,12 +68,7 @@ struct dispatch {
 
   /* Help me! */
   { "help", cmd_help, },
-  { "-h", cmd_help, },
-  { "-help", cmd_help, },
-  { "--help", cmd_help, },
   { "version", cmd_version, },
-  { "--version", cmd_version, },
-  { "-v", cmd_version, },
 
   /* Action functions */
   { "click", cmd_click, },
@@ -116,6 +111,7 @@ int main(int argc, char **argv) {
   const char *usage = "Usage: %s <cmd> <args>\n";
   static struct option long_options[] = {
     { "help", no_argument, NULL, 'h' },
+    { "version", no_argument, NULL, 'v' },
     { 0, 0, 0, 0 }
   };
 
@@ -129,6 +125,9 @@ int main(int argc, char **argv) {
     switch (opt) {
       case 'h':
         cmd_help(0, NULL);
+        exit(EXIT_SUCCESS);
+      case 'v':
+        cmd_version(0, NULL);
         exit(EXIT_SUCCESS);
       default:
         fprintf(stderr, usage, argv[0]);
