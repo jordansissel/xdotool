@@ -1,19 +1,36 @@
 #!/bin/sh
 
-if ! which Xvfb > /dev/null 2>&1 ; then
-  echo "Xvfb not found, but it is needed for the tests."
+# so that xdotool uses the recently-build libxdo.so.0 during the
+# tests:
+LD_LIBRARY_PATH=$(pwd)/..
+export LD_LIBRARY_PATH
+
+XSERVER="Xephyr"
+
+if ! which $XSERVER > /dev/null 2>&1 ; then
+  echo "$XSERVER not found, but it is needed for the tests."
   exit 1
 fi
 
-export DISPLAY=:15
-Xvfb $DISPLAY &
-xvfb_pid="$!"
+_DISPLAY=:15
 
-gnome-session > /dev/null 2>&1 &
-gnome_pid="$!"
+if which openbox-session > /dev/null 2>&1 ; then
+    session="openbox-session"
+else
+    session="gnome-session"
+fi
 
-# Give gnome a few seconds to get going...
-sleep 5
+#startx -- `which $XSERVER` $_DISPLAY &
+$XSERVER $_DISPLAY &
+server_pid="$!"
+export DISPLAY=$_DISPLAY
+sleep 2
+
+$session > /dev/null 2>&1 &
+session_pid="$!"
+
+# Give the session manager a few seconds to get going...
+sleep 8
 
 results=$(mktemp)
 ( sh no_crashes_please.sh
@@ -31,6 +48,8 @@ echo "$(grep -c "^FAILURE:" $results) tests failed"
 echo "$(grep -c "^SUCCESS:" $results) tests passed"
 
 rm $results
-kill $gnome_pid $xvfb_pid
+kill $server_pid $session_pid
+
+wait
 
 exit $exitcode
