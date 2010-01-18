@@ -19,6 +19,8 @@ See the L</EXTENDED WINDOW MANAGER HINTS> section for more information.
 
 =head1 KEYBOARD COMMANDS
 
+=over
+
 =item B<key> I<[options]> I<keystroke>
 
 Options:
@@ -54,9 +56,9 @@ Same as above, except only keyup events are sent.
 
 =item B<type> I<[options]> I<something to type>
 
-=over
-
 Options:
+
+=over
 
 =item B<--window windowid> - Send keystrokes to a specific window id. See
 SENDEVENT below.
@@ -74,6 +76,8 @@ tab). Each keystroke is separated by a delay given by the delay option.
 
 Example: to type 'Hello world!' you would do:
  xdotool type 'Hello world!'
+
+=back
 
 =head1 MOUSE COMMANDS
 
