@@ -51,7 +51,7 @@ uninstall:
 	rm -f $(INSTALLLIB)/libxdo.so.$(MINOR)
 
 clean:
-	rm -f *.o xdotool xdotool.1 || true
+	rm -f *.o xdotool xdotool.1 libxdo.so libxdo.so.$(MINOR) || true
 
 xdo.o: xdo.c
 	$(CC) $(CFLAGS) -fPIC -c xdo.c
