@@ -28,6 +28,7 @@
 
 #include "xdo.h"
 #include "xdo_util.h"
+#include "xdo_version.h"
 
 static void _xdo_populate_charcode_map(xdo_t *xdo);
 static int _xdo_has_xtest(xdo_t *xdo);
@@ -116,6 +117,10 @@ void xdo_free(xdo_t *xdo) {
     XFreeModifiermap(xdo->modmap);
 
   free(xdo);
+}
+
+const char *xdo_version(void) {
+  return XDO_VERSION;
 }
 
 int xdo_window_map(xdo_t *xdo, Window wid) {
@@ -1166,13 +1171,11 @@ void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
           KeyCode key;
           key = _xdo_cached_modifier_to_keycode(xdo, masks[i]),
           XTestFakeKeyEvent(xdo->xdpy, key, is_press, CurrentTime);
-          //XSync(xdo->xdpy, False);
         }
       }
     }
 
     XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
-    //XSync(xdo->xdpy, False);
   } else {
     /* Since key events have 'state' (shift, etc) in the event, we don't
      * need to worry about key press ordering. */
@@ -1184,6 +1187,7 @@ void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
     xk.type = (is_press ? KeyPress : KeyRelease);
     XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
   }
+  XSync(xdo->xdpy, False);
   usleep(delay);
 }
 
