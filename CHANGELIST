@@ -1,3 +1,10 @@
+???????????:
+  - Allow typing keys that are not mapped to any keyboard button. 
+    For example, you can type the euro symbol like this, even if you don't have
+    a key on your keyboard that can do it:
+      xdotool key EuroSign
+    http://code.google.com/p/semicomplete/issues/detail?id=16
+
 20091231.03:
   - Fix regression in 'windowsize' command: --useflags stopped being accepted,
     now works again. Reported by Evangelos Foutras in bug/issue #15.
