@@ -658,18 +658,64 @@ int xdo_keysequence_list_do(xdo_t *xdo, Window window, charcodemap_t *keys,
   int i = 0;
   int modstate = 0;
 
+  /* Find an unused keycode in case we need to bind unmapped keysyms */
+  KeySym *keysyms = NULL;
+  int keysyms_per_keycode = 0;
+  int scratch_keycode = 0; /* Scratch space for temporary keycode bindings */
+  keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low, 
+                                xdo->keycode_high - xdo->keycode_low,
+                                &keysyms_per_keycode);
+  //XXX fprintf(stderr, "Searching for scratch keycode\n");
+  for (i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
+    int j = 0;
+    int key_is_empty = 1;
+    //XXX printf("%d: ", i);
+    for (j = 0; j < keysyms_per_keycode; j++) {
+      char *symname;
+      int symindex = (i - xdo->keycode_low) * keysyms_per_keycode + j;
+      symname = XKeysymToString(keysyms[symindex]);
+      //XXX printf("%d(%s) ", keysyms[symindex]);
+      if (keysyms[symindex] != 0) {
+        key_is_empty = 0;
+      }
+    }
+    //XXX printf("\n");
+    if (key_is_empty) {
+      scratch_keycode = i;
+      break;
+    }
+  }
+  XFree(keysyms);
+
   /* Allow passing NULL for modifier in case we don't care about knowing
    * the modifier map state after we finish */
   if (modifier == NULL)
     modifier = &modstate;
 
   for (i = 0; i < nkeys; i++) {
+    if (keys[i].needs_binding == 1) {
+      KeySym keysym_list[] = { keys[i].symbol };
+      XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
+      /* override the code in our current key to use the scratch_keycode */
+      keys[i].code = scratch_keycode;
+      //fprintf(stderr, "Adding keysym binding on keycode %d => %d\n",
+              //scratch_keycode, keysym_list[0]);
+      //XSync(xdo->xdpy, False);
+    }
+
     _xdo_send_key(xdo, window, keys[i].code, *modifier, pressed, 0);
 
     if (pressed) {
       *modifier |= _xdo_cached_keycode_to_modifier(xdo, keys[i].code);
     } else {
       *modifier &= ~(_xdo_cached_keycode_to_modifier(xdo, keys[i].code));
+    }
+
+    if (keys[i].needs_binding == 1) {
+      KeySym keysym_list[] = { 0 };
+      //fprintf(stderr, "Removing keysym binding on keycode %d\n", scratch_keycode);
+      XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
+      //XSync(xdo->xdpy, False);
     }
   }
 
@@ -932,30 +978,31 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
     }
 
     if (key == 0) {
-      fprintf(stderr, "No such key '%s'. Ignoring it.\n", tok);
-      continue;
-    }
+      //fprintf(stderr, "No such key '%s'. Ignoring it.\n", tok);
+      (*keys)[*nkeys].symbol = sym;
+      (*keys)[*nkeys].needs_binding = 1;
+    } else {
+      (*keys)[*nkeys].symbol = 0;
+      (*keys)[*nkeys].needs_binding = 0;
+      (*keys)[*nkeys].code = key;
+      if ((XKeycodeToKeysym(xdo->xdpy, key, 0) == sym)
+          || sym == NoSymbol) {
+        /* sym is NoSymbol if we give a keycode to type */
+        (*keys)[*nkeys].shift = 0;
+      } else  {
+        /* Inject a 'shift' key item if we should be using shift */
+        //fprintf(stderr, "Key '%s' doesn't match first symbol\n", tok);
+        (*keys)[*nkeys].code = shift_keycode;
+        (*keys)[*nkeys].shift = 0;
 
-    if ((XKeycodeToKeysym(xdo->xdpy, key, 0) == sym)
-        || sym == NoSymbol) {
-      /* sym is NoSymbol if we give a keycode to type */
-      (*keys)[*nkeys].shift = 0;
-    } else  {
-      /* Inject a 'shift' key item if we should be using shift */
-      //fprintf(stderr, "Key '%s' doesn't match first symbol\n", tok);
-      (*keys)[*nkeys].code = shift_keycode;
-      (*keys)[*nkeys].shift = 0;
-
-      (*nkeys)++;
-      if (*nkeys == keys_size) {
-        keys_size *= 2;
-        *keys = realloc(*keys, keys_size * sizeof(charcodemap_t));
+        (*nkeys)++;
+        if (*nkeys == keys_size) {
+          keys_size *= 2;
+          *keys = realloc(*keys, keys_size * sizeof(charcodemap_t));
+        }
+        (*keys)[*nkeys].shift = shift_keycode;
       }
-
-      (*keys)[*nkeys].shift = shift_keycode;
     }
-
-    (*keys)[*nkeys].code = key;
 
     (*nkeys)++;
     if (*nkeys == keys_size) {
@@ -965,7 +1012,6 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
   }
 
   free(keyseq_copy);
-
   return True;
 }
 
@@ -1120,11 +1166,13 @@ void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
           KeyCode key;
           key = _xdo_cached_modifier_to_keycode(xdo, masks[i]),
           XTestFakeKeyEvent(xdo->xdpy, key, is_press, CurrentTime);
+          //XSync(xdo->xdpy, False);
         }
       }
     }
 
     XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
+    //XSync(xdo->xdpy, False);
   } else {
     /* Since key events have 'state' (shift, etc) in the event, we don't
      * need to worry about key press ordering. */
@@ -1199,7 +1247,7 @@ int xdo_active_modifiers_to_keycode_list(xdo_t *xdo, charcodemap_t **keys,
 
   XQueryKeymap(xdo->xdpy, keymap);
 
-  for (keycode = 0; keycode < 256; keycode++) {
+  for (keycode = xdo->keycode_low; keycode <= xdo->keycode_high; keycode++) {
     if ((keymap[(keycode / 8)] & (1 << (keycode % 8))) \
         && _xdo_cached_keycode_to_modifier(xdo, keycode)) {
       /* This keycode is active and is a modifier */

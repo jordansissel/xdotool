@@ -35,8 +35,10 @@ typedef struct keysym_charmap {
 typedef struct charcodemap {
   char key;
   KeyCode code;
+  KeySym symbol;
   int shift;
   int modmask;
+  int needs_binding;
 } charcodemap_t;
 
 typedef struct xdo {
