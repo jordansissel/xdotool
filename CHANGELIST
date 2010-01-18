@@ -9,6 +9,7 @@
     a key on your keyboard that can do it:
       xdotool key EuroSign
     http://code.google.com/p/semicomplete/issues/detail?id=16
+  - Fixed some pod errors in the manpage
 
 20091231.03:
   - Fix regression in 'windowsize' command: --useflags stopped being accepted,
