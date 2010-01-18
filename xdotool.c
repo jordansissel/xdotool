@@ -22,7 +22,6 @@
 #include <string.h>
 #include <strings.h>
 
-
 #include "xdo.h"
 
 int cmd_click(int argc, char **args);
@@ -45,6 +44,7 @@ int cmd_windowraise(int argc, char **args);
 int cmd_windowsize(int argc, char **args);
 int cmd_windowunmap(int argc, char **args);
 int cmd_set_window(int argc, char** args);
+int cmd_version(int argc, char** args);
 
 /* pager-like commands */
 int cmd_set_num_desktops(int argc, char **args);
@@ -71,6 +71,9 @@ struct dispatch {
   { "-h", cmd_help, },
   { "-help", cmd_help, },
   { "--help", cmd_help, },
+  { "version", cmd_version, },
+  { "--version", cmd_version, },
+  { "-v", cmd_version, },
 
   /* Action functions */
   { "click", cmd_click, },
@@ -171,6 +174,11 @@ int cmd_help(int unused_argc, char **unused_args) {
   for (i = 0; dispatch[i].name != NULL; i++)
     printf("  %s\n", dispatch[i].name);
 
+  return 0;
+}
+
+int cmd_version(int unused_argc, char **unused_args) {
+  printf("xdotool version %s\n", xdo_version());
   return 0;
 }
 
