@@ -29,18 +29,20 @@ all: xdotool xdotool.1 libxdo.so libxdo.so.$(MAJOR)
 install: installlib installprog installman installheader
 
 installprog: xdotool
+	[ -d $(INSTALLBIN) ] || mkdir -p $(INSTALLBIN)
 	install -m 755 xdotool $(INSTALLBIN)/
 
 installlib: libxdo.so
+	[ -d $(INSTALLLIB) ] || mkdir -p $(INSTALLLIB)
 	install libxdo.so $(INSTALLLIB)/libxdo.so.$(MAJOR)
 	ln -sf libxdo.so.$(MAJOR) $(INSTALLLIB)/libxdo.so
 
 installheader: xdo.h
+	[ -d $(INSTALLINCLUDE) ] || mkdir -p $(INSTALLINCLUDE)
 	install xdo.h $(INSTALLINCLUDE)/xdo.h
 
 installman: xdotool.1
-	[ -d $(INSTALLMAN) ] || mkdir $(INSTALLMAN)
-	[ -d $(INSTALLMAN)/man1 ] || mkdir $(INSTALLMAN)/man1
+	[ -d $(INSTALLMAN)/man1 ] || mkdir -p $(INSTALLMAN)/man1
 	install -m 644 xdotool.1 $(INSTALLMAN)/man1/
 
 deinstall: uninstall
@@ -76,7 +78,7 @@ xdotool.1: xdotool.pod
 
 package: test-package-build create-package
 
-test:
+test: xdotool libxdo.so.$(MAJOR)
 	cd t/; sh run.sh
 
 xdo_version.h:
