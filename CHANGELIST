@@ -1,3 +1,6 @@
+0.2010????.*:
+  - Fix http://code.google.com/p/semicomplete/issues/detail?id=17
+
 0.20100118.*:
   - Slight change in how we present versions. Now versions have major, date,
     and svn revision. The main addition was to add the major which maps to the
