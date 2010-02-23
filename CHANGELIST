@@ -1,5 +1,9 @@
 0.2010????.*:
   - Fix http://code.google.com/p/semicomplete/issues/detail?id=17
+  - Support '--pid NUM' for searching for windows by pid:
+    Fixes: http://code.google.com/p/semicomplete/issues/detail?id=10
+    Example: xdotool search --pid 12345
+    Example: xdotool search --pid 12345 "hello world"
 
 0.20100118.*:
   - Slight change in how we present versions. Now versions have major, date,
