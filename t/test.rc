@@ -1,5 +1,7 @@
 #!/bin/sh
 
+TITLE=xdotool_test_window_$$
+
 try () {
   "$@" > /dev/null 2>&1
 
@@ -11,6 +13,6 @@ try () {
 }
 
 mkwindow () {
-  xterm -T xdotool_test_window -e 'sleep 300' &
+  xterm -T "$TITLE" -e 'sleep 300' &
   windowpid="$!"
 }

@@ -36,20 +36,12 @@ static int _xdo_has_xtest(xdo_t *xdo);
 static int _xdo_keycode_from_char(xdo_t *xdo, char key);
 static int _xdo_get_shiftcode_if_needed(xdo_t *xdo, char key);
 
-static void _xdo_get_child_windows(xdo_t *xdo, Window window, int max_depth,
-                                   Window **total_window_list, 
-                                   int *ntotal_windows, 
-                                   int *window_list_size);
-
 static int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
                                             charcodemap_t **keys, int *nkeys);
 static int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq,
                                int pressed, int *modifier);
 static int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags,
                                    regex_t *re);
-static int _xdo_is_window_visible(xdo_t *xdo, Window wid);
-static unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
-                                       long *nitems, Atom *type, int *size);
 static int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature);
 static void _xdo_init_xkeyevent(xdo_t *xdo, XKeyEvent *xk);
 void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
@@ -135,60 +127,6 @@ int xdo_window_unmap(xdo_t *xdo, Window wid) {
   ret = XUnmapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
   return _is_success("XUnmapWindow", ret == 0);
-}
-
-int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags, int max_depth,
-                              Window **windowlist, int *nwindows) {
-  regex_t re;
-  Window *total_window_list = NULL;
-  int ntotal_windows = 0;
-  int window_list_size = 0;
-  int matched_window_list_size = 100;
-
-  int ret = 0;
-  int i = 0;
-
-  ret = regcomp(&re, regex, REG_EXTENDED | REG_ICASE);
-  if (ret != 0) {
-    fprintf(stderr, "Failed to compile regex: '%s'\n", regex);
-    return 1;
-  }
-
-  /* Default search settings:
-   * All windows (visible and hidden) and search all text pieces
-   */
-  if ((flags & (SEARCH_TITLE | SEARCH_CLASS | SEARCH_NAME)) == 0) {
-    fprintf(stderr, "No text fields specified for regex search. \nDefaulting to"
-            " window title, class, and name searching\n");
-    flags |= SEARCH_TITLE | SEARCH_CLASS | SEARCH_NAME;
-  }
-
-  *nwindows = 0;
-  *windowlist = malloc(matched_window_list_size * sizeof(Window));
-
-  _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, 0), max_depth,
-                         &total_window_list, &ntotal_windows,
-                         &window_list_size);
-  for (i = 0; i < ntotal_windows; i++) {
-    Window wid = total_window_list[i];
-    if (flags & SEARCH_VISIBLEONLY && !_xdo_is_window_visible(xdo, wid))
-      continue;
-    if (!_xdo_regex_match_window(xdo, wid, flags, &re))
-      continue;
-
-    (*windowlist)[*nwindows] = wid;
-    (*nwindows)++;
-
-    if (matched_window_list_size == *nwindows) {
-      matched_window_list_size *= 2;
-      *windowlist = realloc(*windowlist, 
-                            matched_window_list_size * sizeof(Window));
-    }
-  }
-  free(total_window_list);
-
-  regfree(&re);
-  return 0;
 }
 
 int xdo_window_move(xdo_t *xdo, Window wid, int x, int y) {
@@ -367,7 +305,7 @@ int xdo_get_number_of_desktops(xdo_t *xdo, long *ndesktops) {
   request = XInternAtom(xdo->xdpy, "_NET_NUMBER_OF_DESKTOPS", False);
   root = XDefaultRootWindow(xdo->xdpy);
 
-  data = _xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+  data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
 
   if (nitems > 0)
     *ndesktops = *((long*)data);
@@ -431,7 +369,7 @@ int xdo_get_current_desktop(xdo_t *xdo, long *desktop) {
   request = XInternAtom(xdo->xdpy, "_NET_CURRENT_DESKTOP", False);
   root = XDefaultRootWindow(xdo->xdpy);
 
-  data = _xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+  data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
 
   if (nitems > 0)
     *desktop = *((long*)data);
@@ -491,7 +429,7 @@ int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop) {
 
   request = XInternAtom(xdo->xdpy, "_NET_WM_DESKTOP", False);
 
-  data = _xdo_getwinprop(xdo, wid, request, &nitems, &type, &size);
+  data = xdo_getwinprop(xdo, wid, request, &nitems, &type, &size);
 
   if (nitems > 0)
     *desktop = *((long*)data);
@@ -520,7 +458,7 @@ int xdo_window_get_active(xdo_t *xdo, Window *window_ret) {
 
   request = XInternAtom(xdo->xdpy, "_NET_ACTIVE_WINDOW", False);
   root = XDefaultRootWindow(xdo->xdpy);
-  data = _xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+  data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
 
   if (nitems > 0)
     *window_ret = *((Window*)data);
@@ -904,43 +842,6 @@ char _keysym_to_char(const char *keysym) {
   return -1;
 }
 
-static void _xdo_get_child_windows(xdo_t *xdo, Window window, int max_depth,
-                                   Window **total_window_list, 
-                                   int *ntotal_windows,
-                                   int *window_list_size) {
-  Window dummy;
-  Window *children;
-  unsigned int i, nchildren;
-
-  if (max_depth == 0) {
-    return;
-  }
-
-  if (*window_list_size == 0) {
-    *ntotal_windows = 0;
-    *window_list_size = 100;
-    *total_window_list = malloc(*window_list_size * sizeof(Window));
-  }
-
-  if (!XQueryTree(xdo->xdpy, window, &dummy, &dummy, &children, &nchildren))
-    return;
-
-  for (i = 0; i < nchildren; i++) {
-    Window w = children[i];
-    (*total_window_list)[*ntotal_windows] = w;
-    *ntotal_windows += 1;
-    if (*ntotal_windows == *window_list_size) {
-      *window_list_size *= 2;
-      *total_window_list = realloc(*total_window_list,
-                                   *window_list_size * sizeof(Window));
-    }
-    _xdo_get_child_windows(xdo, w, max_depth - 1, total_window_list,
-                           ntotal_windows, window_list_size);
-  }
-
-  XFree(children);
-}
-
 int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
                                      charcodemap_t **keys, int *nkeys) {
   char *tokctx = NULL;
@@ -1026,73 +927,16 @@ int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
   return True;
 }
 
-int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags, regex_t *re) {
-  XWindowAttributes attr;
-  XTextProperty tp;
-  XClassHint classhint;
-  int i;
-
-  XGetWindowAttributes(xdo->xdpy, window, &attr);
-
-  XGetWMName(xdo->xdpy, window, &tp);
-
-  if (flags & SEARCH_TITLE) {
-    if (tp.nitems > 0) {
-      int count = 0;
-      char **list = NULL;
-      XmbTextPropertyToTextList(xdo->xdpy, &tp, &list, &count);
-      for (i = 0; i < count; i++) {
-        if (regexec(re, list[i], 0, NULL, 0) == 0) {
-          XFreeStringList(list);
-          XFree(tp.value);
-          return True;
-        }
-      }
-      XFreeStringList(list);
-    }
-  }
-  XFree(tp.value);
-
-  if (XGetClassHint(xdo->xdpy, window, &classhint)) {
-    if ((flags & SEARCH_NAME) && classhint.res_name) {
-      if (regexec(re, classhint.res_name, 0, NULL, 0) == 0) {
-        XFree(classhint.res_name);
-        XFree(classhint.res_class);
-        return True;
-      }
-      XFree(classhint.res_name);
-    }
-    if ((flags & SEARCH_CLASS) && classhint.res_class) {
-      if (regexec(re, classhint.res_class, 0, NULL, 0) == 0) {
-        XFree(classhint.res_class);
-        return True;
-      }
-      XFree(classhint.res_class);
-    }
-  }
-  return False;
-}
-
 int _is_success(const char *funcname, int code) {
   if (code != 0)
     fprintf(stderr, "%s failed (code=%d)\n", funcname, code);
   return code;
 }
 
-int _xdo_is_window_visible(xdo_t *xdo, Window wid) {
-  XWindowAttributes wattr;
-
-  XGetWindowAttributes(xdo->xdpy, wid, &wattr);
-  if (wattr.map_state != IsViewable)
-    return False;
-
-  return True;
-}
-
 /* Arbitrary window property retrieval
  * slightly modified version from xprop.c from Xorg */
-unsigned char * _xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
-                                long *nitems, Atom *type, int *size) {
+unsigned char *xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
+                              long *nitems, Atom *type, int *size) {
   Atom actual_type;
   int actual_format;
   unsigned long _nitems;
@@ -1143,7 +987,7 @@ int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature) {
   feature_atom = XInternAtom(xdo->xdpy, feature, False);
   root = RootWindow(xdo->xdpy, 0);
 
-  results = (Atom *) _xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+  results = (Atom *) xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
   for (i = 0L; i < nitems; i++) {
     if (results[i] == feature_atom)
       return True;

@@ -52,6 +52,19 @@ typedef struct xdo {
   int close_display_when_freed;
 } xdo_t;
 
+typedef struct xdo_search {
+  char *title;       /* pattern to test against a window title */
+  char *winclass;    /* pattern to test against a window class */
+  char *winname;     /* pattern to test against a window name */
+  unsigned long pid; /* window pid (From window atom _NET_WM_PID) */
+  long max_depth;     /* depth of search. 1 means only toplevel windows */
+  int only_visible;  /* boolean; set true to search only visible windows */
+
+  /* Should the tests be 'and' or 'or' ? If 'and', any failure will skip the
+   * window. If 'or', any success will keep the window in search results. */
+  enum { SEARCH_ANY, SEARCH_ALL } require;
+} xdo_search_t;
+
 xdo_t* xdo_new(char *display);
 xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
                                    int close_display_when_freed);
@@ -98,10 +111,11 @@ int xdo_get_current_desktop(xdo_t *xdo, long *desktop);
 int xdo_set_desktop_for_window(xdo_t *xdo, Window wid, long desktop);
 int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop);
 
-/* Returns: windowlist and nwindows */
-int xdo_window_list_by_regex(xdo_t *xdo, char *regex, int flags, int max_depth,
-                             Window **windowlist, int *nwindows);
+int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
+                      Window **windowlist_ret, int *nwindows_ret);
 
+unsigned char *xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
+                              long *nitems, Atom *type, int *size);
 const keysym_charmap_t *xdo_keysym_charmap(void);
 const char **xdo_symbol_map(void);
 

@@ -6,7 +6,7 @@ LD_LIBRARY_PATH=$(pwd)/..
 export LD_LIBRARY_PATH
 
 # default to use Xephyr as xserver
-: ${XSERVER=:Xephyr}
+: ${XSERVER:=Xephyr}
 
 if ! which $XSERVER > /dev/null 2>&1 ; then
   echo "$XSERVER not found, but it is needed for the tests."

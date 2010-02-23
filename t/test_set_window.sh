@@ -7,7 +7,7 @@ mkwindow
 
 sleep 1
 
-wid=`$xdotool search xdotool_test_window`
+wid=`$xdotool search $TITLE`
 try $xdotool set_window --name "NAME" $wid
 try $xdotool set_window --icon "ICON" $wid
 try $xdotool set_window --class "CLASS" $wid

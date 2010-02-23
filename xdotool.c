@@ -894,22 +894,29 @@ int cmd_set_window(int argc, char** args) {
 
 int cmd_search(int argc, char **args) {
   Window *list;
+  xdo_search_t search;
   int nwindows;
   int i;
   int c;
 
   int only_visible = 0;
-  int search_title = 0;
-  int search_name = 0;
-  int search_class = 0;
-  int max_depth = -1;
+  int search_title = -1;
+  int search_name = -1;
+  int search_class = -1;
+  typedef enum { 
+    opt_unused, opt_title, opt_onlyvisible, opt_name, opt_class, opt_maxdepth,
+    opt_pid, opt_help, opt_any, opt_all,
+  } optlist_t;
   struct option longopts[] = {
-    { "onlyvisible", 0, &only_visible, 1 },
-    { "title", 0, &search_title, 1 },
-    { "name", 0, &search_name, 1 },
-    { "class", 0, &search_class, 1 },
-    { "maxdepth", required_argument, NULL, 1 },
-    { "help", no_argument, NULL, 'h' },
+    { "onlyvisible", 0, &only_visible, opt_onlyvisible },
+    { "title", 0, &search_title, opt_title },
+    { "name", 0, &search_name, opt_name },
+    { "any", 0, NULL, opt_any },
+    { "all", 0, NULL, opt_all },
+    { "class", 0, &search_class, opt_class },
+    { "maxdepth", required_argument, NULL, opt_maxdepth },
+    { "pid", required_argument, NULL, opt_pid },
+    { "help", no_argument, NULL, opt_help },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
@@ -926,7 +933,9 @@ int cmd_search(int argc, char **args) {
       "* If none of --title, --class, and --name are specified,\n"
       "the defaults are to match any of them.\n";
 
-  int search_flags = 0;
+  memset(&search, 0, sizeof(xdo_search_t));
+  search.max_depth = -1;
+  search.require = SEARCH_ANY;
 
   char *cmd = *args;
   int option_index;
@@ -935,45 +944,70 @@ int cmd_search(int argc, char **args) {
     switch (c) {
       case 0:
         break;
-      case 'h':
+      case opt_help:
         printf(usage, cmd);
         return EXIT_SUCCESS;
-      case 1:
-        if (optarg) 
-          max_depth = atoi(optarg);
+      case opt_maxdepth:
+        if (optarg) {
+          search.max_depth = strtol(optarg, NULL, 0);
+        }
+        break;
+      case opt_pid:
+        if (optarg) {
+          search.pid = strtoul(optarg, NULL, 0);
+        }
+        break;
+      case opt_any:
+        search.require = SEARCH_ANY;
+        break;
+      case opt_all:
+        search.require = SEARCH_ALL;
         break;
       default:
         printf(usage, cmd);
-        return 1;
+        return EXIT_FAILURE;
     }
   }
-
-  if (only_visible)
-    search_flags |= SEARCH_VISIBLEONLY;
-  if (search_title)
-    search_flags |= SEARCH_TITLE;
-  if (search_name)
-    search_flags |= SEARCH_NAME;
-  if (search_class)
-    search_flags |= SEARCH_CLASS;
 
   args += optind;
   argc -= optind;
 
-  if (argc != 1) {
+  /* We require a pattern or a pid to search for */
+  if (argc != 1 && search.pid == 0) {
     printf(usage, cmd);
-    return 1;
+    return EXIT_FAILURE;
   }
 
-  xdo_window_list_by_regex(xdo, *args, search_flags, max_depth, &list, &nwindows);
+  if (only_visible)
+    search.only_visible = True;
+
+  //printf("Enum: %d %d %d %d", opt_pid, opt_maxdepth, opt_name, opt_title);
+  //printf("Search title: %d\n", search_title);
+  //printf("Search name: %d\n", search_name);
+  //printf("Search class: %d\n", search_class);
+  if (search_title < 0 && search_name < 0 && search_class < 0 && argc > 0) {
+    fprintf(stderr, "Defaulting to search window title, class, and name\n");
+    search_title = opt_title;
+    search_name = opt_name;
+    search_class = opt_class;
+  }
+
+  if (search_title == opt_title)
+    search.title = args[0];
+  if (search_name == opt_name)
+    search.winname = args[0];
+  if (search_class == opt_class)
+    search.winclass = args[0];
+
+  xdo_window_search(xdo, &search, &list, &nwindows);
   for (i = 0; i < nwindows; i++)
     window_print(list[i]);
 
-  /* Free list as it's malloc'd by xdo_window_list_by_regex */
+  /* Free list as it's malloc'd by xdo_window_search */
   free(list);
 
   /* error if number of windows found is zero (behave like grep) */
-  return !nwindows;
+  return (nwindows ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 /* Added 2007-07-28 - Lee Pumphret */

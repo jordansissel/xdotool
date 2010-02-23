@@ -58,19 +58,23 @@ clean:
 xdo.o: xdo.c xdo_version.h
 	$(CC) $(CFLAGS) -fPIC -c xdo.c
 
+xdo_search.o: xdo_search.c
+	$(CC) $(CFLAGS) -fPIC -c xdo_search.c
+
 xdotool.o: xdotool.c xdo_version.h
 	$(CC) $(CFLAGS) -c xdotool.c
 
+xdo_search.c: xdo.h
 xdo.c: xdo.h
 xdotool.c: xdo.h
 
-libxdo.so: xdo.o
-	$(CC) $(LDFLAGS) -shared -Wl,-soname=libxdo.so.$(MAJOR) $< -o $@
+libxdo.so: xdo.o xdo_search.o
+	$(CC) $(LDFLAGS) -shared -Wl,-soname=libxdo.so.$(MAJOR) xdo.o xdo_search.o -o $@
 
 libxdo.so.$(MAJOR): libxdo.so
 	ln -s $< $@
 
-xdotool: xdotool.o libxdo.so
+xdotool: xdotool.o libxdo.so 
 	$(CC) -o $@ xdotool.o -L. -lxdo $(LDFLAGS) 
 
 xdotool.1: xdotool.pod
