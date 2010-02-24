@@ -1,8 +1,15 @@
+DESTDIR?=
 PREFIX?=/usr/local
 INSTALLBIN?=$(PREFIX)/bin
 INSTALLLIB?=$(PREFIX)/lib
 INSTALLMAN?=$(PREFIX)/man
 INSTALLINCLUDE?=$(PREFIX)/include
+
+DPREFIX=$(DESTDIR)$(PREFIX)
+DINSTALLBIN=$(DESTDIR)$(INSTALLBIN)
+DINSTALLLIB=$(DESTDIR)$(INSTALLLIB)
+DINSTALLMAN=$(DESTDIR)$(INSTALLMAN)
+DINSTALLINCLUDE=$(DESTDIR)$(INSTALLINCLUDE)
 
 MAJOR=$(shell sh version.sh --major)
 VERSION=$(shell sh version.sh)
@@ -26,31 +33,34 @@ LDFLAGS+=$(LIBS)
 
 all: xdotool xdotool.1 libxdo.so libxdo.so.$(MAJOR)
 
-install: installlib installprog installman installheader
+install: pre-install installlib installprog installman installheader
+
+pre-install:
+	install -d $(DPREFIX)
 
 installprog: xdotool
-	[ -d $(INSTALLBIN) ] || mkdir -p $(INSTALLBIN)
-	install -m 755 xdotool $(INSTALLBIN)/
+	install -d $(DINSTALLBIN)
+	install -m 755 xdotool $(DINSTALLBIN)/
 
 installlib: libxdo.so
-	[ -d $(INSTALLLIB) ] || mkdir -p $(INSTALLLIB)
-	install libxdo.so $(INSTALLLIB)/libxdo.so.$(MAJOR)
-	ln -sf libxdo.so.$(MAJOR) $(INSTALLLIB)/libxdo.so
+	install -d $(DINSTALLLIB)
+	install libxdo.so $(DINSTALLLIB)/libxdo.so.$(MAJOR)
+	ln -sf libxdo.so.$(MAJOR) $(DINSTALLLIB)/libxdo.so
 
 installheader: xdo.h
-	[ -d $(INSTALLINCLUDE) ] || mkdir -p $(INSTALLINCLUDE)
-	install xdo.h $(INSTALLINCLUDE)/xdo.h
+	install -d $(DINSTALLINCLUDE)
+	install xdo.h $(DINSTALLINCLUDE)/xdo.h
 
 installman: xdotool.1
-	[ -d $(INSTALLMAN)/man1 ] || mkdir -p $(INSTALLMAN)/man1
-	install -m 644 xdotool.1 $(INSTALLMAN)/man1/
+	install -d $(DINSTALLMAN)/man1
+	install -m 644 xdotool.1 $(DINSTALLMAN)/
 
 deinstall: uninstall
 uninstall: 
-	rm -f $(INSTALLBIN)/xdotool
-	rm -f $(INSTALLMAN)/man1/xdotool.1
-	rm -f $(INSTALLLIB)/libxdo.so
-	rm -f $(INSTALLLIB)/libxdo.so.$(MAJOR)
+	rm -f $(DINSTALLBIN)/xdotool
+	rm -f $(DINSTALLMAN)/xdotool.1
+	rm -f $(DINSTALLLIB)/libxdo.so
+	rm -f $(DINSTALLLIB)/libxdo.so.$(MAJOR)
 
 clean:
 	rm -f *.o xdotool xdotool.1 libxdo.so libxdo.so.$(MAJOR) || true
