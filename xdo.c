@@ -504,16 +504,31 @@ int xdo_mousemove_relative(const xdo_t *xdo, int x, int y)  {
   return _is_success("XTestFakeRelativeMotionEvent", ret == 0);
 }
 
-int xdo_mousedown(const xdo_t *xdo, int button) {
+int xdo_mousedown(const xdo_t *xdo, Window window, int button) {
   int ret = 0;
-  ret = XTestFakeButtonEvent(xdo->xdpy, button, True, CurrentTime);
+
+  if (window == 0) {
+    ret = XTestFakeButtonEvent(xdo->xdpy, button, True, CurrentTime);
+  } else {
+    /* Send to specific window */
+    fprintf(stderr, "Not implemented\n");
+    ret = XDO_ERROR;
+  }
+
   XFlush(xdo->xdpy);
   return _is_success("XTestFakeButtonEvent(down)", ret == 0);
 }
 
-int xdo_mouseup(const xdo_t *xdo, int button) {
+int xdo_mouseup(const xdo_t *xdo, Window window, int button) {
   int ret = 0;
-  ret = XTestFakeButtonEvent(xdo->xdpy, button, False, CurrentTime);
+
+  if (window == 0) {
+    ret = XTestFakeButtonEvent(xdo->xdpy, button, False, CurrentTime);
+  } else {
+    /* Send to specific window */
+    fprintf(stderr, "Not implemented\n");
+    ret = XDO_ERROR;
+  }
   XFlush(xdo->xdpy);
   return _is_success("XTestFakeButtonEvent(up)", ret == 0);
 }
@@ -547,12 +562,12 @@ int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret, int *screen_num_
   return _is_success("XQueryPointer", ret == False);
 }
 
-int xdo_click(const xdo_t *xdo, int button) {
+int xdo_click(const xdo_t *xdo, Window window, int button) {
   int ret = 0;
-  ret = xdo_mousedown(xdo, button);
+  ret = xdo_mousedown(xdo, window, button);
   if (ret != XDO_SUCCESS)
     return ret;
-  ret = xdo_mouseup(xdo, button);
+  ret = xdo_mouseup(xdo, window, button);
   return ret;
 }
 
@@ -1166,15 +1181,15 @@ int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, xdo_active_mods_
                           active_mods->nkeymods, False, NULL);
 
   if (active_mods->input_state & Button1MotionMask)
-    ret = xdo_mouseup(xdo, 1);
+    ret = xdo_mouseup(xdo, window, 1);
   if (!ret && active_mods->input_state & Button2MotionMask)
-    ret = xdo_mouseup(xdo, 2);
+    ret = xdo_mouseup(xdo, window, 2);
   if (!ret && active_mods->input_state & Button3MotionMask)
-    ret = xdo_mouseup(xdo, 3);
+    ret = xdo_mouseup(xdo, window, 3);
   if (!ret && active_mods->input_state & Button4MotionMask)
-    ret = xdo_mouseup(xdo, 4);
+    ret = xdo_mouseup(xdo, window, 4);
   if (!ret && active_mods->input_state & Button5MotionMask)
-    ret = xdo_mouseup(xdo, 5);
+    ret = xdo_mouseup(xdo, window, 5);
 
   return ret;
 }
@@ -1184,15 +1199,15 @@ int xdo_set_active_modifiers(const xdo_t *xdo, Window window, const xdo_active_m
   xdo_keysequence_list_do(xdo, window, active_mods->keymods,
                           active_mods->nkeymods, True, NULL);
   if (active_mods->input_state & Button1MotionMask)
-    ret = xdo_mousedown(xdo, 1);
+    ret = xdo_mousedown(xdo, window, 1);
   if (!ret && active_mods->input_state & Button2MotionMask)
-    ret = xdo_mousedown(xdo, 2);
+    ret = xdo_mousedown(xdo, window, 2);
   if (!ret && active_mods->input_state & Button3MotionMask)
-    ret = xdo_mousedown(xdo, 3);
+    ret = xdo_mousedown(xdo, window, 3);
   if (!ret && active_mods->input_state & Button4MotionMask)
-    ret = xdo_mousedown(xdo, 4);
+    ret = xdo_mousedown(xdo, window, 4);
   if (!ret && active_mods->input_state & Button5MotionMask)
-    ret = xdo_mousedown(xdo, 5);
+    ret = xdo_mousedown(xdo, window, 5);
 
   return ret;
 }

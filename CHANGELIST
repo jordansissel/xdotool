@@ -4,6 +4,9 @@
     Fixes: http://code.google.com/p/semicomplete/issues/detail?id=10
     Example: xdotool search --pid 12345
     Example: xdotool search --pid 12345 "hello world"
+  - The --clearmodifiers flag now clears mouse buttons, too.
+    From: http://code.google.com/p/semicomplete/issues/detail?id=6
+
 
 0.20100118.*:
   - Slight change in how we present versions. Now versions have major, date,

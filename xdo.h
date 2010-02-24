@@ -83,11 +83,11 @@ void xdo_free(xdo_t *xdo);
 
 int xdo_mousemove(const xdo_t *xdo, int x, int y);
 int xdo_mousemove_relative(const xdo_t *xdo, int x, int y);
-int xdo_mousedown(const xdo_t *xdo, int button);
-int xdo_mouseup(const xdo_t *xdo, int button);
+int xdo_mousedown(const xdo_t *xdo, Window window, int button);
+int xdo_mouseup(const xdo_t *xdo, Window window, int button);
 int xdo_mouselocation(const xdo_t *xdo, int *x, int *y, int *screen_num);
 
-int xdo_click(const xdo_t *xdo, int button);
+int xdo_click(const xdo_t *xdo, Window window, int button);
 
 int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay);
 int xdo_keysequence(const xdo_t *xdo, Window window, char *keysequence);
