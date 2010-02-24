@@ -52,6 +52,12 @@ typedef struct xdo {
   int close_display_when_freed;
 } xdo_t;
 
+typedef struct xdo_active_mods {
+  charcodemap_t *keymods;
+  int nkeymods;
+  unsigned int input_state;
+} xdo_active_mods_t;
+
 typedef struct xdo_search {
   char *title;       /* pattern to test against a window title */
   char *winclass;    /* pattern to test against a window class */
@@ -72,52 +78,58 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
 const char *xdo_version(void);
 void xdo_free(xdo_t *xdo);
 
-int xdo_mousemove(xdo_t *xdo, int x, int y);
-int xdo_mousemove_relative(xdo_t *xdo, int x, int y);
-int xdo_mousedown(xdo_t *xdo, int button);
-int xdo_mouseup(xdo_t *xdo, int button);
-int xdo_mouselocation(xdo_t *xdo, int *x, int *y, int *screen_num);
+int xdo_mousemove(const xdo_t *xdo, int x, int y);
+int xdo_mousemove_relative(const xdo_t *xdo, int x, int y);
+int xdo_mousedown(const xdo_t *xdo, int button);
+int xdo_mouseup(const xdo_t *xdo, int button);
+int xdo_mouselocation(const xdo_t *xdo, int *x, int *y, int *screen_num);
 
-int xdo_click(xdo_t *xdo, int button);
+int xdo_click(const xdo_t *xdo, int button);
 
-int xdo_type(xdo_t *xdo, Window window, char *string, useconds_t delay);
-int xdo_keysequence(xdo_t *xdo, Window window, char *keysequence);
-int xdo_keysequence_up(xdo_t *xdo, Window window, char *keysequence);
-int xdo_keysequence_down(xdo_t *xdo, Window window, char *keysequence);
-int xdo_keysequence_list_do(xdo_t *xdo, Window window, charcodemap_t *keys,
+int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay);
+int xdo_keysequence(const xdo_t *xdo, Window window, char *keysequence);
+int xdo_keysequence_up(const xdo_t *xdo, Window window, char *keysequence);
+int xdo_keysequence_down(const xdo_t *xdo, Window window, char *keysequence);
+int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys,
                              int nkeys, int pressed, int *modifier);
-int xdo_active_modifiers_to_keycode_list(xdo_t *xdo, charcodemap_t **keys,
+int xdo_active_modifiers_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
                                          int *nkeys);
 
-int xdo_window_move(xdo_t *xdo, Window wid, int x, int y);
-int xdo_window_setsize(xdo_t *xdo, Window wid, int w, int h, int flags);
-int xdo_window_setprop (xdo_t *xdo, Window wid, const char *property, const char *value);
-int xdo_window_setclass(xdo_t *xdo, Window wid, const char *name, const char *class);
-int xdo_window_focus(xdo_t *xdo, Window wid);
-int xdo_window_raise(xdo_t *xdo, Window wid);
-int xdo_window_get_focus(xdo_t *xdo, Window *window_ret);
-int xdo_window_sane_get_focus(xdo_t *xdo, Window *window_ret);
-int xdo_window_activate(xdo_t *xdo, Window wid);
+int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y);
+int xdo_window_setsize(const xdo_t *xdo, Window wid, int w, int h, int flags);
+int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property, const char *value);
+int xdo_window_setclass(const xdo_t *xdo, Window wid, const char *name, const char *class);
+int xdo_window_focus(const xdo_t *xdo, Window wid);
+int xdo_window_raise(const xdo_t *xdo, Window wid);
+int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret);
+int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret);
+int xdo_window_activate(const xdo_t *xdo, Window wid);
 
-int xdo_window_map(xdo_t *xdo, Window wid);
-int xdo_window_unmap(xdo_t *xdo, Window wid);
+int xdo_window_map(const xdo_t *xdo, Window wid);
+int xdo_window_unmap(const xdo_t *xdo, Window wid);
 
 /* pager-like behaviors */
-int xdo_window_get_active(xdo_t *xdo, Window *window_ret);
-int xdo_set_number_of_desktops(xdo_t *xdo, long ndesktops);
-int xdo_get_number_of_desktops(xdo_t *xdo, long *ndesktops);
-int xdo_set_current_desktop(xdo_t *xdo, long desktop);
-int xdo_get_current_desktop(xdo_t *xdo, long *desktop);
-int xdo_set_desktop_for_window(xdo_t *xdo, Window wid, long desktop);
-int xdo_get_desktop_for_window(xdo_t *xdo, Window wid, long *desktop);
+int xdo_window_get_active(const xdo_t *xdo, Window *window_ret);
+int xdo_set_number_of_desktops(const xdo_t *xdo, long ndesktops);
+int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops);
+int xdo_set_current_desktop(const xdo_t *xdo, long desktop);
+int xdo_get_current_desktop(const xdo_t *xdo, long *desktop);
+int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop);
+int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop);
 
 int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
                       Window **windowlist_ret, int *nwindows_ret);
 
-unsigned char *xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
+unsigned char *xdo_getwinprop(const xdo_t *xdo, Window window, Atom atom,
                               long *nitems, Atom *type, int *size);
 unsigned int xdo_get_input_state(const xdo_t *xdo);
 const keysym_charmap_t *xdo_keysym_charmap(void);
 const char **xdo_symbol_map(void);
+
+/* active modifiers stuff */
+xdo_active_mods_t *xdo_get_active_modifiers(const xdo_t *xdo);
+int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, xdo_active_mods_t *active_mods);
+int xdo_set_active_modifiers(const xdo_t *xdo, Window window, const xdo_active_mods_t *active_mods);
+void xdo_free_active_modifiers(xdo_active_mods_t *active_mods);
 
 #endif /* ifndef _XDO_H_ */

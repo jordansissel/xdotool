@@ -438,9 +438,7 @@ int cmd_type(int argc, char **args) {
   int i;
   int c;
   char *cmd = *args;
-  charcodemap_t *keymods;
-  int nkeymods;
-  unsigned int input_state;
+  xdo_active_mods_t *active_mods;
 
   /* Options */
   int clear_modifiers = 0;
@@ -496,15 +494,8 @@ int cmd_type(int argc, char **args) {
   }
 
   if (clear_modifiers) {
-    xdo_active_modifiers_to_keycode_list(xdo, &keymods, &nkeymods);
-    xdo_keysequence_list_do(xdo, window, keymods, nkeymods, False, NULL);
-
-    input_state = xdo_get_input_state(xdo);
-    if (input_state & Button1MotionMask) xdo_mouseup(xdo, 1);
-    if (input_state & Button2MotionMask) xdo_mouseup(xdo, 2);
-    if (input_state & Button3MotionMask) xdo_mouseup(xdo, 3);
-    if (input_state & Button4MotionMask) xdo_mouseup(xdo, 4);
-    if (input_state & Button5MotionMask) xdo_mouseup(xdo, 5);
+    active_mods = xdo_get_active_modifiers(xdo);
+    xdo_clear_active_modifiers(xdo, window, active_mods);
   }
 
   for (i = 0; i < argc; i++) {
@@ -518,15 +509,8 @@ int cmd_type(int argc, char **args) {
   }
 
   if (clear_modifiers) {
-    /* Re-activate any modifiers we disabled previously */
-    xdo_keysequence_list_do(xdo, window, keymods, nkeymods, True, NULL);
-    free(keymods);
-
-    if (input_state & Button1MotionMask) xdo_mousedown(xdo, 1);
-    if (input_state & Button2MotionMask) xdo_mousedown(xdo, 2);
-    if (input_state & Button3MotionMask) xdo_mousedown(xdo, 3);
-    if (input_state & Button4MotionMask) xdo_mousedown(xdo, 4);
-    if (input_state & Button5MotionMask) xdo_mousedown(xdo, 5);
+    xdo_set_active_modifiers(xdo, window, active_mods);
+    xdo_free_active_modifiers(active_mods);
   }
 
   return ret > 0;
@@ -537,8 +521,7 @@ int cmd_key(int argc, char **args) {
   int i;
   int c;
   char *cmd = *args;
-  charcodemap_t *keymods;
-  int nkeymods;
+  xdo_active_mods_t *active_mods;
 
   /* Options */
   Window window = 0;
@@ -553,7 +536,6 @@ int cmd_key(int argc, char **args) {
 
   static const char *usage = "Usage: %s [--window windowid] [--clearmodifiers] <keyseq1> [keyseq2 ... keyseqN]\n";
   int option_index;
-  unsigned int input_state;
 
   while ((c = getopt_long_only(argc, args, "hw:", longopts, &option_index)) != -1) {
     switch (c) {
@@ -582,7 +564,7 @@ int cmd_key(int argc, char **args) {
     return 1;
   }
 
-  int (*func)(xdo_t *, Window, char *) = NULL;
+  int (*func)(const xdo_t *, Window, char *) = NULL;
 
   if (!strcmp(cmd, "key")) {
     func = xdo_keysequence;
@@ -596,15 +578,8 @@ int cmd_key(int argc, char **args) {
   }
 
   if (clear_modifiers) {
-    xdo_active_modifiers_to_keycode_list(xdo, &keymods, &nkeymods);
-    xdo_keysequence_list_do(xdo, window, keymods, nkeymods, False, NULL);
-
-    input_state = xdo_get_input_state(xdo);
-    if (input_state & Button1MotionMask) xdo_mouseup(xdo, 1);
-    if (input_state & Button2MotionMask) xdo_mouseup(xdo, 2);
-    if (input_state & Button3MotionMask) xdo_mouseup(xdo, 3);
-    if (input_state & Button4MotionMask) xdo_mouseup(xdo, 4);
-    if (input_state & Button5MotionMask) xdo_mouseup(xdo, 5);
+    active_mods = xdo_get_active_modifiers(xdo);
+    xdo_clear_active_modifiers(xdo, window, active_mods);
   }
 
   for (i = 0; i < argc; i++) {
@@ -615,15 +590,8 @@ int cmd_key(int argc, char **args) {
   }
 
   if (clear_modifiers) {
-    /* Re-activate any modifiers we disabled previously */
-    xdo_keysequence_list_do(xdo, window, keymods, nkeymods, True, NULL);
-    free(keymods);
-
-    if (input_state & Button1MotionMask) xdo_mousedown(xdo, 1);
-    if (input_state & Button2MotionMask) xdo_mousedown(xdo, 2);
-    if (input_state & Button3MotionMask) xdo_mousedown(xdo, 3);
-    if (input_state & Button4MotionMask) xdo_mousedown(xdo, 4);
-    if (input_state & Button5MotionMask) xdo_mousedown(xdo, 5);
+    xdo_set_active_modifiers(xdo, window, active_mods);
+    xdo_free_active_modifiers(active_mods);
   }
 
   return ret;
