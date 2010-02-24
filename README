@@ -1,8 +1,8 @@
 xdo: Fake input from the mouse and keyboard very easily
 
-### See the website for more up-to-date documentation
-#   http://www.semicomplete.com/projects/xdotool/
-#   or the manpage listed below.
+See the website for more up-to-date documentation
+  http://www.semicomplete.com/projects/xdotool/
+  or the manpage listed below.
 
 Compile: make
 Install: make install
@@ -10,6 +10,11 @@ Install: make install
 You may have to set 'PREFIX' to the location you want to install to. 
 The default PREFIX is /usr/local
 
-Also see the manpage, which you can generate by running:
-% make xdotool.1
-% nroff -man xdotool.1 | less
+For packagers, there's also support for DESTDIR for staged install.
+
+Also, see the manpage, which you can generate by running:
+  make xdotool.1
+  nroff -man xdotool.1 | less
+Note, that the manpage will be installed during 'make install'
+
+
