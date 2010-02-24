@@ -116,6 +116,7 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
 
 unsigned char *xdo_getwinprop(xdo_t *xdo, Window window, Atom atom,
                               long *nitems, Atom *type, int *size);
+unsigned int xdo_get_input_state(const xdo_t *xdo);
 const keysym_charmap_t *xdo_keysym_charmap(void);
 const char **xdo_symbol_map(void);
 

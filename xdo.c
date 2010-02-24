@@ -40,8 +40,6 @@ static int _xdo_keysequence_to_keycode_list(xdo_t *xdo, char *keyseq,
                                             charcodemap_t **keys, int *nkeys);
 static int _xdo_keysequence_do(xdo_t *xdo, Window window, char *keyseq,
                                int pressed, int *modifier);
-static int _xdo_regex_match_window(xdo_t *xdo, Window window, int flags,
-                                   regex_t *re);
 static int _xdo_ewmh_is_supported(xdo_t *xdo, const char *feature);
 static void _xdo_init_xkeyevent(xdo_t *xdo, XKeyEvent *xk);
 void _xdo_send_key(xdo_t *xdo, Window window, int keycode, int modstate,
@@ -1121,6 +1119,18 @@ int xdo_active_modifiers_to_keycode_list(xdo_t *xdo, charcodemap_t **keys,
   } 
 
   return True;
+}
+
+unsigned int xdo_get_input_state(const xdo_t *xdo) {
+  Window root, dummy;
+  int root_x, root_y, win_x, win_y;
+  unsigned int mask;
+  root = DefaultRootWindow(xdo->xdpy);
+
+  XQueryPointer(xdo->xdpy, root, &dummy, &dummy,
+                &root_x, &root_y, &win_x, &win_y, &mask);
+
+  return mask;
 }
 
 const keysym_charmap_t *xdo_keysym_charmap(void) {
