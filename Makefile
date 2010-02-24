@@ -53,7 +53,7 @@ installheader: xdo.h
 
 installman: xdotool.1
 	install -d $(DINSTALLMAN)/man1
-	install -m 644 xdotool.1 $(DINSTALLMAN)/
+	install -m 644 xdotool.1 $(DINSTALLMAN)/man1/
 
 deinstall: uninstall
 uninstall: 
