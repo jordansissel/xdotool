@@ -574,7 +574,7 @@ int xdo_click(const xdo_t *xdo, Window window, int button) {
 /* XXX: Return proper code if errors found */
 int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
   int i = 0;
-  char key = '0';
+  char key = '\0';
   int keycode = 0;
   int shiftcode = 0;
   int modstate = 0;
@@ -667,6 +667,7 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
       keymapchanged = 1;
     }
 
+    printf("Sending %d\n", keys[i].code);
     _xdo_send_key(xdo, window, keys[i].code, *modifier, pressed, 0);
 
     if (keys[i].needs_binding == 1) {
