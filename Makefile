@@ -63,7 +63,7 @@ uninstall:
 	rm -f $(DINSTALLLIB)/libxdo.so.$(MAJOR)
 
 clean:
-	rm -f *.o xdotool xdotool.1 libxdo.so libxdo.so.$(MAJOR) || true
+	rm -f *.o xdotool xdotool.1 libxdo.so libxdo.so.? || true
 
 xdo.o: xdo.c xdo_version.h
 	$(CC) $(CFLAGS) -fPIC -c xdo.c
