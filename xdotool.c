@@ -1009,22 +1009,27 @@ int cmd_search(int argc, char **args) {
 /* Added 2007-07-28 - Lee Pumphret */
 int cmd_getwindowfocus(int argc, char **args) {
   int ret = 0;
+  int get_toplevel_focus = 1;
   Window wid = 0;
   char *cmd = *args;
 
   int c;
   static struct option longopts[] = {
     { "help", no_argument, NULL, 'h' },
+    { NULL, no_argument, NULL, 'f' },
     { 0, 0, 0, 0 },
   };
   static const char *usage = "Usage: %s -f\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(argc, args, "fh", longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
         return EXIT_SUCCESS;
+        break;
+      case 'f':
+        get_toplevel_focus = 0;
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -1040,15 +1045,10 @@ int cmd_getwindowfocus(int argc, char **args) {
     return 1;
   }
 
-  if (argc == 1) {
-    if (!strcmp(args[0], "-f")) { /* -f was given */
-      ret = xdo_window_get_focus(xdo, &wid);
-    } else {
-      fprintf(stderr, usage, cmd);
-    }
-  } else {
-    /* No '-f' flag given, assume sane mode */
+  if (get_toplevel_focus) {
     ret = xdo_window_sane_get_focus(xdo, &wid);
+  } else {
+    ret = xdo_window_get_focus(xdo, &wid);
   }
 
   if (ret) {

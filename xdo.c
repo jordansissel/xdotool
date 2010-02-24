@@ -175,10 +175,13 @@ int xdo_window_setsize(const xdo_t *xdo, Window wid, int width, int height, int 
 }
 
 int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name, const char *class) {
-
+  int ret;
   XClassHint *hint = XAllocClassHint();
   
-  XGetClassHint(xdo->xdpy, wid, hint);
+  ret = XGetClassHint(xdo->xdpy, wid, hint);
+  if (ret == 0) {
+    return _is_success("XGetClassHint", ret == 0);
+  }
 
   if (name != NULL)
     hint->res_name = (char*)name;
@@ -186,25 +189,32 @@ int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name, const c
   if(class != NULL)
     hint->res_class = (char*)class;
 
-  XSetClassHint(xdo->xdpy, wid, hint);
-
+  ret = XSetClassHint(xdo->xdpy, wid, hint);
   XFree(hint);
-  return 0;
+  return _is_success("XSetClassHint", ret == 0);
 }
 
 int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property, const char *value) {
   
   char netwm_property[256] = "_NET_";
+  int ret;
   strncat(netwm_property, property, strlen(property));
 
-  XChangeProperty(xdo->xdpy, wid, XInternAtom(xdo->xdpy, property, False), 
-                  XInternAtom(xdo->xdpy, "STRING", False), 8, PropModeReplace,
-                  (unsigned char*)value, strlen(value));
+  // Change the property
+  ret = XChangeProperty(xdo->xdpy, wid, 
+                        XInternAtom(xdo->xdpy, property, False), 
+                        XInternAtom(xdo->xdpy, "STRING", False), 8, 
+                        PropModeReplace, (unsigned char*)value, strlen(value));
+  if (ret == 0) {
+    return _is_success("XChangeProperty", ret == 0);
+  }
 
-  XChangeProperty(xdo->xdpy, wid, XInternAtom(xdo->xdpy, netwm_property, False), 
-                  XInternAtom(xdo->xdpy, "STRING", False), 8, PropModeReplace,
-                  (unsigned char*)value, strlen(value));
-  return 0;
+  // Change _NET_<property> just in case for simpler NETWM compliance?
+  ret = XChangeProperty(xdo->xdpy, wid, 
+                        XInternAtom(xdo->xdpy, netwm_property, False), 
+                        XInternAtom(xdo->xdpy, "STRING", False), 8, 
+                        PropModeReplace, (unsigned char*)value, strlen(value));
+  return _is_success("XChangeProperty", ret == 0);
 }
 
 int xdo_window_focus(const xdo_t *xdo, Window wid) {
@@ -224,7 +234,7 @@ int xdo_window_activate(const xdo_t *xdo, Window wid) {
     fprintf(stderr,
             "Your windowmanager claims not to support _NET_ACTIVE_WINDOW, "
             "so the attempt to activate the window was aborted.\n");
-    return 1;
+    return XDO_ERROR;
   }
 
   /* If this window is on another desktop, let's go to that desktop first */
@@ -264,7 +274,7 @@ int xdo_set_number_of_desktops(const xdo_t *xdo, long ndesktops) {
     fprintf(stderr,
             "Your windowmanager claims not to support _NET_NUMBER_OF_DESKTOPS, "
             "so the attempt to change the number of desktops was aborted.\n");
-    return 1;
+    return XDO_ERROR;
   }
 
   root = RootWindow(xdo->xdpy, 0);
@@ -297,7 +307,7 @@ int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops) {
     fprintf(stderr,
             "Your windowmanager claims not to support _NET_NUMBER_OF_DESKTOPS, "
             "so the attempt to query the number of desktops was aborted.\n");
-    return 1;
+    return XDO_ERROR;
   }
 
   request = XInternAtom(xdo->xdpy, "_NET_NUMBER_OF_DESKTOPS", False);
@@ -305,15 +315,15 @@ int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops) {
 
   data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
 
-  if (nitems > 0)
+  if (nitems > 0) {
     *ndesktops = *((long*)data);
-  else
+  } else {
     *ndesktops = 0;
+  }
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_NUMBER_OF_DESKTOPS]",
                      *ndesktops == 0);
-
 }
 
 int xdo_set_current_desktop(const xdo_t *xdo, long desktop) {
@@ -328,7 +338,7 @@ int xdo_set_current_desktop(const xdo_t *xdo, long desktop) {
     fprintf(stderr,
             "Your windowmanager claims not to support _NET_CURRENT_DESKTOP, "
             "so the attempt to change desktops was aborted.\n");
-    return 1;
+    return XDO_ERROR;
   }
 
   memset(&xev, 0, sizeof(xev));
@@ -361,7 +371,7 @@ int xdo_get_current_desktop(const xdo_t *xdo, long *desktop) {
     fprintf(stderr,
             "Your windowmanager claims not to support _NET_CURRENT_DESKTOP, "
             "so the query for the current desktop was aborted.\n");
-    return 1;
+    return XDO_ERROR;
   }
 
   request = XInternAtom(xdo->xdpy, "_NET_CURRENT_DESKTOP", False);
@@ -369,10 +379,11 @@ int xdo_get_current_desktop(const xdo_t *xdo, long *desktop) {
 
   data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
 
-  if (nitems > 0)
+  if (nitems > 0) {
     *desktop = *((long*)data);
-  else
+  } else {
     *desktop = -1;
+  }
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_CURRENT_DESKTOP]",
@@ -390,7 +401,7 @@ int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop) {
             "Your windowmanager claims not to support _NET_WM_DESKTOP, "
             "so the attempt to change a window's desktop location was "
             "aborted.\n");
-    return 1;
+    return XDO_ERROR;
   }
 
   memset(&xev, 0, sizeof(xev));
@@ -422,17 +433,18 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
             "Your windowmanager claims not to support _NET_WM_DESKTOP, "
             "so the attempt to query a window's desktop location was "
             "aborted.\n");
-    return 1;
+    return XDO_ERROR;
   }
 
   request = XInternAtom(xdo->xdpy, "_NET_WM_DESKTOP", False);
 
   data = xdo_getwinprop(xdo, wid, request, &nitems, &type, &size);
 
-  if (nitems > 0)
+  if (nitems > 0) {
     *desktop = *((long*)data);
-  else
+  } else {
     *desktop = -1;
+  }
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_WM_DESKTOP]",
@@ -451,17 +463,18 @@ int xdo_window_get_active(const xdo_t *xdo, Window *window_ret) {
     fprintf(stderr,
             "Your windowmanager claims not to support _NET_ACTIVE_WINDOW, "
             "so the attempt to query the active window aborted.\n");
-    return 1;
+    return XDO_ERROR;
   }
 
   request = XInternAtom(xdo->xdpy, "_NET_ACTIVE_WINDOW", False);
   root = XDefaultRootWindow(xdo->xdpy);
   data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
 
-  if (nitems > 0)
+  if (nitems > 0) {
     *window_ret = *((Window*)data);
-  else
+  } else {
     *window_ret = 0;
+  }
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_ACTIVE_WINDOW]",
@@ -537,7 +550,7 @@ int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret, int *screen_num_
 int xdo_click(const xdo_t *xdo, int button) {
   int ret = 0;
   ret = xdo_mousedown(xdo, button);
-  if (ret)
+  if (ret != XDO_SUCCESS)
     return ret;
   ret = xdo_mouseup(xdo, button);
   return ret;
@@ -573,7 +586,7 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
     XFlush(xdo->xdpy);
   }
 
-  return 0;
+  return XDO_SUCCESS;
 }
 
 int _xdo_keysequence_do(const xdo_t *xdo, Window window, char *keyseq, int pressed, int *modifier) {
@@ -607,21 +620,17 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
   keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low, 
                                 xdo->keycode_high - xdo->keycode_low,
                                 &keysyms_per_keycode);
-  //XXX fprintf(stderr, "Searching for scratch keycode\n");
   for (i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
     int j = 0;
     int key_is_empty = 1;
-    //XXX printf("%d: ", i);
     for (j = 0; j < keysyms_per_keycode; j++) {
       char *symname;
       int symindex = (i - xdo->keycode_low) * keysyms_per_keycode + j;
       symname = XKeysymToString(keysyms[symindex]);
-      //XXX printf("%d(%s) ", keysyms[symindex]);
       if (keysyms[symindex] != 0) {
         key_is_empty = 0;
       }
     }
-    //XXX printf("\n");
     if (key_is_empty) {
       scratch_keycode = i;
       break;
@@ -660,7 +669,6 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
   }
 
 
-  //if (keys[i].needs_binding == 1) {
   if (keymapchanged) {
     KeySym keysym_list[] = { 0 };
     XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
@@ -668,7 +676,7 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
 
   /* Necessary? */
   XFlush(xdo->xdpy);
-  return 0;
+  return XDO_SUCCESS;
 }
 
   
@@ -926,6 +934,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, char *keyseq,
 }
 
 int _is_success(const char *funcname, int code) {
+  /* Nonzero is failure. */
   if (code != 0)
     fprintf(stderr, "%s failed (code=%d)\n", funcname, code);
   return code;
@@ -1118,7 +1127,7 @@ int xdo_active_modifiers_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
     }
   } 
 
-  return True;
+  return XDO_SUCCESS;
 }
 
 unsigned int xdo_get_input_state(const xdo_t *xdo) {

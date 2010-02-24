@@ -71,6 +71,9 @@ typedef struct xdo_search {
   enum { SEARCH_ANY, SEARCH_ALL } require;
 } xdo_search_t;
 
+#define XDO_ERROR 1
+#define XDO_SUCCESS 0
+
 xdo_t* xdo_new(char *display);
 xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
                                    int close_display_when_freed);
