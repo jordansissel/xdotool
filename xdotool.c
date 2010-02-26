@@ -2,8 +2,6 @@
  *
  * command line interface to the xdo library
  *
- * $Id$
- *
  * getwindowfocus contributed by Lee Pumphret
  * keyup/down contributed by Lee Pumphret
  *
@@ -1017,6 +1015,8 @@ int cmd_search(int argc, char **args) {
       " --maxdepth N    set search depth to N. Default is infinite.\n"
       " --name          check regexp_pattern agains the window name\n"
       " --onlyvisible   matches only windows currently visible\n"
+      " --pid PID       only show windows belonging to specific process\n"
+      "                 Not supported by all X11 applications"
       " --screen N      only search a specific screen. Default is all screens\n"
       " --title         check regexp_pattern agains the window title\n"
       "                 -1 also means infinite.\n"
