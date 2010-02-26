@@ -1,12 +1,18 @@
-0.2010????.*:
-  - Fix http://code.google.com/p/semicomplete/issues/detail?id=17
+1.2010????.*:
+  - Bump major version since there were lots of libxdo changes.
   - Support '--pid NUM' for searching for windows by pid:
-    Fixes: http://code.google.com/p/semicomplete/issues/detail?id=10
+    Fixes http://code.google.com/p/semicomplete/issues/detail?id=10
     Example: xdotool search --pid 12345
     Example: xdotool search --pid 12345 "hello world"
   - The --clearmodifiers flag now clears mouse buttons, too.
-    From: http://code.google.com/p/semicomplete/issues/detail?id=6
-
+    Part of http://code.google.com/p/semicomplete/issues/detail?id=6
+  - The --clearmodifiers flag now clears caps lock.
+    Fixes http://code.google.com/p/semicomplete/issues/detail?id=4
+  - Have 'make install' create all required directories
+    Fixes http://code.google.com/p/semicomplete/issues/detail?id=17
+  - Support multiple screens in searches. Default is to search all screens.
+    Fixes http://code.google.com/p/semicomplete/issues/detail?id=11
+    Example: 'xdotool search --screen N' specifies a single screen to search.
 
 0.20100118.*:
   - Slight change in how we present versions. Now versions have major, date,
