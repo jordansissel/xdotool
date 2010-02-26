@@ -872,7 +872,6 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
   
   /* Array of keys to press, in order given by keyseq */
   int keys_size = 10;
-  *nkeys = 0;
 
   if (strcspn(keyseq, " \t\n.-[]{}\\|") != strlen(keyseq)) {
     fprintf(stderr, "Error: Invalid key sequence '%s'\n", keyseq);
@@ -881,6 +880,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
 
   shift_keycode = XKeysymToKeycode(xdo->xdpy, XStringToKeysym("Shift_L"));
 
+  *nkeys = 0;
   *keys = malloc(keys_size * sizeof(charcodemap_t));
   keyseq_copy = strptr = strdup(keyseq);
   while ((tok = strtok_r(strptr, "+", &tokctx)) != NULL) {
@@ -908,32 +908,37 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
     } else {
       key = XKeysymToKeycode(xdo->xdpy, sym);
     }
+    //printf("%s => %d => %d\n", tok, sym, key);
 
     if (key == 0) {
       //fprintf(stderr, "No such key '%s'. Ignoring it.\n", tok);
       (*keys)[*nkeys].symbol = sym;
       (*keys)[*nkeys].needs_binding = 1;
+      (*keys)[*nkeys].code = 0;
     } else {
-      (*keys)[*nkeys].symbol = 0;
-      (*keys)[*nkeys].needs_binding = 0;
-      (*keys)[*nkeys].code = key;
+
+      /* Inject a shift key if we need to press shift to reach this keysym */
       if ((XKeycodeToKeysym(xdo->xdpy, key, 0) == sym)
           || sym == NoSymbol) {
         /* sym is NoSymbol if we give a keycode to type */
         (*keys)[*nkeys].shift = 0;
       } else  {
         /* Inject a 'shift' key item if we should be using shift */
-        //fprintf(stderr, "Key '%s' doesn't match first symbol\n", tok);
+        (*keys)[*nkeys].symbol = NoSymbol;
         (*keys)[*nkeys].code = shift_keycode;
         (*keys)[*nkeys].shift = 0;
-
         (*nkeys)++;
+
         if (*nkeys == keys_size) {
           keys_size *= 2;
           *keys = realloc(*keys, keys_size * sizeof(charcodemap_t));
         }
-        (*keys)[*nkeys].shift = shift_keycode;
       }
+
+      /* Record the original keycode */
+      (*keys)[*nkeys].symbol = NoSymbol;
+      (*keys)[*nkeys].needs_binding = 0;
+      (*keys)[*nkeys].code = key;
     }
 
     (*nkeys)++;
@@ -943,6 +948,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
     }
   }
 
+  *nkeys--;
   free(keyseq_copy);
   return True;
 }
