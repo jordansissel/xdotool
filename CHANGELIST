@@ -4,6 +4,8 @@
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=10
     Example: xdotool search --pid 12345
     Example: xdotool search --pid 12345 "hello world"
+  - Add --window to xdotool mousemove, click, mousedown, and mouseup
+  - Add --screen to xdotool mousemove
   - The --clearmodifiers flag now clears mouse buttons, too.
     Part of http://code.google.com/p/semicomplete/issues/detail?id=6
   - The --clearmodifiers flag now clears caps lock.
