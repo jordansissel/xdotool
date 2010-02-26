@@ -982,28 +982,30 @@ int cmd_search(int argc, char **args) {
   int search_class = -1;
   typedef enum { 
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_class, opt_maxdepth,
-    opt_pid, opt_help, opt_any, opt_all,
+    opt_pid, opt_help, opt_any, opt_all, opt_screen
   } optlist_t;
   struct option longopts[] = {
-    { "onlyvisible", 0, &only_visible, opt_onlyvisible },
-    { "title", 0, &search_title, opt_title },
-    { "name", 0, &search_name, opt_name },
-    { "any", 0, NULL, opt_any },
-    { "all", 0, NULL, opt_all },
-    { "class", 0, &search_class, opt_class },
-    { "maxdepth", required_argument, NULL, opt_maxdepth },
-    { "pid", required_argument, NULL, opt_pid },
+    { "all", no_argument, NULL, opt_all },
+    { "any", no_argument, NULL, opt_any },
+    { "class", no_argument, &search_class, opt_class },
     { "help", no_argument, NULL, opt_help },
+    { "maxdepth", required_argument, NULL, opt_maxdepth },
+    { "name", no_argument, &search_name, opt_name },
+    { "onlyvisible", 0, &only_visible, opt_onlyvisible },
+    { "pid", required_argument, NULL, opt_pid },
+    { "screen", required_argument, NULL, opt_screen },
+    { "title", no_argument, &search_title, opt_title },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
       "Usage: xdotool %s "
-      "[--onlyvisible --title --class --name --maxdepth N] regexp_pattern\n"
-      " --onlyvisible   matches only windows currently visible\n"
-      " --title         check regexp_pattern agains the window title\n"
+      "[options] regexp_pattern\n"
       " --class         check regexp_pattern agains the window class\n"
+      " --maxdepth N    set search depth to N. Default is infinite.\n"
       " --name          check regexp_pattern agains the window name\n"
-      " --maxdepth <N>  set child window depth level to N. Default is infinite.\n"
+      " --onlyvisible   matches only windows currently visible\n"
+      " --screen N      only search a specific screen. Default is all screens\n"
+      " --title         check regexp_pattern agains the window title\n"
       "                 -1 also means infinite.\n"
       " -h, --help      show this help output\n"
       "\n"
@@ -1025,14 +1027,11 @@ int cmd_search(int argc, char **args) {
         printf(usage, cmd);
         return EXIT_SUCCESS;
       case opt_maxdepth:
-        if (optarg) {
-          search.max_depth = strtol(optarg, NULL, 0);
-        }
+        search.max_depth = strtol(optarg, NULL, 0);
         break;
       case opt_pid:
-        if (optarg) {
-          search.pid = strtoul(optarg, NULL, 0);
-        }
+        search.pid = strtoul(optarg, NULL, 0);
+        search.searchmask |= SEARCH_PID;
         break;
       case opt_any:
         search.require = SEARCH_ANY;
@@ -1040,7 +1039,12 @@ int cmd_search(int argc, char **args) {
       case opt_all:
         search.require = SEARCH_ALL;
         break;
+      case opt_screen:
+        search.screen = strtoul(optarg, NULL, 0);
+        search.searchmask |= SEARCH_SCREEN;
+        break;
       default:
+        printf("Invalid usage\n");
         printf(usage, cmd);
         return EXIT_FAILURE;
     }
@@ -1064,17 +1068,24 @@ int cmd_search(int argc, char **args) {
   //printf("Search class: %d\n", search_class);
   if (search_title < 0 && search_name < 0 && search_class < 0 && argc > 0) {
     fprintf(stderr, "Defaulting to search window title, class, and name\n");
+    search.searchmask |= (SEARCH_TITLE | SEARCH_NAME | SEARCH_CLASS);
     search_title = opt_title;
     search_name = opt_name;
     search_class = opt_class;
   }
 
-  if (search_title == opt_title)
+  if (search_title == opt_title) {
+    search.searchmask |= SEARCH_TITLE;
     search.title = args[0];
-  if (search_name == opt_name)
+  }
+  if (search_name == opt_name) {
+    search.searchmask |= SEARCH_NAME;
     search.winname = args[0];
-  if (search_class == opt_class)
+  }
+  if (search_class == opt_class) {
+    search.searchmask |= SEARCH_CLASS;
     search.winclass = args[0];
+  }
 
   xdo_window_search(xdo, &search, &list, &nwindows);
   for (i = 0; i < nwindows; i++)

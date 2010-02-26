@@ -15,15 +15,11 @@
 #include <X11/Xlib.h>
 #include <unistd.h>
 
-#define SEARCH_VISIBLEONLY (1L << 0)
-#define SEARCH_TITLE (1L << 1)
-#define SEARCH_CLASS (1L << 2)
-#define SEARCH_NAME (1L << 3)
-
 #define SEARCH_IGNORE_TRANSIENTS (1L << 4)
 #define SEARCH_IGNORE_WINDOW_INPUTONLY (1L << 5)
 
 #define SIZE_USEHINTS (1L << 0)
+#define CURRENTWINDOW (0)
 
 /* Map keysym name to actual ascii */
 typedef struct keysym_charmap {
@@ -58,17 +54,27 @@ typedef struct xdo_active_mods {
   unsigned int input_state;
 } xdo_active_mods_t;
 
+#define SEARCH_TITLE (1UL << 0)
+#define SEARCH_CLASS (1UL << 1)
+#define SEARCH_NAME (1UL << 2)
+#define SEARCH_PID  (1UL << 3)
+#define SEARCH_ONLYVISIBLE  (1UL << 4)
+#define SEARCH_SCREEN  (1UL << 5)
+
 typedef struct xdo_search {
   char *title;       /* pattern to test against a window title */
   char *winclass;    /* pattern to test against a window class */
   char *winname;     /* pattern to test against a window name */
   unsigned long pid; /* window pid (From window atom _NET_WM_PID) */
-  long max_depth;     /* depth of search. 1 means only toplevel windows */
+  long max_depth;    /* depth of search. 1 means only toplevel windows */
   int only_visible;  /* boolean; set true to search only visible windows */
+  int screen;        /* what screen to search, if any. If none given, search 
+                        all screens */
 
   /* Should the tests be 'and' or 'or' ? If 'and', any failure will skip the
    * window. If 'or', any success will keep the window in search results. */
   enum { SEARCH_ANY, SEARCH_ALL } require;
+  unsigned int searchmask; /* bitmask of things you are searching for */
 } xdo_search_t;
 
 #define XDO_ERROR 1

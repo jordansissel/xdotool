@@ -35,9 +35,18 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
   *windowlist_ret = calloc(sizeof(Window), matched_window_list_size);
 
   /* TODO(sissel): Support multiple screens */
-  _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, 0), search->max_depth,
-                         &candidate_window_list, &ncandidate_windows,
-                         &candidate_window_list_size);
+  if (search->searchmask & SEARCH_SCREEN) {
+    _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, search->screen), search->max_depth,
+                           &candidate_window_list, &ncandidate_windows,
+                           &candidate_window_list_size);
+  } else {
+    const int screencount = ScreenCount(xdo->xdpy);
+    for (i = 0; i < screencount; i++) {
+      _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, i), search->max_depth,
+                             &candidate_window_list, &ncandidate_windows,
+                             &candidate_window_list_size);
+    }
+  }
   //printf("Window count: %d\n", (int)ncandidate_windows);
   //printf("Search:\n");
   //printf("onlyvisible: %d\n", search->only_visible);
@@ -232,11 +241,16 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
   visible_ok = pid_ok = title_ok = name_ok = class_ok = True;
     //(search->require == SEARCH_ANY ? False : True);
 
-  visible_want = search->only_visible;
-  pid_want = (search->pid > 0);
-  title_want = (search->title != NULL);
-  name_want = (search->winname != NULL);
-  class_want = (search->winclass != NULL);
+  visible_want = search->searchmask & SEARCH_ONLYVISIBLE;
+  pid_want = search->searchmask & SEARCH_PID;
+  title_want = search->searchmask & SEARCH_TITLE;
+  name_want = search->searchmask & SEARCH_NAME;
+  class_want = search->searchmask & SEARCH_CLASS;
+  //visible_want = search->only_visible;
+  //pid_want = (search->pid > 0);
+  //title_want = (search->title != NULL);
+  //name_want = (search->winname != NULL);
+  //class_want = (search->winclass != NULL);
 
   do {
     /* Visibility is a hard condition, fail always if we wanted 
@@ -277,15 +291,17 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
 
   switch (search->require) {
     case SEARCH_ALL:
-      if (debug) 
+      if (debug) {
         fprintf(stderr, "pid:%d, title:%d, name:%d, class:%d\n",
                 pid_ok, title_ok, name_ok, class_ok);
+      }
       return visible_ok && pid_ok && title_ok && name_ok && class_ok;
       break;
     case SEARCH_ANY:
-      if (debug)
+      if (debug) {
         fprintf(stderr, "pid:%d, title:%d, name:%d, class:%d\n",
                 pid_ok, title_ok, name_ok, class_ok);
+      }
       return visible_ok && ((pid_want && pid_ok) || (title_want && title_ok) \
                             || (name_want && name_ok) \
                             || (class_want && class_ok));
