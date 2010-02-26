@@ -1,3 +1,7 @@
+/* xdo search implementation
+ *
+ * Lets you search windows by a query
+ */
 
 #include <stdlib.h>
 #include <regex.h>
@@ -246,11 +250,6 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
   title_want = search->searchmask & SEARCH_TITLE;
   name_want = search->searchmask & SEARCH_NAME;
   class_want = search->searchmask & SEARCH_CLASS;
-  //visible_want = search->only_visible;
-  //pid_want = (search->pid > 0);
-  //title_want = (search->title != NULL);
-  //name_want = (search->winname != NULL);
-  //class_want = (search->winclass != NULL);
 
   do {
     /* Visibility is a hard condition, fail always if we wanted 

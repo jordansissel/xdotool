@@ -2,7 +2,6 @@
  * xdo library header
  * - include this if you have code that uses xdo
  *
- * $Id$
  */
 #ifndef _XDO_H_
 #define _XDO_H_
@@ -96,12 +95,12 @@ int xdo_mouselocation(const xdo_t *xdo, int *x, int *y, int *screen_num);
 int xdo_click(const xdo_t *xdo, Window window, int button);
 
 int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay);
-int xdo_keysequence(const xdo_t *xdo, Window window, char *keysequence);
-int xdo_keysequence_up(const xdo_t *xdo, Window window, char *keysequence);
-int xdo_keysequence_down(const xdo_t *xdo, Window window, char *keysequence);
+int xdo_keysequence(const xdo_t *xdo, Window window, const char *keysequence);
+int xdo_keysequence_up(const xdo_t *xdo, Window window, const char *keysequence);
+int xdo_keysequence_down(const xdo_t *xdo, Window window, const char *keysequence);
 int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys,
                              int nkeys, int pressed, int *modifier);
-int xdo_active_modifiers_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
+int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
                                          int *nkeys);
 
 int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y);
