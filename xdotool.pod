@@ -30,9 +30,8 @@ Options:
 =item B<--window windowid> - Send keystrokes to a specific window id. See
 SENDEVENT below.
 
-=item B<--clearmodifiers> - Clear modifiers before sending keystrokes. This
-allows you to send keystrokes ignorant of any active modifier keys from your
-physical keyboard (alt, control, shift, super, etc)
+=item B<--clearmodifiers> - Clear modifiers before sending keystrokes. See
+CLEARMODIFIERS below.
 
 =back
 
@@ -65,9 +64,8 @@ SENDEVENT below.
 
 =item B<--delay milliseconds> - Delay between keystrokes. Default is 12ms.
 
-=item B<--clearmodifiers> - Clear modifiers before sending keystrokes. This
-allows you to type ignorant of any active modifier keys from your physical
-keyboard (alt, control, shift, super, etc).
+=item B<--clearmodifiers> - Clear modifiers before sending keystrokes. See
+CLEARMODIFIERS below.
 
 =back
 
@@ -83,26 +81,44 @@ Example: to type 'Hello world!' you would do:
 
 =over 
 
-=item B<mousemove> I<x> I<y>
+=item B<mousemove> I<[options]> I<x> I<y>
 
 Move the mouse to the specific X and Y coordinates on the screen
 
-=item B<mousedown> I<button>
+=over
 
-Send 'mouse down' for the given button. 1 == left, 2 ==  middle,  3  == right,
-etc.
+=item B<--window WINDOW> Specify a window to move relative to. Coordinates 0,0
+are at the top left of the window you choose.
 
-=item B<mouseup> I<button>
+=item B<--clearmodifiers> See CLEARMODIFIERS
 
-Send 'mouse up for the given button
+=back
 
-=item B<click> I<button>
+=item B<click> I<[options[> I<button>
 
 Send mousedown followed by mouseup for the given button
 
+=over
+
+=item B<--clearmodifiers> Clear modifiers before clicking. See
+CLEARMODIFIERS below.
+
+=item B<--window> WINDOW - Specify a window to send a click to. See SENDEVENT below for caveats. Uses the current mouse position when generating the event.
+
+=back
+
+=item B<mousedown> I<[options]> I<button>
+
+Same as above, except only a mouse down is sent.
+
+=item B<mouseup> I<[options]> I<button>
+
+Same as above, except only a mouse up is sent.
+
 =item B<getmouselocation>
 
-Outputs the x, y, and screen location of the mouse cursor. Screen numbers will be nonzero if you have multiple monitors and are not using Xinerama.
+Outputs the x, y, and screen location of the mouse cursor. Screen numbers will
+be nonzero if you have multiple monitors and are not using Xinerama.
 
 =back
 
@@ -119,15 +135,28 @@ The options available are:
 
 =over
 
-=item B<--onlyvisible> - Show only visible windows in the results.
+=item B<--class> - Match against the window class
 
-=item B<--title> - Match against the window title
+=item B<--maxdepth> N - Set recursion/child search depth. Default is -1,
+meaning infinite. 0 means no depth, aka no results. If you only want toplevel
+windows, set maxdepth of 1.
 
 =item B<--name> - Match against the window name
 
-=item B<--class> - Match against the window class
+=item B<--onlyvisible> - Show only visible windows in the results.
 
-=item B<--maxdepth> N - Set recursion/child search depth. Default is -1, meaning infinite. 0 means no depth, aka no results. If you only want toplevel windows, set maxdepth of 1.
+=item B<--pid PID> - Match windows that belong to a specific process id. This
+may not work for some X applications that do not set this metadata on its
+windows.
+
+=item B<--screen N> - Select windows only on a specific screen. Default is to
+search all screens. Only meaningful if you have multiple displays and are not
+using Xinerama.
+
+=item B<--title> - Match against the window title (what's displayed in the
+titlebar of the window)
+
+
 
 =back
 
@@ -255,6 +284,46 @@ Move a window to a different desktop.
 =item B<get_desktop_for_window> I<window_id>
 
 Output the desktop currently containing the given window.
+
+=back
+
+=head1 CLEARMODIFIERS
+
+Any command taking the I<--clearmodifiers> flag will attempt to clear any
+active input modifiers during the command and restore them afterwards.
+
+For example, if you were to run this command:
+ xdotool key a
+
+The result would be 'a' or 'A' depending on whether or not you were holding the
+shift key on your keyboard. Often it is undesirable to have any modifiers
+active, so you can tell xdotool to clear any active modifiers. 
+
+The order of operations if you hold shift while running 'xdotool key --clearmodifiers a' is this:
+
+=over
+
+=item 1. Query for all active modifiers (finds shift, in this case)
+
+=item 2. Try to clear shift by sending 'key up' for the shift key
+
+=item 3. Runs normal 'xdotool key a'
+
+=item 4. Restore shift key by sending 'key down' for shift
+
+=back
+
+The I<--clearmodifiers> flag can currently clear of the following:
+
+=over
+
+=item * any key in your active keymap that has a modifier associated with it.
+(See L<xmodmap(1)>'s 'xmodmap -pm' output)
+
+=item * mouse buttons (1, 2, 3, 4, and 5)
+
+=item * caps lock
+
 
 =back
 
