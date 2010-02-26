@@ -187,18 +187,28 @@ int cmd_mousemove(int argc, char **args) {
   char *cmd = *args;
 
   int c;
+  int screen = 0;
+  Window window = 0;
   static struct option longopts[] = {
     { "help", no_argument, NULL, 'h' },
+    { "screen", required_argument, NULL, 's' },
+    { "window", required_argument, NULL, 'w' },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = "Usage: %s <xcoord> <ycoord>\n";
+  static const char *usage = "Usage: %s [--window W] [--screen N] <xcoord> <ycoord>\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(argc, args, "hs:w:", longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
         return EXIT_SUCCESS;
+        break;
+      case 's':
+        screen = atoi(optarg);
+        break;
+      case 'w':
+        window = strtoul(optarg, NULL, 0);
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -218,7 +228,11 @@ int cmd_mousemove(int argc, char **args) {
   x = atoi(args[0]);
   y = atoi(args[1]);
 
-  ret = xdo_mousemove(xdo, x, y);
+  if (window > 0) {
+    ret = xdo_mousemove_relative_to_window(xdo, window, x, y);
+  } else {
+    ret = xdo_mousemove(xdo, x, y, screen);
+  }
 
   if (ret)
     fprintf(stderr, "xdo_mousemove reported an error\n");
@@ -281,9 +295,9 @@ int cmd_mousedown(int argc, char **args) {
 
   int c;
   static struct option longopts[] = {
-    { "help", no_argument, NULL, 'h' },
     { "clearmodifiers", no_argument, NULL, 'c' },
-    { "window", no_argument, NULL, 'w' },
+    { "help", no_argument, NULL, 'h' },
+    { "window", required_argument, NULL, 'w' },
     { 0, 0, 0, 0 },
   };
   static const char *usage =
@@ -292,7 +306,7 @@ int cmd_mousedown(int argc, char **args) {
             "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(argc, args, "hw:", longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
@@ -348,9 +362,9 @@ int cmd_mouseup(int argc, char **args) {
 
   int c;
   static struct option longopts[] = {
-    { "help", no_argument, NULL, 'h' },
     { "clearmodifiers", no_argument, NULL, 'c' },
-    { "window", no_argument, NULL, 'w' },
+    { "help", no_argument, NULL, 'h' },
+    { "window", required_argument, NULL, 'w' },
     { 0, 0, 0, 0 },
   };
   static const char *usage =
@@ -454,8 +468,8 @@ int cmd_click(int argc, char **args) {
 
   int c;
   static struct option longopts[] = {
-    { "help", no_argument, NULL, 'h' },
     { "clearmodifiers", no_argument, NULL, 'c' },
+    { "help", no_argument, NULL, 'h' },
     { "window", required_argument, NULL, 'w' },
     { 0, 0, 0, 0 },
   };
@@ -476,7 +490,6 @@ int cmd_click(int argc, char **args) {
         break;
       case 'w':
         window = strtoul(optarg, NULL, 0);
-        printf("Window: %lu\n", window);
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -523,10 +536,10 @@ int cmd_type(int argc, char **args) {
   useconds_t delay = 12000; /* 12ms between keystrokes default */
 
   struct option longopts[] = {
-    { "window", required_argument, NULL, 'w' },
-    { "delay", required_argument, NULL, 'd' },
     { "clearmodifiers", no_argument, NULL, 'c' },
+    { "delay", required_argument, NULL, 'd' },
     { "help", no_argument, NULL, 'h' },
+    { "window", required_argument, NULL, 'w' },
     { 0, 0, 0, 0 },
   };
 
@@ -605,9 +618,9 @@ int cmd_key(int argc, char **args) {
   int clear_modifiers = 0;
 
   static struct option longopts[] = {
-    { "window", required_argument, NULL, 'w' },
     { "clearmodifiers", no_argument, NULL, 'c' },
     { "help", no_argument, NULL, 'h' },
+    { "window", required_argument, NULL, 'w' },
     { 0, 0, 0, 0 },
   };
 
@@ -618,7 +631,7 @@ int cmd_key(int argc, char **args) {
              "Any letter or key symbol such as Shift_L, Return, Dollar, a, space are valid here.\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "hw:", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(argc, args, "hcw:", longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':
         window = strtoul(optarg, NULL, 0);
@@ -645,7 +658,7 @@ int cmd_key(int argc, char **args) {
     return 1;
   }
 
-  int (*func)(const xdo_t *, Window, char *) = NULL;
+  int (*func)(const xdo_t *, Window, const char *) = NULL;
 
   if (!strcmp(cmd, "key")) {
     func = xdo_keysequence;

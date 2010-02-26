@@ -46,6 +46,7 @@ void _xdo_send_key(const xdo_t *xdo, Window window, int keycode, int modstate,
 static int _xdo_query_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode);
 static int _xdo_cached_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode);
 static int _xdo_cached_modifier_to_keycode(const xdo_t *xdo, int modmask);
+static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press);
 
 static int _is_success(const char *funcname, int code);
 
@@ -488,11 +489,23 @@ int xdo_window_raise(const xdo_t *xdo, Window wid) {
 }
 
 /* XXX: Include 'screen number' support? */
-int xdo_mousemove(const xdo_t *xdo, int x, int y)  {
+int xdo_mousemove(const xdo_t *xdo, int x, int y, int screen)  {
   int ret = 0;
-  ret = XTestFakeMotionEvent(xdo->xdpy, -1, x, y, CurrentTime);
+  ret = XTestFakeMotionEvent(xdo->xdpy, screen, x, y, CurrentTime);
   XFlush(xdo->xdpy);
   return _is_success("XTestFakeMotionEvent", ret == 0);
+}
+
+int xdo_mousemove_relative_to_window(const xdo_t *xdo, Window window, int x, int y) {
+  int ret = 0;
+  XWindowAttributes attr;
+  Window unused_child;
+  int root_x, root_y;
+
+  XGetWindowAttributes(xdo->xdpy, window, &attr);
+  XTranslateCoordinates(xdo->xdpy, window, attr.root,
+                        x, y, &root_x, &root_y, &unused_child);
+  return xdo_mousemove(xdo, root_x, root_y, XScreenNumberOfScreen(attr.screen));
 }
 
 int xdo_mousemove_relative(const xdo_t *xdo, int x, int y)  {
@@ -502,33 +515,64 @@ int xdo_mousemove_relative(const xdo_t *xdo, int x, int y)  {
   return _is_success("XTestFakeRelativeMotionEvent", ret == 0);
 }
 
-int xdo_mousedown(const xdo_t *xdo, Window window, int button) {
+int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) {
   int ret = 0;
 
-  if (window == 0) {
-    ret = XTestFakeButtonEvent(xdo->xdpy, button, True, CurrentTime);
+  if (window == CURRENTWINDOW) {
+    ret = XTestFakeButtonEvent(xdo->xdpy, button, is_press, CurrentTime);
+    XFlush(xdo->xdpy);
+    return _is_success("XTestFakeButtonEvent(down)", ret == 0);
   } else {
     /* Send to specific window */
-    fprintf(stderr, "Not implemented\n");
-    ret = XDO_ERROR;
-  }
+    int screen = 0;
+    XButtonEvent xbpe;
+    xdo_active_mods_t *active_mods;
 
-  XFlush(xdo->xdpy);
-  return _is_success("XTestFakeButtonEvent(down)", ret == 0);
+    xdo_mouselocation(xdo, &xbpe.x_root, &xbpe.y_root, &screen);
+    active_mods = xdo_get_active_modifiers(xdo);
+
+    xbpe.window = window;
+    xbpe.button = button;
+    xbpe.display = xdo->xdpy;
+    xbpe.root = RootWindow(xdo->xdpy, screen);
+    xbpe.same_screen = True; /* Should we detect if window is on the same
+                                 screen as cursor? */
+    xbpe.state = active_mods->input_state;
+
+    xbpe.subwindow = None;
+    xbpe.time = CurrentTime;
+    xbpe.type = (is_press ? ButtonPress : ButtonRelease);
+
+    /* Get the coordinates of the cursor relative to xbpe.window and also find what
+     * subwindow it might be on */
+    XTranslateCoordinates(xdo->xdpy, xbpe.root, xbpe.window, 
+                          xbpe.x_root, xbpe.y_root, &xbpe.x, &xbpe.y, &xbpe.subwindow);
+
+    /* Normal behavior of 'mouse up' is that the modifier mask includes
+     * 'ButtonNMotionMask' where N is the button being released. This works the same
+     * way with keys, too. */
+    if (!is_press) { /* is mouse up */
+      switch(button) {
+        case 1: xbpe.state |= Button1MotionMask; break;
+        case 2: xbpe.state |= Button2MotionMask; break;
+        case 3: xbpe.state |= Button3MotionMask; break;
+        case 4: xbpe.state |= Button4MotionMask; break;
+        case 5: xbpe.state |= Button5MotionMask; break;
+      }
+    }
+    ret = XSendEvent(xdo->xdpy, window, True, ButtonPressMask, (XEvent *)&xbpe);
+    XFlush(xdo->xdpy);
+    xdo_free_active_modifiers(active_mods);
+    return _is_success("XSendEvent(mousedown)", ret == 0);
+  }
 }
 
 int xdo_mouseup(const xdo_t *xdo, Window window, int button) {
-  int ret = 0;
+  return _xdo_mousebutton(xdo, window, button, False);
+}
 
-  if (window == 0) {
-    ret = XTestFakeButtonEvent(xdo->xdpy, button, False, CurrentTime);
-  } else {
-    /* Send to specific window */
-    fprintf(stderr, "Not implemented\n");
-    ret = XDO_ERROR;
-  }
-  XFlush(xdo->xdpy);
-  return _is_success("XTestFakeButtonEvent(up)", ret == 0);
+int xdo_mousedown(const xdo_t *xdo, Window window, int button) {
+  return _xdo_mousebutton(xdo, window, button, True);
 }
 
 int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret, int *screen_num_ret) {
@@ -563,8 +607,11 @@ int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret, int *screen_num_
 int xdo_click(const xdo_t *xdo, Window window, int button) {
   int ret = 0;
   ret = xdo_mousedown(xdo, window, button);
-  if (ret != XDO_SUCCESS)
+  if (ret != XDO_SUCCESS) {
+    fprintf(stderr, "xdo_mousedown failed, aborting click.\n");
     return ret;
+  }
+  usleep(12000);
   ret = xdo_mouseup(xdo, window, button);
   return ret;
 }
@@ -948,7 +995,6 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
     }
   }
 
-  *nkeys--;
   free(keyseq_copy);
   return True;
 }
