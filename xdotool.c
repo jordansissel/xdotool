@@ -24,6 +24,7 @@
 
 int cmd_click(int argc, char **args);
 int cmd_getwindowfocus(int argc, char **args);
+int cmd_getwindowpid(int argc, char **args);
 int cmd_getactivewindow(int argc, char **args);
 int cmd_help(int argc, char **args);
 int cmd_key(int argc, char **args);
@@ -60,8 +61,9 @@ struct dispatch {
   int (*func)(int argc, char **args);
 } dispatch[] = {
   /* Query functions */
-  { "getwindowfocus", cmd_getwindowfocus, },
   { "getactivewindow", cmd_getactivewindow, },
+  { "getwindowfocus", cmd_getwindowfocus, },
+  { "getwindowpid", cmd_getwindowpid, },
   { "search", cmd_search, },
 
   /* Help me! */
@@ -70,6 +72,7 @@ struct dispatch {
 
   /* Action functions */
   { "click", cmd_click, },
+  { "getmouselocation", cmd_getmouselocation, },
   { "key", cmd_key, },
   { "keydown", cmd_key, },
   { "keyup", cmd_key, },
@@ -77,7 +80,6 @@ struct dispatch {
   { "mousemove", cmd_mousemove, },
   { "mousemove_relative", cmd_mousemove_relative, },
   { "mouseup", cmd_mouseup, },
-  { "getmouselocation", cmd_getmouselocation, },
   { "type", cmd_type, },
   { "windowactivate", cmd_windowactivate, },
   { "windowfocus", cmd_windowfocus, },
@@ -1043,7 +1045,7 @@ int cmd_search(int argc, char **args) {
         search.max_depth = strtol(optarg, NULL, 0);
         break;
       case opt_pid:
-        search.pid = strtoul(optarg, NULL, 0);
+        search.pid = atoi(optarg);
         search.searchmask |= SEARCH_PID;
         break;
       case opt_any:
@@ -1163,6 +1165,50 @@ int cmd_getwindowfocus(int argc, char **args) {
   }
 
   return ret;
+}
+
+int cmd_getwindowpid(int argc, char **args) {
+  Window wid = 0;
+  int pid;
+  char *cmd = *args;
+
+  int c;
+
+  static struct option longopts[] = {
+    { "help", no_argument, NULL, 'h' },
+    { 0, 0, 0, 0 },
+  };
+  static const char *usage = "Usage: %s <window id>\n";
+  int option_index;
+
+  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        printf(usage, cmd);
+        return EXIT_SUCCESS;
+        break;
+      default:
+        fprintf(stderr, usage, cmd);
+        return EXIT_FAILURE;
+    }
+  }
+
+  argc -= optind;
+  args += optind;
+
+  if (argc != 1) {
+    fprintf(stderr, usage, cmd);
+    return 1;
+  }
+
+  wid = (Window)strtol(args[0], NULL, 0);
+  pid = xdo_window_get_pid(xdo, wid);
+  if (pid == 0) {
+    fprintf(stderr, "window %ld has no pid associated with it.\n", wid);
+  }
+
+  printf("%d\n", pid);
+  return pid != 0;
 }
 
 int cmd_getactivewindow(int argc, char **args) {

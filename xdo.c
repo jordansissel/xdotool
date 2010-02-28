@@ -1,6 +1,5 @@
 /* xdo library
- *
- * - getwindowfocus contributed by Lee Pumphret
+ * * - getwindowfocus contributed by Lee Pumphret
  * - keysequence_{up,down} contributed by Magnus Boman
  *
  */
@@ -52,6 +51,9 @@ static int _is_success(const char *funcname, int code);
 
 /* context-free functions */
 static char _keysym_to_char(const char *keysym);
+
+/* Default to -1, initialize it when we need it */
+static Atom _NET_WM_PID = -1;
 
 xdo_t* xdo_new(char *display_name) {
   Display *xdpy;
@@ -497,7 +499,6 @@ int xdo_mousemove(const xdo_t *xdo, int x, int y, int screen)  {
 }
 
 int xdo_mousemove_relative_to_window(const xdo_t *xdo, Window window, int x, int y) {
-  int ret = 0;
   XWindowAttributes attr;
   Window unused_child;
   int root_x, root_y;
@@ -1284,3 +1285,25 @@ void xdo_free_active_modifiers(xdo_active_mods_t *active_mods) {
   free(active_mods);
 }
 
+
+int xdo_window_get_pid(const xdo_t *xdo, Window window) {
+  Atom type;
+  int size;
+  long nitems;
+  unsigned char *data;
+  int window_pid = 0;
+
+  if (_NET_WM_PID == (Atom)-1) {
+    _NET_WM_PID = XInternAtom(xdo->xdpy, "_NET_WM_PID", False);
+  }
+
+  data = xdo_getwinprop(xdo, window, _NET_WM_PID, &nitems, &type, &size);
+
+  if (nitems > 0) {
+    /* The data itself is unsigned long, but everyone uses int as pid values */
+    window_pid = (int) *((unsigned long *)data);
+  }
+  free(data);
+
+  return window_pid;
+}

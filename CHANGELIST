@@ -4,6 +4,7 @@
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=10
     Example: xdotool search --pid 12345
     Example: xdotool search --pid 12345 "hello world"
+  - Add 'xdotool getwindowpid' command to get the pid that owns a window.
   - Add --window to xdotool mousemove, click, mousedown, and mouseup
   - Add --screen to xdotool mousemove
   - The --clearmodifiers flag now clears mouse buttons, too.

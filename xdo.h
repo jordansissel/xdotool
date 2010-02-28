@@ -64,7 +64,7 @@ typedef struct xdo_search {
   char *title;       /* pattern to test against a window title */
   char *winclass;    /* pattern to test against a window class */
   char *winname;     /* pattern to test against a window name */
-  unsigned long pid; /* window pid (From window atom _NET_WM_PID) */
+  int pid;           /* window pid (From window atom _NET_WM_PID) */
   long max_depth;    /* depth of search. 1 means only toplevel windows */
   int only_visible;  /* boolean; set true to search only visible windows */
   int screen;        /* what screen to search, if any. If none given, search 
@@ -73,7 +73,8 @@ typedef struct xdo_search {
   /* Should the tests be 'and' or 'or' ? If 'and', any failure will skip the
    * window. If 'or', any success will keep the window in search results. */
   enum { SEARCH_ANY, SEARCH_ALL } require;
-  unsigned int searchmask; /* bitmask of things you are searching for */
+  unsigned int searchmask; /* bitmask of things you are searching for 
+                            * See SEARCH_TITLE, etc */
 } xdo_search_t;
 
 #define XDO_ERROR 1
@@ -111,6 +112,7 @@ int xdo_window_setclass(const xdo_t *xdo, Window wid, const char *name, const ch
 int xdo_window_focus(const xdo_t *xdo, Window wid);
 int xdo_window_raise(const xdo_t *xdo, Window wid);
 int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret);
+int xdo_window_get_pid(const xdo_t *xdo, Window window);
 int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret);
 int xdo_window_activate(const xdo_t *xdo, Window wid);
 

@@ -22,10 +22,8 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
 static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_window_match_title(const xdo_t *xdo, Window window, regex_t *re);
-static int _xdo_window_match_pid(const xdo_t *xdo, Window window, const unsigned long pid);
+static int _xdo_window_match_pid(const xdo_t *xdo, Window window, int pid);
 static int _xdo_is_window_visible(const xdo_t *xdo, Window wid);
-
-static Atom _NET_WM_PID = -1;
 
 int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
                       Window **windowlist_ret, int *nwindows_ret) {
@@ -59,13 +57,12 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
   //printf("name: %s\n", search->winname);
   //printf("class: %s\n", search->winclass);
   //printf("/Search\n");
+
   for (i = 0; i < ncandidate_windows; i++) {
     Window wid = candidate_window_list[i];
-    int result = check_window_match(xdo, wid, search);
-    if (!result)
+    if (!check_window_match(xdo, wid, search))
       continue;
 
-    /* If we get this far, the window matches all our requirements */
     (*windowlist_ret)[*nwindows_ret] = wid;
     (*nwindows_ret)++;
 
@@ -77,7 +74,7 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
   }
   free(candidate_window_list);
 
-  return True;
+  return XDO_SUCCESS;
 }
 
 static void _xdo_get_child_windows(const xdo_t *xdo, Window window, 
@@ -176,25 +173,10 @@ static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re)
   return False;
 }
 
-static int _xdo_window_match_pid(const xdo_t *xdo, Window window, const unsigned long pid) {
-  /* TODO(sissel): To implement. (Bug/issue #10) */
-  Atom type;
-  int size;
-  long nitems;
-  unsigned char *data;
-  unsigned long window_pid = 0;
+static int _xdo_window_match_pid(const xdo_t *xdo, Window window, const int pid) {
+  int window_pid;
 
-  if (_NET_WM_PID == (Atom)-1) {
-    _NET_WM_PID = XInternAtom(xdo->xdpy, "_NET_WM_PID", False);
-  }
-
-  data = xdo_getwinprop(xdo, window, _NET_WM_PID, &nitems, &type, &size);
-
-  if (nitems > 0) {
-    window_pid = *((unsigned long *)data);
-  }
-  free(data);
-
+  window_pid = xdo_window_get_pid(xdo, window);
   if (pid == window_pid) {
     return True;
   } else {
