@@ -146,8 +146,10 @@ int script_main(int argc, char **argv) {
   int ret;
   while (fgets(buffer, 4096, input) != NULL) {
     char *line = buffer;
-    // Ignore comments and blank lines
+    // Ignore leading whitespace
     line += strspn(line, " \t");
+
+    // blanklines or line comment are ignored, too
     if (line[0] == '\n' || line[0] == '#') {
       continue;
     }
