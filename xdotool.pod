@@ -323,7 +323,8 @@ Output the desktop currently containing the given window.
 
 =head1 SCRIPTS
 
-xdotool can read a list of commands via stdin or a file if you want.
+xdotool can read a list of commands via stdin or a file if you want. A script
+will when any command fails.
 
 =over
 
