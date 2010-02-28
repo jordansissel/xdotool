@@ -1,5 +1,5 @@
-1.2010????.*:
-  - Bump major version since there were lots of libxdo changes.
+1.20100227.*:
+  - Bump major version since there were lots of libxdo changes (now libxdo.so.1)
   - Support '--pid NUM' for searching for windows by pid:
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=10
     Example: xdotool search --pid 12345
