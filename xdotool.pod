@@ -111,7 +111,7 @@ See CLEARMODIFIERS
 
 =back
 
-=item B<click> I<[options[> I<button>
+=item B<click> I<[options]> I<button>
 
 Send mousedown followed by mouseup for the given button
 
