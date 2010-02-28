@@ -8,17 +8,20 @@
  * XXX: Need to use 'Window' instead of 'int' where appropriate.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #define _GNU_SOURCE 1
 #ifndef __USE_BSD
 #define __USE_BSD /* for strdup on linux/glibc */
 #endif /* __USE_BSD */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
 #include <strings.h>
+#include <errno.h>
 
 #include "xdo.h"
 
@@ -55,6 +58,8 @@ int cmd_get_desktop_for_window(int argc, char **args);
 
 xdo_t *xdo;
 void window_print(Window wid);
+static int script_main(int argc, char **argv);
+static int args_main(int argc, char **argv);
 
 struct dispatch {
   const char *name;
@@ -101,6 +106,67 @@ struct dispatch {
 };
 
 int main(int argc, char **argv) {
+  /* read stdin if stdin is not a tty or first argument is "-" */
+
+  int want_script;
+  struct stat data;
+  int stat_ret;
+
+  /* If we are being run from a script with shebang line #!/path/to/xdotool
+   * then the input file will be argv[argc - 1].
+   */
+  stat_ret = stat(argv[argc - 1], &data);
+
+  want_script = (!isatty(0)
+                 || (argc == 2 && !strcmp(argv[1], "-"))
+                 || (stat_ret == 0));
+  if (want_script) {
+    return script_main(argc, argv);
+  } else {
+    return args_main(argc, argv);
+  }
+}
+
+int script_main(int argc, char **argv) {
+  FILE *input = NULL;
+  const char *path = argv[argc - 1];
+  char *cmd;
+  char buffer[4096];
+
+  if (!strcmp(path, "-") || !isatty(0)) {
+    input = fdopen(0, "r");
+  } else {
+    input = fopen(path, "r");
+    if (input == NULL) {
+      fprintf(stderr, "Failure opening '%s': %s\n", path, strerror(errno));
+      return EXIT_FAILURE;
+    }
+  }
+
+  int ret;
+  while (fgets(buffer, 4096, input) != NULL) {
+    char *line = buffer;
+    // Ignore comments and blank lines
+    line += strspn(line, " \t");
+    if (line[0] == '\n' || line[0] == '#') {
+      continue;
+    }
+    line[strlen(line) - 1] = '\0'; /* replace newline with null */
+
+    asprintf(&cmd, "%s %s", argv[0], line);
+    //printf("Running: %s\n", cmd);
+    ret = system(cmd);
+    free(cmd);
+
+    if (ret != EXIT_SUCCESS) {
+      return ret;
+    }
+  }
+
+  return EXIT_SUCCESS;
+}
+
+int args_main(int argc, char **argv) {
   char *cmd;
   char *prog;
   int ret = 0;
@@ -153,7 +219,7 @@ int main(int argc, char **argv) {
   }
 
   if (!cmd_found) {
-    fprintf(stderr, "Unknown command: %s\n", cmd);
+    fprintf(stderr, "%s: Unknown command: %s\n", strrchr(prog, '/') + 1, cmd);
     fprintf(stderr, "Run '%s help' if you want a command list\n", prog);
     ret = 1;
   }
