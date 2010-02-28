@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
 
   want_script = (!isatty(0)
                  || (argc == 2 && !strcmp(argv[1], "-"))
-                 || (stat_ret == 0));
+                 || (argc == 2 && stat_ret == 0));
   if (want_script) {
     return script_main(argc, argv);
   } else {
