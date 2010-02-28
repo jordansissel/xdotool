@@ -27,11 +27,13 @@ Options:
 
 =over
 
-=item B<--window windowid> - Send keystrokes to a specific window id. See
-SENDEVENT below.
+=item B<--window windowid> 
 
-=item B<--clearmodifiers> - Clear modifiers before sending keystrokes. See
-CLEARMODIFIERS below.
+Send keystrokes to a specific window id. See SENDEVENT below.
+
+=item B<--clearmodifiers> 
+
+Clear modifiers before sending keystrokes. See CLEARMODIFIERS below.
 
 =back
 
@@ -42,8 +44,15 @@ Generally, any valid X Keysym string will work. Multiple keys are
 separated by '+'. Aliases exist for "alt", "ctrl", "shift", "super",
 and "meta" which all map to Foo_L, such as Alt_L and Control_L, etc.
 
+In cases where your keyboard doesn't actually have the key you want to type,
+xdotool will automatically find an unused keycode and use that to type the key.
+
 Example: Send the keystroke "F2"
  xdotool key F2
+
+Example: Send 'a' with an accent over it (not on english keyboards, but still
+works with xdotool)
+ xdotool key Aacute
 
 =item B<keydown> I<[options]> I<keystroke>
 
@@ -59,13 +68,17 @@ Options:
 
 =over
 
-=item B<--window windowid> - Send keystrokes to a specific window id. See
-SENDEVENT below.
+=item B<--window windowid> 
 
-=item B<--delay milliseconds> - Delay between keystrokes. Default is 12ms.
+Send keystrokes to a specific window id. See SENDEVENT below.
 
-=item B<--clearmodifiers> - Clear modifiers before sending keystrokes. See
-CLEARMODIFIERS below.
+=item B<--delay milliseconds> 
+
+Delay between keystrokes. Default is 12ms.
+
+=item B<--clearmodifiers> 
+
+Clear modifiers before sending keystrokes. See CLEARMODIFIERS below.
 
 =back
 
@@ -87,10 +100,14 @@ Move the mouse to the specific X and Y coordinates on the screen
 
 =over
 
-=item B<--window WINDOW> Specify a window to move relative to. Coordinates 0,0
+=item B<--window WINDOW> 
+
+Specify a window to move relative to. Coordinates 0,0
 are at the top left of the window you choose.
 
-=item B<--clearmodifiers> See CLEARMODIFIERS
+=item B<--clearmodifiers> 
+
+See CLEARMODIFIERS
 
 =back
 
@@ -100,10 +117,14 @@ Send mousedown followed by mouseup for the given button
 
 =over
 
-=item B<--clearmodifiers> Clear modifiers before clicking. See
-CLEARMODIFIERS below.
+=item B<--clearmodifiers> 
 
-=item B<--window> WINDOW - Specify a window to send a click to. See SENDEVENT below for caveats. Uses the current mouse position when generating the event.
+Clear modifiers before clicking. See CLEARMODIFIERS below.
+
+=item B<--window> 
+
+WINDOW - Specify a window to send a click to. See SENDEVENT below for caveats.
+Uses the current mouse position when generating the event.
 
 =back
 
@@ -135,28 +156,38 @@ The options available are:
 
 =over
 
-=item B<--class> - Match against the window class
+=item B<--class> 
 
-=item B<--maxdepth> N - Set recursion/child search depth. Default is -1,
+Match against the window class
+
+=item B<--maxdepth> N 
+
+Set recursion/child search depth. Default is -1,
 meaning infinite. 0 means no depth, aka no results. If you only want toplevel
 windows, set maxdepth of 1.
 
-=item B<--name> - Match against the window name
+=item B<--name>
 
-=item B<--onlyvisible> - Show only visible windows in the results.
+Match against the window name
 
-=item B<--pid PID> - Match windows that belong to a specific process id. This
-may not work for some X applications that do not set this metadata on its
-windows.
+=item B<--onlyvisible> 
 
-=item B<--screen N> - Select windows only on a specific screen. Default is to
+Show only visible windows in the results.
+
+=item B<--pid PID> 
+
+Match windows that belong to a specific process id. This may not work for some
+X applications that do not set this metadata on its windows.
+
+=item B<--screen N>
+
+Select windows only on a specific screen. Default is to
 search all screens. Only meaningful if you have multiple displays and are not
 using Xinerama.
 
-=item B<--title> - Match against the window title (what's displayed in the
-titlebar of the window)
+=item B<--title> 
 
-
+Match against the window title (what's displayed in the titlebar of the window)
 
 =back
 
@@ -181,8 +212,11 @@ The options available are:
 
 =over
 
-=item B<--usehints> - Use window sizing hints when setting width and height.
-This is useful on terminals.
+=item B<--usehints> 
+
+Use window sizing hints (when available) to set width and height.  This is
+useful on terminals for setting the size based on row/column of text rather
+than pixels.
 
 =back
 
@@ -286,6 +320,40 @@ Move a window to a different desktop.
 Output the desktop currently containing the given window.
 
 =back
+
+=head1 SCRIPTS
+
+xdotool can read a list of commands via stdin or a file if you want.
+
+=over
+
+=item * Read commands from a file:
+
+ xdotool filename
+
+=item * Read commands from stdin:
+
+ xdotool -
+
+=item * Read commands from a redirected file (uses isatty(0) to detect redirection on stdin)
+
+ xdotool < myfile
+
+=back
+
+You can also write scripts that only execute xdotool. Example:
+
+ #!/usr/local/bin/xdotool
+ windowactivate $WINDOWID
+ mousemove -window $WINDOWID 50 50
+ click 1
+ click 1
+
+All commands are run as if you had typed 'xdotool <line>' via /bin/sh. This
+means any shell magic should work here, too, including the use of environment
+variables. For above, here's how you'd set the value of WINDOWID:
+
+ % WINDOWID=1234 ./myscript
 
 =head1 CLEARMODIFIERS
 
