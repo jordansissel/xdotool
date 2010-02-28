@@ -16,6 +16,13 @@
   - Support multiple screens in searches. Default is to search all screens.
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=11
     Example: 'xdotool search --screen N' specifies a single screen to search.
+  - Support reading a list of xdotool commands via stdin or a file. Usages:
+    * read from stdin:
+      xdotool -
+    * read from stdin (use isatty(0) to detect redirection): 
+      xdotool < somefile    
+    * An executable script also works when it has this at the top:
+      #!/path/to/xdotool
 
 0.20100118.*:
   - Slight change in how we present versions. Now versions have major, date,
