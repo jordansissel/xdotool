@@ -178,12 +178,7 @@ int xdo_window_setsize(const xdo_t *xdo, Window wid, int width, int height, int 
 int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name, const char *class) {
   int ret = 0;
   XClassHint *hint = XAllocClassHint();
-  
-  ret = XGetClassHint(xdo->xdpy, wid, hint);
-  if (ret == 0) {
-    return _is_success("XGetClassHint", ret == 0);
-  }
-
+  XGetClassHint(xdo->xdpy, wid, hint);
   if (name != NULL)
     hint->res_name = (char*)name;
 
