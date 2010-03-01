@@ -9,7 +9,7 @@
 #include "xdo.h"
 
 /* human to Keysym string mapping */
-const char *symbol_map[] = {
+static const char *symbol_map[] = {
   "alt", "Alt_L",
   "ctrl", "Control_L",
   "control", "Control_L",
@@ -19,7 +19,7 @@ const char *symbol_map[] = {
   NULL, NULL,
 };
 
-keysym_charmap_t keysym_charmap[] = {
+static const keysym_charmap_t keysym_charmap[] = {
   { "Return", '\n', },
   { "ampersand", '&', },
   { "apostrophe", '\'', },
