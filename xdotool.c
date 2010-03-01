@@ -117,8 +117,7 @@ int main(int argc, char **argv) {
    */
   stat_ret = stat(argv[argc - 1], &data);
 
-  want_script = (!isatty(0)
-                 || (argc == 2 && !strcmp(argv[1], "-"))
+  want_script = ((argc == 2 && !strcmp(argv[1], "-"))
                  || (argc == 2 && stat_ret == 0));
   if (want_script) {
     return script_main(argc, argv);
