@@ -29,7 +29,6 @@ LIBS=$(shell pkg-config --libs x11 xtst 2> /dev/null || echo "$(DEFAULT_LIBS)")
 INC=$(shell pkg-config --cflags x11 xtst 2> /dev/null || echo "$(DEFAULT_INC)")
 
 CFLAGS+=-std=c99 $(INC)
-LDFLAGS+=$(LIBS)
 
 all: xdotool xdotool.1 libxdo.so libxdo.so.$(MAJOR)
 
@@ -79,7 +78,7 @@ xdo.c: xdo.h
 xdotool.c: xdo.h
 
 libxdo.so: xdo.o xdo_search.o
-	$(CC) $(LDFLAGS) -shared -Wl,-soname=libxdo.so.$(MAJOR) xdo.o xdo_search.o -o $@
+	$(CC) $(LDFLAGS) $(LIBS) -shared -Wl,-soname=libxdo.so.$(MAJOR) xdo.o xdo_search.o -o $@
 
 libxdo.so.$(MAJOR): libxdo.so
 	ln -s $< $@
