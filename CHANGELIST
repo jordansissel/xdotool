@@ -1,8 +1,9 @@
 1.20100301.*:
-  - Nonfunctional changes only in this release.
   - Minor libxdo patch to avoid exporting unnecessary symbols (Daniel Kahn Gillmor)
   - Minor Makefile fix to only link libxdo (and not xdotool) against libX11 and libXtst
     (also Daniel Kahn Gillmor)
+  - Fix a minor bug in xdo_window_setclass that incorrectly aborts when
+    XGetClassHint fails.
 
 1.20100227.*:
   - Bump major version since there were lots of libxdo changes (now libxdo.so.1)
