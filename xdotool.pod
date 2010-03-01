@@ -336,9 +336,9 @@ will when any command fails.
 
  xdotool -
 
-=item * Read commands from a redirected file (uses isatty(0) to detect redirection on stdin)
+=item * Read commands from a redirected file
 
- xdotool < myfile
+ xdotool - < myfile
 
 =back
 
