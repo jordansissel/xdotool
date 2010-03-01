@@ -8,7 +8,7 @@ export LD_LIBRARY_PATH
 # default to use Xephyr as xserver
 : ${XSERVER:=Xephyr}
 
-if ! which $XSERVER > /dev/null 2>&1 ; then
+if ! which "$XSERVER" > /dev/null 2>&1 ; then
   echo "$XSERVER not found, but it is needed for the tests."
   exit 1
 fi
@@ -21,12 +21,12 @@ else
     session="gnome-session"
 fi
 
-$XSERVER $_DISPLAY &
+"$XSERVER" "$_DISPLAY" &
 server_pid="$!"
-export DISPLAY=$_DISPLAY
+export DISPLAY="$_DISPLAY"
 sleep 2
 
-$session > /dev/null 2>&1 &
+"$session" > /dev/null 2>&1 &
 session_pid="$!"
 
 # Give the session manager a few seconds to get going...
@@ -36,9 +36,9 @@ results=$(mktemp)
 ( sh no_crashes_please.sh
   sh test_search_maxdepth.sh
   sh test_set_window.sh
-) | tee $results
+) | tee "$results"
 
-if grep -q "^FAILURE:" $results ; then
+if grep -q "^FAILURE:" "$results" ; then
   exitcode=1
 else
   exitcode=0
@@ -47,8 +47,8 @@ fi
 echo "$(grep -c "^FAILURE:" $results) tests failed"
 echo "$(grep -c "^SUCCESS:" $results) tests passed"
 
-rm $results
-kill $server_pid $session_pid
+rm "$results"
+kill "$server_pid" "$session_pid"
 wait
 
-exit $exitcode
+exit "$exitcode"
