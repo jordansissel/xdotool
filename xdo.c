@@ -39,8 +39,8 @@ static int _xdo_keysequence_do(const xdo_t *xdo, Window window, const char *keys
                                int pressed, int *modifier);
 static int _xdo_ewmh_is_supported(const xdo_t *xdo, const char *feature);
 static void _xdo_init_xkeyevent(const xdo_t *xdo, XKeyEvent *xk);
-void _xdo_send_key(const xdo_t *xdo, Window window, int keycode, int modstate,
-                   int is_press, useconds_t delay);
+static void _xdo_send_key(const xdo_t *xdo, Window window, int keycode, int modstate,
+                          int is_press, useconds_t delay);
 
 static int _xdo_query_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode);
 static int _xdo_cached_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode);
