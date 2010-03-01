@@ -7,6 +7,9 @@ mkwindow
 
 sleep 1
 
+# Ensure we have a keymap so typing, etc, works.
+setxkbmap us
+
 try "$xdotool" search xdotool_test_window
 try "$xdotool" getwindowfocus
 
