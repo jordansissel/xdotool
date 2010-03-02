@@ -14,6 +14,12 @@ try "$xdotool" search xdotool_test_window
 try "$xdotool" getwindowfocus
 
 wid=`"$xdotool" search xdotool_test_window`
+
+if [ -z "$wid" ] ; then
+  echo "'xdotool search xdotool_test_window' failed"
+  exit 1
+fi
+
 try "$xdotool" windowraise "$wid"
 try "$xdotool" windowsize "$wid" 500 500
 try "$xdotool" windowfocus "$wid"
