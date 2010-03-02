@@ -1,7 +1,6 @@
 /* xdo library
- * * - getwindowfocus contributed by Lee Pumphret
+ * - getwindowfocus contributed by Lee Pumphret
  * - keysequence_{up,down} contributed by Magnus Boman
- *
  */
 
 #ifndef _XOPEN_SOURCE
