@@ -79,7 +79,6 @@ xdotool.c: xdo.h
 
 libxdo.so: xdo.o xdo_search.o
 	$(CC) $(LDFLAGS) -shared -Wl,-soname=libxdo.so.$(MAJOR) xdo.o xdo_search.o -o $@ $(LIBS)
-	#$(CC) $(LDFLAGS) $(LIBS) -shared -Wl,-soname=libxdo.so.$(MAJOR) xdo.o xdo_search.o -o $@
 
 libxdo.so.$(MAJOR): libxdo.so
 	ln -s $< $@
