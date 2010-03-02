@@ -10,16 +10,15 @@ sleep 1
 # Ensure we have a keymap so typing, etc, works.
 setxkbmap us
 
-try "$xdotool" search xdotool_test_window
-try "$xdotool" getwindowfocus
-
-wid=`"$xdotool" search xdotool_test_window`
-
-if [ -z "$wid" ] ; then
-  echo "'xdotool search xdotool_test_window' failed"
+try "$xdotool" search $TITLE
+if [ "$?" -ne 0 ] ; then
+  echo "'xdotool search xdotool_test_window' failed, aborting test."
   exit 1
 fi
 
+wid=`"$xdotool" search xdotool_test_window`
+
+try "$xdotool" getwindowfocus
 try "$xdotool" windowraise "$wid"
 try "$xdotool" windowsize "$wid" 500 500
 try "$xdotool" windowfocus "$wid"

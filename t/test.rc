@@ -7,8 +7,10 @@ try () {
 
   if [ $? -ne 0 ]; then
     echo "FAILURE: $@"
+    return 1
   else
     echo "SUCCESS: $@"
+    return 0
   fi
 }
 
