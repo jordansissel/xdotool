@@ -1,7 +1,12 @@
+1.20100302.*:
+  - Some test fixes suggested by Daniel Kahn Gillmor
+  - Don't use isatty(0) anymore as it isn't totally reliable in determining if
+    we should try to read from stdin.
+
 1.20100301.*:
   - Minor libxdo patch to avoid exporting unnecessary symbols (Daniel Kahn Gillmor)
-  - Minor Makefile fix to only link libxdo (and not xdotool) against libX11 and libXtst
-    (also Daniel Kahn Gillmor)
+  - Minor Makefile fix to only link libxdo (and not xdotool) against libX11 and
+    libXtst (also Daniel Kahn Gillmor)
   - Some test cleanup patches by Daniel Kahn Gillmor
   - Fixed the 'type hello' test that would fail sometimes when run in Xephyr. 
   - Fix a minor bug in xdo_window_setclass that incorrectly aborts when
