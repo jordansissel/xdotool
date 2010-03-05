@@ -270,19 +270,15 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
   if (search->winname) 
     regfree(&name_re);
 
+  if (debug) {
+    fprintf(stderr, "win: %ld, pid:%d, title:%d, name:%d, class:%d, visible:%d\n",
+            wid, pid_ok, title_ok, name_ok, class_ok, visible_ok);
+  }
   switch (search->require) {
     case SEARCH_ALL:
-      if (debug) {
-        fprintf(stderr, "pid:%d, title:%d, name:%d, class:%d\n",
-                pid_ok, title_ok, name_ok, class_ok);
-      }
       return visible_ok && pid_ok && title_ok && name_ok && class_ok;
       break;
     case SEARCH_ANY:
-      if (debug) {
-        fprintf(stderr, "pid:%d, title:%d, name:%d, class:%d\n",
-                pid_ok, title_ok, name_ok, class_ok);
-      }
       return visible_ok && ((pid_want && pid_ok) || (title_want && title_ok) \
                             || (name_want && name_ok) \
                             || (class_want && class_ok));

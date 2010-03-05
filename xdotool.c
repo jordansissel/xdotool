@@ -1090,11 +1090,11 @@ int cmd_search(int argc, char **args) {
     { "class", no_argument, &search_class, opt_class },
     { "help", no_argument, NULL, opt_help },
     { "maxdepth", required_argument, NULL, opt_maxdepth },
-    { "name", no_argument, &search_name, opt_name },
-    { "onlyvisible", 0, &only_visible, opt_onlyvisible },
+    { "name", no_argument, NULL, opt_name },
+    { "onlyvisible", 0, NULL, opt_onlyvisible },
     { "pid", required_argument, NULL, opt_pid },
     { "screen", required_argument, NULL, opt_screen },
-    { "title", no_argument, &search_title, opt_title },
+    { "title", no_argument, NULL, opt_title },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
@@ -1144,6 +1144,10 @@ int cmd_search(int argc, char **args) {
       case opt_screen:
         search.screen = strtoul(optarg, NULL, 0);
         search.searchmask |= SEARCH_SCREEN;
+        break;
+      case opt_onlyvisible:
+        search.only_visible = 1;
+        search.searchmask |= SEARCH_ONLYVISIBLE;
         break;
       default:
         printf("Invalid usage\n");
