@@ -44,6 +44,10 @@ if [ ! -z "$TEST_DISPLAY" ] ; then
 fi
 
 export DISPLAY
+
+# Add local built libxdo.so
+export LD_LIBRARY_PATH="${PWD}/.."
+
 ruby alltests.rb
 
 exitstatus=$?
