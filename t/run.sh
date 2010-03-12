@@ -12,6 +12,11 @@ if [ ! -z "$XSERVER" ] ; then
   sleep 1
 
   if [ ! -z "$WM" ] ; then
+    if ! which $WM  > /dev/null 2>&1 ; then
+      echo "WM '$WM' not found. Skipping..."
+      exit 0
+    fi
+
     ( 
       if [ ! -z "QUIET" ] ; then
         exec > /dev/null
