@@ -1,32 +1,11 @@
 #!/usr/bin/env ruby
 #
 
-require 'test/unit'
+require "test/unit"
+require "xdo_test_helper"
 
 class XdotoolSearchTests < Test::Unit::TestCase
-  def setup
-    @xdotool = "../xdotool"
-    @title = "#{self.class.name}_#{rand}"
-
-    # Clever pipe trick to get xterm to tell us its window id
-    reader, writer = IO.pipe
-    @windowpid = fork { 
-      exec("exec xterm -T '#{@title}' -e 'echo $WINDOWID >& #{writer.fileno}; echo $$ >& #{writer.fileno}; exec sleep 300'") 
-    };
-    @wid = reader.readline.to_i
-    @shellpid = reader.readline.to_i
-  end
-
-  def teardown
-    Process.kill("TERM", @shellpid)
-  end
-
-  def _xdotool(args)
-    io = IO.popen("#{@xdotool} #{args}")
-    output = io.readlines.collect { |i| i.chomp }
-    io.close
-    return [$?.exitstatus, output]
-  end
+  include XdoTestHelper
 
   def test_search_pid
     status, lines = _xdotool "search --pid #{@windowpid}"
@@ -63,5 +42,11 @@ class XdotoolSearchTests < Test::Unit::TestCase
     assert_equal(0, status, "Exit status should have been 0")
     assert_equal(1, lines.size, "Expect only one match to our search (only one window running that should match)")
     assert_equal(@wid, lines[0].to_i, "Expected the correct windowid when searching for its pid")
+  end
+
+  def test_search_maxdeth_0_has_no_results
+    status, lines = _xdotool "search --maxdepth 0 ."
+    assert_equal(1, status, "Exit status should be nonzero (no results expected)")
+    assert_equal(0, lines.length, "Search with --maxdepth 0 should return no results");
   end
 end # XdotoolSearchTests
