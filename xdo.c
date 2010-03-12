@@ -21,6 +21,7 @@
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
+#include <X11/keysym.h>
 
 #include "xdo.h"
 #include "xdo_util.h"
