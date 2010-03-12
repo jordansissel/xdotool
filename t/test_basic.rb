@@ -120,15 +120,43 @@ class XdotoolBasicTests < Test::Unit::TestCase
 
   def test_misc
     cmds = ["mousedown 1", "mouseup 1", "mousemove 0 0", "mousemove 50 50", "click 1",
-            "type \"hello\"", "key \"ctrl+w\"", "windowactivate #{@wid}",
-            "set_num_desktops 5", "set_desktop 1", "set_desktop_for_window #{@wid} 3"]
+            "type \"hello\"", "key \"ctrl+w\""]
+    cmds_withoutput = []
+
+    if (wm_supports?("_NET_ACTIVE_WINDOW"))
+      cmds << "windowactivate #{@wid}"
+      cmds_withoutput << "getwindowfocus"
+    else
+      puts "Skipping _NET_ACTIVE_WINDOW features (current wm does not support it)"
+    end
+
+    if (wm_supports?("_NET_NUMBER_OF_DESKTOPS"))
+      cmds << "set_num_desktops 5"
+      cmds_withoutput << "get_num_desktops"
+    else
+      puts "Skipping _NET_NUMBER_OF_DESKTOPS features (current wm does not support it)"
+    end
+
+    if (wm_supports?("_NET_WM_DESKTOP"))
+      cmds << "set_desktop_for_window #{@wid} 3"
+      cmds_withoutput << "get_desktop"
+    else
+      puts "Skipping _NET_WM_DESKTOP features (current wm does not support it)"
+    end
+
+    if (wm_supports?("_NET_CURRENT_DESKTOP"))
+      cmds << "set_desktop 1"
+      cmds_withoutput << "get_desktop_for_window #{@wid}"
+    else
+      puts "Skipping _NET_CURRENT_DESKTOP features (current wm does not support it)"
+    end
+
     cmds.each do |cmd|
       status, lines = _xdotool cmd
       assert_status_ok(status, cmd)
       assert_equal(0, lines.length, "'#{cmd}' should have no output")
     end
 
-    cmds_withoutput = ["get_num_desktops", "get_desktop", "get_desktop_for_window #{@wid}"]
     cmds_withoutput.each do |cmd|
       status, lines = _xdotool cmd
       assert_status_ok(status, cmd)

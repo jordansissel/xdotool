@@ -40,4 +40,26 @@ module XdoTestHelper
   def assert_status_fail(status, msg="")
     assert_not_equal(0, status, "Exit status should not have been 0, was #{status}. #{msg}")
   end
+
+  def detect_window_manager
+    status, lines = runcmd("xprop -root")
+    
+    # ion
+    if lines.grep(/^_ION_WORKSPACE/).length > 0
+      return :ion
+    end
+
+    return :unknown
+  end
+
+  def wm_supports?(feature)
+    status, lines = runcmd("xprop -root")
+
+    supported = lines.grep(/^_NET_SUPPORTED/)
+    return false if supported.length == 0
+
+    features = supported.first.split(" = ")[-1].split(", ")
+    return features.include?(feature)
+  end
+
 end

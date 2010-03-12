@@ -92,7 +92,7 @@ xdotool.1: xdotool.pod
 package: test-package-build create-package
 
 test: xdotool libxdo.so.$(MAJOR)
-	cd t/; sh run.sh
+	$(MAKE) -C t test
 
 xdo_version.h:
 	sh version.sh --header > $@
