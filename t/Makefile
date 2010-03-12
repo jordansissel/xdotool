@@ -1,9 +1,10 @@
 
+all-headless: test-xvfb test-xvfb-openbox test-xvfb-gnome
+all-xephyr: test-xephyr test-xephyr-openbox test-xephyr-gnome
+all: all-headless all-xephyr 
+
 test:
 	./run.sh
-
-all-headless: test-xvfb test-xvfb-openbox test-xvfb-gnome
-all: all-headless test-xephyr test-xephyr-openbox test-xephyr-gnome
 
 test-xephyr:
 	QUIET=1 XSERVER="Xephyr -ac -screen 1280x768x24" TEST_DISPLAY=:5 $(MAKE) test

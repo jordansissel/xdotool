@@ -120,7 +120,8 @@ class XdotoolBasicTests < Test::Unit::TestCase
 
   def test_misc
     cmds = ["mousedown 1", "mouseup 1", "mousemove 0 0", "mousemove 50 50", "click 1",
-            "type \"hello\"", "key \"ctrl+w\""]
+            "key \"ctrl+w\""]
+    #"type \"hello\"",
     cmds_withoutput = []
 
     if (wm_supports?("_NET_ACTIVE_WINDOW"))

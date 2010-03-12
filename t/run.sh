@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ ! -z "XSERVER" ] ; then
+if [ ! -z "$XSERVER" ] ; then
   ( 
     if [ ! -z "QUIET" ] ; then
       exec > /dev/null
@@ -27,16 +27,20 @@ if [ ! -z "XSERVER" ] ; then
     [ "$WM" = "gnome-session" ] && sleeptime=15
     echo "Sleeping for a $sleeptime seconds to let the wm startup ($WM) [$wmpid]"
     sleep $sleeptime
-  fi
+  fi # if ! -z $WM
 
   [ -z "$KEYMAP" ] && KEYMAP=us
   echo "Setting up keymap on new server as $KEYMAP"
   DISPLAY="$TEST_DISPLAY" setxkbmap $KEYMAP
-else
-  TEST_DISPLAY=$DISPLAY
+fi # if ! -z $XSERVER
+
+if [ ! -z "$TEST_DISPLAY" ] ; then
+  DISPLAY="$TEST_DISPLAY"
 fi
 
-DISPLAY="$TEST_DISPLAY" ruby alltests.rb
+export DISPLAY
+ruby alltests.rb
+
 exitstatus=$?
 
 if [ ! -z "$wmpid" ] ; then
