@@ -1,3 +1,15 @@
+1.??????????:
+  - Bug fixes only this release
+  - Rewrote tests to use ruby and will now test against Xvfb and Xephyr using
+    no window manager, openbox, and then gnome.
+  - Fix build problems on Arch linux (or gentoo?)
+    Fixes: http://code.google.com/p/semicomplete/issues/detail?id=20
+  - Fix searching for only visible windows.
+    Fixes: http://code.google.com/p/semicomplete/issues/detail?id=22
+  - Fix xdotool search flags: --title, --name, --class
+  - Add include for keysym.h to fix compile errors reported on the mailing list.
+
+
 1.20100302.*:
   - Some test fixes suggested by Daniel Kahn Gillmor
   - Don't use isatty(0) anymore as it isn't totally reliable in determining if
