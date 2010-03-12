@@ -33,8 +33,11 @@ module XdoTestHelper
     return [$?.exitstatus, output]
   end
 
-  def assert_status_ok(status)
-    assert_equal(0, status, "Exit status should have been 0, was #{status}")
+  def assert_status_ok(status, msg="")
+    assert_equal(0, status, "Exit status should have been 0, was #{status}. #{msg}")
   end
 
+  def assert_status_fail(status, msg="")
+    assert_not_equal(0, status, "Exit status should not have been 0, was #{status}. #{msg}")
+  end
 end
