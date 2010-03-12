@@ -92,7 +92,7 @@ xdotool.1: xdotool.pod
 package: test-package-build create-package
 
 test: xdotool libxdo.so.$(MAJOR)
-	$(MAKE) -C t test
+	$(MAKE) -C t
 
 xdo_version.h:
 	sh version.sh --header > $@
@@ -109,15 +109,15 @@ create-package: pre-create-package VERSION xdo_version.h
 	mkdir $${NAME}; \
 	rsync --exclude .svn -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* version.sh VERSION 2> /dev/null` $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
-	rm -rf $${NAME}/
+	rm -r $${NAME}
 	rm VERSION
 
 # Make sure the package we're building compiles.
 test-package-build: create-package
-	@NAME=xdotool-$(VERSION); \
-	echo "Testing package $$NAME"; \
-	tar -zxf $${NAME}.tar.gz; \
-	make -C $${NAME} xdotool; \
-	rm -rf $${NAME}/
-	rm -f $${NAME}.tar.gz
+	@NAME=xdotool-$(VERSION) && \
+	echo "Testing package $$NAME" && \
+	tar -zxf $${NAME}.tar.gz && \
+	make -C $${NAME} test && \
+	echo "Package ready: $${NAME}"; \
+	rm -rf $${NAME}
 
