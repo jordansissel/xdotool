@@ -1149,6 +1149,15 @@ int cmd_search(int argc, char **args) {
         search.only_visible = 1;
         search.searchmask |= SEARCH_ONLYVISIBLE;
         break;
+      case opt_title:
+        search_title = True;
+        break;
+      case opt_class:
+        search_class = True;
+        break;
+      case opt_name:
+        search_name = True;
+        break;
       default:
         printf("Invalid usage\n");
         printf(usage, cmd);
@@ -1168,10 +1177,6 @@ int cmd_search(int argc, char **args) {
   if (only_visible)
     search.only_visible = True;
 
-  //printf("Enum: %d %d %d %d", opt_pid, opt_maxdepth, opt_name, opt_title);
-  //printf("Search title: %d\n", search_title);
-  //printf("Search name: %d\n", search_name);
-  //printf("Search class: %d\n", search_class);
   if (search_title < 0 && search_name < 0 && search_class < 0 && argc > 0) {
     fprintf(stderr, "Defaulting to search window title, class, and name\n");
     search.searchmask |= (SEARCH_TITLE | SEARCH_NAME | SEARCH_CLASS);
