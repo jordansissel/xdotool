@@ -759,6 +759,12 @@ int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret) {
   int unused_revert_ret;
 
   ret = XGetInputFocus(xdo->xdpy, window_ret, &unused_revert_ret);
+
+  if (*window_ret == 1) {
+    fprintf(stderr, 
+            "XGetInputFocus returned the focused window of %ld. "
+            "This is likely a bug in the X server.\n", *window_ret);
+  }
   return _is_success("XGetInputFocus", ret == 0);
 }
 
@@ -1053,7 +1059,7 @@ int _xdo_ewmh_is_supported(const xdo_t *xdo, const char *feature) {
   
   request = XInternAtom(xdo->xdpy, "_NET_SUPPORTED", False);
   feature_atom = XInternAtom(xdo->xdpy, feature, False);
-  root = RootWindow(xdo->xdpy, 0);
+  root = XDefaultRootWindow(xdo->xdpy);
 
   results = (Atom *) xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
   for (i = 0L; i < nitems; i++) {
