@@ -2,7 +2,6 @@
 #
 
 require 'test/unit'
-#require 'xdotool_test_helper'
 
 class XdotoolSearchTests < Test::Unit::TestCase
   def setup
