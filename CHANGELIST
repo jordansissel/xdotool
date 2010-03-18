@@ -1,14 +1,14 @@
 1.??????????:
   - Bug fixes only this release
-  - Rewrote tests to use ruby and will now test against Xvfb and Xephyr using
+  - Rewrote tests to use ruby and will now test against Xvfb and Xephyr using:
     no window manager, openbox, and then gnome.
   - Fix build problems on Arch linux (or gentoo?)
     Fixes: http://code.google.com/p/semicomplete/issues/detail?id=20
   - Fix searching for only visible windows.
     Fixes: http://code.google.com/p/semicomplete/issues/detail?id=22
   - Fix xdotool search flags: --title, --name, --class
-  - Add include for keysym.h to fix compile errors reported on the mailing list.
-
+  - Add include for keysym.h to fix compile errors reported on the mailing
+    list.
 
 1.20100302.*:
   - Some test fixes suggested by Daniel Kahn Gillmor
@@ -16,7 +16,8 @@
     we should try to read from stdin.
 
 1.20100301.*:
-  - Minor libxdo patch to avoid exporting unnecessary symbols (Daniel Kahn Gillmor)
+  - Minor libxdo patch to avoid exporting unnecessary symbols (Daniel Kahn
+    Gillmor)
   - Minor Makefile fix to only link libxdo (and not xdotool) against libX11 and
     libXtst (also Daniel Kahn Gillmor)
   - Some test cleanup patches by Daniel Kahn Gillmor
@@ -25,7 +26,8 @@
     XGetClassHint fails.
 
 1.20100227.*:
-  - Bump major version since there were lots of libxdo changes (now libxdo.so.1)
+  - Bump major version since there were lots of libxdo changes (now
+    libxdo.so.1)
   - Support '--pid NUM' for searching for windows by pid:
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=10
     Example: xdotool search --pid 12345
@@ -90,8 +92,8 @@
 
 20091210:
   * No functional changes.
-  * Added 'soname' (shared library name/version) to libxdo.so for better linkage.
-    This change may break linking with non-gnu ld(1), I don't know.
+  * Added 'soname' (shared library name/version) to libxdo.so for better
+    linkage. This change may break linking with non-gnu ld(1), I don't know.
 
 20091208:
   * Added documentation about 'search --maxdepth' and new command 'set_window'
@@ -153,9 +155,9 @@
 20090126:
   * Change the default behavior of 'getwindowfocus' to get the first
     ancestor-or-self window that has WM_CLASS set. WM_CLASS will be set on
-    (all?) top-level windows and it's possible that the currently focused window
-    according to X is not a top-level window. To use the previous behavior, use
-    'getwindowfocus -f'
+    (all?) top-level windows and it's possible that the currently focused
+    window according to X is not a top-level window. To use the previous
+    behavior, use 'getwindowfocus -f'
   * Make 'xdotool key at' work correctly. 'at' is usually Shift+2, for example.
     Now all shifted characters should work, but I've only tested on a US
     keyboard.
@@ -185,8 +187,8 @@
 
 20080601:
   * Add new commands:
-    - windowactivate: Activate a window. If the window is on another desktop, we
-        will switch to that desktop and then activate the window.
+    - windowactivate: Activate a window. If the window is on another desktop,
+      we will switch to that desktop and then activate the window.
     - set_num_desktops number: Changes the number of desktops or workspaces.
     - get_num_desktops: Output the current number of desktops.
     - set_desktop desktop_number: Change the current view to the specified
