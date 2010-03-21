@@ -49,4 +49,61 @@ class XdotoolSearchTests < Test::Unit::TestCase
     assert_equal(1, status, "Exit status should be nonzero (no results expected)")
     assert_equal(0, lines.length, "Search with --maxdepth 0 should return no results");
   end
+
+  def test_search_by_name
+    name = "name#{rand}"
+    status, lines = _xdotool "search --name '#{name}'"
+    assert_equal(1, status, 
+                 "Search for window with name '#{name}' exit nonzero when" \
+                 + " no window with that name exists")
+    assert_equal(0, lines.length, 
+                 "Search for window with name '#{name}' should have no results when" \
+                 + " no window with that name exists")
+                  
+
+    _xdotool "set_window --name '#{name}' #{@wid}"
+    status, lines = _xdotool "search --name '#{name}'"
+    assert_equal(0, status, "Search for name '#{name}' should exit zero")
+    assert_equal(1, lines.size, "Search for name '#{name}' have one result")
+    assert(lines.include?(@wid.to_s),
+           "Searched results should include our expected window")
+  end
+
+  def test_search_by_class
+    name = "class#{rand}"
+    status, lines = _xdotool "search --class '#{name}'"
+    assert_equal(1, status, 
+                 "Search for window with class '#{name}' exit nonzero when" \
+                 + " no window with that class exists")
+    assert_equal(0, lines.length, 
+                 "Search for window with class '#{name}' should have no results when" \
+                 + " no window with that class exists")
+                  
+
+    _xdotool "set_window --class '#{name}' #{@wid}"
+    status, lines = _xdotool "search --class '#{name}'"
+    assert_equal(0, status, "Search for class '#{name}' should exit zero")
+    assert_equal(1, lines.size, "Search for class '#{name}' have one result")
+    assert(lines.include?(@wid.to_s),
+           "Searched results should include our expected window")
+  end
+
+  def test_search_by_classname
+    name = "classname#{rand}"
+    status, lines = _xdotool "search --classname '#{name}'"
+    assert_equal(1, status, 
+                 "Search for window with classname '#{name}' exit nonzero when" \
+                 + " no window with that classname exists")
+    assert_equal(0, lines.length, 
+                 "Search for window with classname '#{name}' should have no results when" \
+                 + " no window with that classname exists")
+                  
+
+    _xdotool "set_window --classname '#{name}' #{@wid}"
+    status, lines = _xdotool "search --classname '#{name}'"
+    assert_equal(0, status, "Search for classname '#{name}' should exit zero")
+    assert_equal(1, lines.size, "Search for classname '#{name}' have one result")
+    assert(lines.include?(@wid.to_s),
+           "Searched results should include our expected window")
+  end
 end # XdotoolSearchTests

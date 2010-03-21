@@ -173,6 +173,23 @@ static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re)
   return False;
 }
 
+static int _xdo_window_match_classname(const xdo_t *xdo, Window window, regex_t *re) {
+  XWindowAttributes attr;
+  XClassHint classhint;
+  XGetWindowAttributes(xdo->xdpy, window, &attr);
+
+  if (XGetClassHint(xdo->xdpy, window, &classhint)) {
+    if ((classhint.res_name) && (regexec(re, classhint.res_name, 0, NULL, 0) == 0)) {
+      XFree(classhint.res_name);
+      XFree(classhint.res_class);
+      return True;
+    }
+    XFree(classhint.res_name);
+    XFree(classhint.res_class);
+  }
+  return False;
+}
+
 static int _xdo_window_match_pid(const xdo_t *xdo, Window window, const int pid) {
   int window_pid;
 
@@ -210,10 +227,12 @@ static int _xdo_is_window_visible(const xdo_t *xdo, Window wid) {
 static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *search) {
   regex_t title_re;
   regex_t class_re;
+  regex_t classname_re;
   regex_t name_re;
 
   if (!compile_re(search->title, &title_re) \
       || !compile_re(search->winclass, &class_re) \
+      || !compile_re(search->winclass, &classname_re) \
       || !compile_re(search->winname, &name_re)) {
     return False;
   }
@@ -221,10 +240,10 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
   /* Set this to 1 for dev debugging */
   const int debug = 0;
 
-  int visible_ok, pid_ok, title_ok, name_ok, class_ok;
-  int visible_want, pid_want, title_want, name_want, class_want;
+  int visible_ok, pid_ok, title_ok, name_ok, class_ok, classname_ok;
+  int visible_want, pid_want, title_want, name_want, class_want, classname_want;
 
-  visible_ok = pid_ok = title_ok = name_ok = class_ok = True;
+  visible_ok = pid_ok = title_ok = name_ok = class_ok = classname_ok = True;
     //(search->require == SEARCH_ANY ? False : True);
 
   visible_want = search->searchmask & SEARCH_ONLYVISIBLE;
@@ -232,6 +251,7 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
   title_want = search->searchmask & SEARCH_TITLE;
   name_want = search->searchmask & SEARCH_NAME;
   class_want = search->searchmask & SEARCH_CLASS;
+  classname_want = search->searchmask & SEARCH_CLASSNAME;
 
   do {
     /* Visibility is a hard condition, fail always if we wanted 
@@ -261,12 +281,19 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
       if (debug) fprintf(stderr, "skip %ld winclass\n", wid);
       class_ok = False;
     }
+
+    if (classname_want && !_xdo_window_match_classname(xdo, wid, &classname_re)) {
+      if (debug) fprintf(stderr, "skip %ld winclassname\n", wid);
+      classname_ok = False;
+    }
   } while (0);
 
   if (search->title) 
     regfree(&title_re);
   if (search->winclass) 
     regfree(&class_re);
+  if (search->winclassname) 
+    regfree(&classname_re);
   if (search->winname) 
     regfree(&name_re);
 
@@ -286,7 +313,8 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
   }
   
   fprintf(stderr, 
-          "Unexpected code reached. search->require is not valid? (%d); this may be a bug?\n",
+          "Unexpected code reached. search->require is not valid? (%d); "
+          "this may be a bug?\n",
           search->require);
   return False;
 }

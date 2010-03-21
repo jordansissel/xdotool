@@ -59,16 +59,18 @@ typedef struct xdo_active_mods {
 #define SEARCH_PID  (1UL << 3)
 #define SEARCH_ONLYVISIBLE  (1UL << 4)
 #define SEARCH_SCREEN  (1UL << 5)
+#define SEARCH_CLASSNAME (1UL << 6)
 
 typedef struct xdo_search {
-  char *title;       /* pattern to test against a window title */
-  char *winclass;    /* pattern to test against a window class */
-  char *winname;     /* pattern to test against a window name */
-  int pid;           /* window pid (From window atom _NET_WM_PID) */
-  long max_depth;    /* depth of search. 1 means only toplevel windows */
-  int only_visible;  /* boolean; set true to search only visible windows */
-  int screen;        /* what screen to search, if any. If none given, search 
-                        all screens */
+  char *title;        /* pattern to test against a window title */
+  char *winclass;     /* pattern to test against a window class */
+  char *winclassname; /* pattern to test against a window class */
+  char *winname;      /* pattern to test against a window name */
+  int pid;            /* window pid (From window atom _NET_WM_PID) */
+  long max_depth;     /* depth of search. 1 means only toplevel windows */
+  int only_visible;   /* boolean; set true to search only visible windows */
+  int screen;         /* what screen to search, if any. If none given, search 
+                         all screens */
 
   /* Should the tests be 'and' or 'or' ? If 'and', any failure will skip the
    * window. If 'or', any success will keep the window in search results. */

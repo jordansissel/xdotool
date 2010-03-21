@@ -1076,18 +1076,19 @@ int cmd_search(int argc, char **args) {
   int i;
   int c;
 
-  int only_visible = 0;
   int search_title = -1;
   int search_name = -1;
   int search_class = -1;
+  int search_classname = -1;
   typedef enum { 
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_class, opt_maxdepth,
-    opt_pid, opt_help, opt_any, opt_all, opt_screen
+    opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname
   } optlist_t;
   struct option longopts[] = {
     { "all", no_argument, NULL, opt_all },
     { "any", no_argument, NULL, opt_any },
     { "class", no_argument, &search_class, opt_class },
+    { "classname", no_argument, &search_class, opt_classname },
     { "help", no_argument, NULL, opt_help },
     { "maxdepth", required_argument, NULL, opt_maxdepth },
     { "name", no_argument, NULL, opt_name },
@@ -1101,6 +1102,7 @@ int cmd_search(int argc, char **args) {
       "Usage: xdotool %s "
       "[options] regexp_pattern\n"
       " --class         check regexp_pattern agains the window class\n"
+      " --classname     check regexp_pattern agains the window classname\n"
       " --maxdepth N    set search depth to N. Default is infinite.\n"
       " --name          check regexp_pattern agains the window name\n"
       " --onlyvisible   matches only windows currently visible\n"
@@ -1146,7 +1148,7 @@ int cmd_search(int argc, char **args) {
         search.searchmask |= SEARCH_SCREEN;
         break;
       case opt_onlyvisible:
-        search.only_visible = 1;
+        search.only_visible = True;
         search.searchmask |= SEARCH_ONLYVISIBLE;
         break;
       case opt_title:
@@ -1154,6 +1156,9 @@ int cmd_search(int argc, char **args) {
         break;
       case opt_class:
         search_class = True;
+        break;
+      case opt_classname:
+        search_classname = True;
         break;
       case opt_name:
         search_name = True;
@@ -1174,28 +1179,33 @@ int cmd_search(int argc, char **args) {
     return EXIT_FAILURE;
   }
 
-  if (only_visible)
-    search.only_visible = True;
-
-  if (search_title < 0 && search_name < 0 && search_class < 0 && argc > 0) {
-    fprintf(stderr, "Defaulting to search window title, class, and name\n");
-    search.searchmask |= (SEARCH_TITLE | SEARCH_NAME | SEARCH_CLASS);
+  if (search_title < 0 && search_name < 0 && search_class 
+      && search_classname < 0 && argc > 0) {
+    fprintf(stderr, "Defaulting to search window title, class, classname, "
+            "and name (title)\n");
+    search.searchmask |= (SEARCH_TITLE | SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
     search_title = opt_title;
     search_name = opt_name;
     search_class = opt_class;
   }
 
-  if (search_title == opt_title) {
-    search.searchmask |= SEARCH_TITLE;
-    search.title = args[0];
-  }
-  if (search_name == opt_name) {
-    search.searchmask |= SEARCH_NAME;
-    search.winname = args[0];
-  }
-  if (search_class == opt_class) {
-    search.searchmask |= SEARCH_CLASS;
-    search.winclass = args[0];
+  if (argc > 0) {
+    if (search_title) {
+      search.searchmask |= SEARCH_TITLE;
+      search.title = args[0];
+    }
+    if (search_name) {
+      search.searchmask |= SEARCH_NAME;
+      search.winname = args[0];
+    }
+    if (search_class) {
+      search.searchmask |= SEARCH_CLASS;
+      search.winclass = args[0];
+    }
+    if (search_classname) {
+      search.searchmask |= SEARCH_CLASSNAME;
+      search.winclassname = args[0];
+    }
   }
 
   xdo_window_search(xdo, &search, &list, &nwindows);

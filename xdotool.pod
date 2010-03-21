@@ -160,6 +160,10 @@ The options available are:
 
 Match against the window class
 
+=item B<--classname> 
+
+Match against the window classname
+
 =item B<--maxdepth> N 
 
 Set recursion/child search depth. Default is -1,
