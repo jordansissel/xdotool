@@ -462,6 +462,9 @@ Please send questions to xdotool-users@googlegroups.com. File bugs and feature r
 
 L<http://code.google.com/p/semicomplete/issues/list>
 
+Alternately, if you prefer email, feel free to file bugs by emailing the list.
+What works for you :)
+
 =head1 AUTHOR
 
 xdotool was written by Jordan Sissel.
