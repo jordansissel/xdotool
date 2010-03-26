@@ -1,4 +1,8 @@
-1.20100318.*
+1.20100325.*:
+  - Fix bug in search where --name wasn't working. Test written to cover this.
+    http://code.google.com/p/semicomplete/issues/detail?id=25
+
+1.20100318.*:
   - Bug fixes only this release
   - Rewrote tests to use ruby and will now test against Xvfb and Xephyr using:
     no window manager, openbox, and then gnome.
