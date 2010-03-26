@@ -916,8 +916,9 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
   char *tokctx = NULL;
   const char *tok = NULL;
   char *keyseq_copy = NULL, *strptr = NULL;
-  int i;
-  int shift_keycode;
+  int i = 0;
+  int shift_keycode = 0;
+  int input_state = 0;
   
   /* Array of keys to press, in order given by keyseq */
   int keys_size = 10;
@@ -928,6 +929,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
   }
 
   shift_keycode = XKeysymToKeycode(xdo->xdpy, XStringToKeysym("Shift_L"));
+  input_state = xdo_get_input_state(xdo);
 
   *nkeys = 0;
   *keys = malloc(keys_size * sizeof(charcodemap_t));
@@ -956,8 +958,36 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
       }
     } else {
       key = XKeysymToKeycode(xdo->xdpy, sym);
+
+      /* Hack for international/modeshift things.
+       * If we can't type this keysym with just a keycode or shift+keycode,
+       * let's pretend we didn't find the keycode and request 
+       * a keybinding.
+       *
+       * Should fix these bugs:
+       * http://code.google.com/p/semicomplete/issues/detail?id=21
+       * http://code.google.com/p/semicomplete/issues/detail?id=13
+       *
+       * This hack seems better (less code) than walking the keymap to find
+       * which modifiers are required to type with this keycode to invoke
+       * this keysym.
+       */
+
+      int offset = 0;
+      /* I can't find a constant in Xlib that is 0x2000 (or 1 << 13) 
+       * Maybe it's in Xkb? Either way, 0x2000 is the state shown by xev(1)
+       * when we are shifted.  Example: 
+       * % setxkbmap -option * grp:switch,grp:shifts_toggle us,se
+       * Then hit both shift-keys simultaneously to switch to 'se' key layout */
+      if (input_state & 0x2000) { /* keymap shifted via xkb */
+        offset = 2;
+      }
+
+      if (XKeycodeToKeysym(xdo->xdpy, key, 0 + offset) != sym
+          && XKeycodeToKeysym(xdo->xdpy, key, 1 + offset) != sym) {
+        key = 0;
+      }
     }
-    //printf("%s => %d => %d\n", tok, sym, key);
 
     if (key == 0) {
       //fprintf(stderr, "No such key '%s'. Ignoring it.\n", tok);
