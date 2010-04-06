@@ -20,7 +20,7 @@ WARNFLAGS+=-pedantic -Wall -W -Wundef \
            -Wmissing-prototypes -Wnested-externs -Winline \
            -Wdisabled-optimization -Wno-missing-field-initializers
 
-CFLAGS?=-pipe $(WARNFLAGS)
+CFLAGS?=-pipe -O2 $(WARNFLAGS)
 
 DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst
 DEFAULT_INC=-I/usr/X11R6/include -I/usr/local/include
