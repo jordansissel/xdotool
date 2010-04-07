@@ -136,10 +136,28 @@ Same as above, except only a mouse down is sent.
 
 Same as above, except only a mouse up is sent.
 
-=item B<getmouselocation>
+=item B<getmouselocation> I<[--shell]>
 
 Outputs the x, y, and screen location of the mouse cursor. Screen numbers will
 be nonzero if you have multiple monitors and are not using Xinerama.
+
+=over
+
+=item B<--shell>
+
+This makes getmouselocation output shell data you can eval. Example:
+
+ % xdotool getmouselocation --shell
+ X=880
+ Y=443
+ SCREEN=0
+
+ % eval $(xdotool getmouselocation --shell)
+ % echo $X,$Y
+ 714,324
+
+=back
+
 
 =back
 
