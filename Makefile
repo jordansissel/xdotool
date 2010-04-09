@@ -30,7 +30,7 @@ INC=$(shell pkg-config --cflags x11 xtst 2> /dev/null || echo "$(DEFAULT_INC)")
 
 CFLAGS+=-std=c99 $(INC)
 
-all: xdotool xdotool.1 libxdo.so libxdo.so.$(MAJOR)
+all: xdotool.1 libxdo.so libxdo.so.$(MAJOR) xdotool
 
 install: pre-install installlib installprog installman installheader
 
@@ -62,7 +62,7 @@ uninstall:
 	rm -f $(DINSTALLLIB)/libxdo.so.$(MAJOR)
 
 clean:
-	rm -f *.o xdotool xdotool.1 libxdo.so libxdo.so.? || true
+	rm -f *.o xdotool xdotool.1 xdotool.html libxdo.so libxdo.so.? || true
 
 xdo.o: xdo.c xdo_version.h
 	$(CC) $(CFLAGS) -fPIC -c xdo.c
@@ -88,6 +88,9 @@ xdotool: xdotool.o libxdo.so
 
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@
+
+xdotool.html: xdotool.pod
+	pod2html $< > $@
 
 package: test-package-build create-package
 
