@@ -154,7 +154,10 @@ int script_main(int argc, char **argv) {
     }
     line[strlen(line) - 1] = '\0'; /* replace newline with null */
 
-    asprintf(&cmd, "%s %s", argv[0], line);
+    if (asprintf(&cmd, "%s %s", argv[0], line) == -1) {
+      fprintf(stderr, "asprintf failed\n");
+      exit(1);
+    }
     //printf("Running: %s\n", cmd);
     ret = system(cmd);
     free(cmd);
@@ -252,7 +255,7 @@ int cmd_mousemove(int argc, char **args) {
   int ret = 0;
   int x, y;
   char *cmd = *args;
-  xdo_active_mods_t *active_mods;
+  xdo_active_mods_t *active_mods = NULL;
   int clear_modifiers = 0;
 
   int c;
@@ -377,7 +380,7 @@ int cmd_mousedown(int argc, char **args) {
   int button;
   char *cmd = *args;
   Window window = 0;
-  xdo_active_mods_t *active_mods;
+  xdo_active_mods_t *active_mods = NULL;
   int clear_modifiers = 0;
 
   int c;
@@ -444,7 +447,7 @@ int cmd_mouseup(int argc, char **args) {
   int button;
   char *cmd = *args;
   Window window = 0;
-  xdo_active_mods_t *active_mods;
+  xdo_active_mods_t *active_mods = NULL;
   int clear_modifiers = 0;
 
   int c;
@@ -563,7 +566,7 @@ int cmd_click(int argc, char **args) {
   int ret;
   int clear_modifiers = 0;
   Window window = 0;
-  xdo_active_mods_t *active_mods;
+  xdo_active_mods_t *active_mods = NULL;
 
   int c;
   static struct option longopts[] = {
@@ -627,7 +630,7 @@ int cmd_type(int argc, char **args) {
   int i;
   int c;
   char *cmd = *args;
-  xdo_active_mods_t *active_mods;
+  xdo_active_mods_t *active_mods = NULL;
 
   /* Options */
   int clear_modifiers = 0;
@@ -710,7 +713,7 @@ int cmd_key(int argc, char **args) {
   int i;
   int c;
   char *cmd = *args;
-  xdo_active_mods_t *active_mods;
+  xdo_active_mods_t *active_mods = NULL;
 
   /* Options */
   Window window = 0;
