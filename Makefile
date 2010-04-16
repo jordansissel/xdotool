@@ -66,7 +66,7 @@ uninstall:
 	rm -f $(DINSTALLLIB)/libxdo.$(VERLIBSUFFIX)
 
 clean:
-	rm -f *.o xdotool xdotool.1 xdotool.html libxdo.$(LIBSUFFIX) libxdo.$(VERBLIBSUFFIX) || true
+	rm -f *.o xdotool xdotool.1 xdotool.html libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) || true
 
 xdo.o: xdo.c xdo_version.h
 	$(CC) $(CFLAGS) -fPIC -c xdo.c
@@ -84,7 +84,7 @@ xdotool.c: xdo.h
 libxdo.$(LIBSUFFIX): xdo.o xdo_search.o
 	$(CC) $(LDFLAGS) $(DYNLIBFLAG) $(LIBNAMEFLAG) xdo.o xdo_search.o -o $@ $(LIBS)
 
-libxdo.$(VERBLIBSUFFIX): libxdo.$(LIBSUFFIX)
+libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 	ln -s $< $@
 
 xdotool: xdotool.o libxdo.$(LIBSUFFIX)
