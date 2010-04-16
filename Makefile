@@ -19,7 +19,11 @@ WARNFLAGS+=-pedantic -Wall -W -Wundef \
            -Wcast-align -Wwrite-strings -Wstrict-prototypes \
            -Wmissing-prototypes -Wnested-externs -Winline \
            -Wdisabled-optimization -Wno-missing-field-initializers
-
+LIBSUFFIX=$(shell sh platform.sh libsuffix)
+VERLIBSUFFIX=$(shell sh platform.sh libsuffix $(MAJOR))
+DYNLIBFLAG=$(shell sh platform.sh dynlibflag)
+LIBNAMEFLAG=$(shell sh platform.sh libnameflag $(MAJOR))
+ 
 CFLAGS?=-pipe -O2 $(WARNFLAGS)
 
 DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst
@@ -30,7 +34,7 @@ INC=$(shell pkg-config --cflags x11 xtst 2> /dev/null || echo "$(DEFAULT_INC)")
 
 CFLAGS+=-std=c99 $(INC)
 
-all: xdotool.1 libxdo.so libxdo.so.$(MAJOR) xdotool
+all: xdotool.1 libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) xdotool
 
 install: pre-install installlib installprog installman installheader
 
@@ -41,10 +45,10 @@ installprog: xdotool
 	install -d $(DINSTALLBIN)
 	install -m 755 xdotool $(DINSTALLBIN)/
 
-installlib: libxdo.so
+installlib: libxdo.$(LIBSUFFIX)
 	install -d $(DINSTALLLIB)
-	install libxdo.so $(DINSTALLLIB)/libxdo.so.$(MAJOR)
-	ln -sf libxdo.so.$(MAJOR) $(DINSTALLLIB)/libxdo.so
+	install libxdo.$(LIBSUFFIX) $(DINSTALLLIB)/libxdo.$(VERLIBSUFFIX)
+	ln -sf libxdo.$(VERLIBSUFFIX) $(DINSTALLLIB)/libxdo.$(LIBSUFFIX)
 
 installheader: xdo.h
 	install -d $(DINSTALLINCLUDE)
@@ -58,11 +62,11 @@ deinstall: uninstall
 uninstall: 
 	rm -f $(DINSTALLBIN)/xdotool
 	rm -f $(DINSTALLMAN)/xdotool.1
-	rm -f $(DINSTALLLIB)/libxdo.so
-	rm -f $(DINSTALLLIB)/libxdo.so.$(MAJOR)
+	rm -f $(DINSTALLLIB)/libxdo.$(LIBSUFFIX)
+	rm -f $(DINSTALLLIB)/libxdo.$(VERLIBSUFFIX)
 
 clean:
-	rm -f *.o xdotool xdotool.1 xdotool.html libxdo.so libxdo.so.? || true
+	rm -f *.o xdotool xdotool.1 xdotool.html libxdo.$(LIBSUFFIX) libxdo.$(VERBLIBSUFFIX) || true
 
 xdo.o: xdo.c xdo_version.h
 	$(CC) $(CFLAGS) -fPIC -c xdo.c
@@ -77,13 +81,13 @@ xdo_search.c: xdo.h
 xdo.c: xdo.h
 xdotool.c: xdo.h
 
-libxdo.so: xdo.o xdo_search.o
-	$(CC) $(LDFLAGS) -shared -Wl,-soname=libxdo.so.$(MAJOR) xdo.o xdo_search.o -o $@ $(LIBS)
+libxdo.$(LIBSUFFIX): xdo.o xdo_search.o
+	$(CC) $(LDFLAGS) $(DYNLIBFLAG) $(LIBNAMEFLAG) xdo.o xdo_search.o -o $@ $(LIBS)
 
-libxdo.so.$(MAJOR): libxdo.so
+libxdo.$(VERBLIBSUFFIX): libxdo.$(LIBSUFFIX)
 	ln -s $< $@
 
-xdotool: xdotool.o libxdo.so 
+xdotool: xdotool.o libxdo.$(LIBSUFFIX)
 	$(CC) -o $@ xdotool.o -L. -lxdo $(LDFLAGS) 
 
 xdotool.1: xdotool.pod
@@ -94,7 +98,7 @@ xdotool.html: xdotool.pod
 
 package: test-package-build create-package
 
-test: xdotool libxdo.so.$(MAJOR)
+test: xdotool libxdo.$(VERLIBSUFFIX)
 	$(MAKE) -C t
 
 xdo_version.h:
@@ -110,7 +114,7 @@ create-package: pre-create-package VERSION xdo_version.h
 	@NAME=xdotool-$(VERSION); \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
-	rsync --exclude .svn -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* version.sh VERSION 2> /dev/null` $${NAME}/; \
+	rsync --exclude .svn -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* version.sh platform.sh VERSION 2> /dev/null` $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -r $${NAME}
 	rm VERSION

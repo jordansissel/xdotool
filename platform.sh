@@ -1,0 +1,47 @@
+#!/bin/sh
+
+uname=$(uname)
+
+libsuffix() {
+  case $uname in
+    Darwin)
+      if [ -z "$1" ] ; then
+        echo "dylib"
+      else
+        echo "$1.dylib"
+      fi
+      ;;
+    *)
+      if [ -z "$1" ] ; then
+        echo "so"
+      else
+        echo so.$1
+      fi
+      ;;
+  esac
+}
+
+dynlibflag() {
+  case $uname in
+    Darwin) echo "-dynamiclib" ;;
+    *) echo "-shared" ;;
+  esac
+}
+
+libnameflag() {
+  MAJOR=$1
+  INSTALLLIB=$2
+  case $uname in
+    Darwin) echo "-Wl,-install_name,$INSTALLLIB/libxdo.$MAJOR.dylib" ;;
+    *) echo "-Wl,-soname=libxdo.so.$MAJOR" ;;
+  esac
+}
+
+command=$1
+shift
+case $command in
+  libsuffix) $command "$@" ;;
+  dynlibflag) $command "$@" ;;
+  libnameflag) $command "$@" ;;
+esac
+
