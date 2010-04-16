@@ -48,8 +48,7 @@ export DISPLAY
 # Add local built libxdo.so
 export LD_LIBRARY_PATH="${PWD}/.."
 
-ruby alltests.rb
-
+ruby alltests.rb 
 exitstatus=$?
 
 if [ ! -z "$wmpid" ] ; then
