@@ -1,3 +1,20 @@
+1.20100415.*:
+  - Add support for searching classnames (not just class)
+  - Support switched xkbmaps. We do this by checking if the keycode found for a keysym
+    has that keysym as the first or second (normal or with shift-key) mapping, if not
+    we pretend we didn't find it and request it be bound as if the keysym wasn't mapped
+    to any key.
+
+    This is a hack to avoid knowing what other modifiers are required to type
+    keysyms mapped at indexes 2 or beyond (0 is normal, 1 is shift, 2 and beyond
+    are unknown).
+    Verified fixes this: http://code.google.com/p/semicomplete/issues/detail?id=13
+    Should fix some of this: http://code.google.com/p/semicomplete/issues/detail?id=21
+  - Add --shell flag to getmouselocation. This will output data you can safely
+    eval in your shell.
+  - Add platform detection for Darwin when building.
+    Should fix: http://code.google.com/p/semicomplete/issues/detail?id=28
+
 1.20100325.*:
   - Fix bug in search where --name wasn't working. Test written to cover this.
     http://code.google.com/p/semicomplete/issues/detail?id=25
