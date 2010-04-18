@@ -111,6 +111,10 @@ See CLEARMODIFIERS
 
 =back
 
+=item B<mousemove_relative> I<x> I<y>
+
+Move the mouse x,y pixels relative to the current position of the mouse cursor.
+
 =item B<click> I<[options]> I<button>
 
 Send mousedown followed by mouseup for the given button
