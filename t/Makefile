@@ -4,7 +4,7 @@ all-xephyr: test-xephyr test-xephyr-openbox test-xephyr-gnome
 all: all-headless all-xephyr 
 
 test:
-	./run.sh
+	sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh
 
 test-xephyr:
 	QUIET=1 XSERVER="Xephyr -ac -screen 1280x768x24" TEST_DISPLAY=:5 $(MAKE) test

@@ -23,8 +23,7 @@ usage() {
   echo
   echo "Examples:"
   echo "  $prog -x 'Xephyr -screen 1280x720' xterm"
-  echo
-  echo "  $prog -x 'Xephyr -screen 1280x720' -w "gnome-session" firefox"
+  echo "  $prog -x 'Xvnc -httpd /usr/share/vnc/classes -geometry 1024x768 -depth 24' -w "gnome-session" firefox"
 }
 
 quiet() {
@@ -50,6 +49,11 @@ if [ "$1" = "FAIL" ] ; then
 fi
 
 num=-1
+if ! which "${XSERVER%% *}" > /dev/null 2>&1 ; then
+  echo "Unable to find ${XSERVER%% *}. Aborting."
+  exit 1
+fi
+
 while true; do 
   num=$(expr $num + 1)
   xsocket=/tmp/.X11-unix/X$num
@@ -90,8 +94,18 @@ export DISPLAY=:$num
 echo "Got display: $DISPLAY"
 
 if [ ! -z "$WINMGR" ] ; then
+  if ! which $WINMGR > /dev/null 2>&1 ; then
+    echo "Cannot find $WINMGR. Aborting."
+    exit 1
+  fi
   quiet || echo "Starting window manager: $WINMGR"
-  $WINMGR &
+  (
+    if quiet ; then
+      exec > /dev/null
+      exec 2> /dev/null
+    fi
+    $WINMGR
+  ) &
   winmgrpid=$!
   sleep 1
 fi
