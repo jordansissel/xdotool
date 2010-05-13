@@ -9,7 +9,7 @@ do-test:
 	@echo " => Running tests on $${XSERVER%% *}/$${WM:-no-windowmanager}"; \
 	set -e; \
 	for i in test_search.rb; do \
-		sh ephemeral-x.sh -x "$$XSERVER" -w "$$WM" ./run.sh ruby $$i; \
+		sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh ruby $$i; \
 	done 
 
 test-xephyr:
