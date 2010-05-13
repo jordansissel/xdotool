@@ -1,3 +1,5 @@
+require "test/unit"
+
 module XdoTestHelper
   def setup
     @xdotool = "../xdotool"
@@ -61,6 +63,27 @@ module XdoTestHelper
 
     features = supported.first.split(" = ")[-1].split(", ")
     return features.include?(feature)
+  end
+
+  def try(options = {})
+    times = options[:times] || 5
+    delay = options[:delay] || 0.1
+
+    last_exception = nil
+    (1 .. times).each do
+      begin
+        yield
+      rescue Test::Unit::AssertionFailedError => e
+        $stderr.puts "Retrying..."
+        last_exception = e
+        next
+      end # begin
+
+      # If we get here, there was no assertions. Test pass.
+      return
+    end # loop 1 .. times
+
+    raise last_exception
   end
 
 end

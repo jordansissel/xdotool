@@ -22,26 +22,39 @@ class XdotoolSearchTests < Test::Unit::TestCase
   end
 
   def test_search_onlyvisible_with_pid
-    status, lines = _xdotool "search --onlyvisible --pid #{@windowpid}"
-    assert_equal(0, status, "Exit status should have been 0")
-    assert_equal(1, lines.size, "Expect only one match to our search (only one window running that should match)")
-    assert_equal(@wid, lines[0].to_i, "Expected the correct windowid when searching for its pid")
+    try do
+      status, lines = _xdotool "search --onlyvisible --pid #{@windowpid}"
+      assert_equal(0, status, "Exit status should have been 0")
+      assert_equal(1, lines.size, "Expect only one match to our search (only one window running that should match)")
+      assert_equal(@wid, lines[0].to_i, "Expected the correct windowid when searching for its pid")
+    end
 
-    # Hide the window and try searching for it. We shouldn't find it.
-    status, lines = _xdotool "windowunmap #{@wid}"
-    assert_equal(0, status, "Exit status should have been 0")
-    status, lines = _xdotool "search --onlyvisible --pid #{@windowpid}"
-    # search will exit 1 when no matches are found
-    assert_equal(1, status, "Exit status should have been 1")
-    assert_equal(0, lines.size, "Expect no matches with onlyvisible and the only match window is hidden")
+    try do
+      # Hide the window and try searching for it. We shouldn't find it.
+      status, lines = _xdotool "windowunmap #{@wid}"
+      assert_equal(0, status, "Exit status should have been 0")
+    end
 
-    # Bring up the window again and try searching for it.
-    status, lines = _xdotool "windowmap #{@wid}"
-    assert_equal(0, status, "Exit status should have been 0")
-    status, lines = _xdotool "search --onlyvisible --pid #{@windowpid}"
-    assert_equal(0, status, "Exit status should have been 0")
-    assert_equal(1, lines.size, "Expect only one match to our search (only one window running that should match)")
-    assert_equal(@wid, lines[0].to_i, "Expected the correct windowid when searching for its pid")
+    try do
+      status, lines = _xdotool "search --onlyvisible --pid #{@windowpid}"
+      # search will exit 1 when no matches are found
+      assert_equal(1, status, "Exit status should have been 1")
+      assert_equal(0, lines.size, "Expect no matches with onlyvisible and the only match window is hidden")
+    end
+
+    try do
+      # Bring up the window again and try searching for it.
+      status, lines = _xdotool "windowmap #{@wid}"
+      assert_equal(0, status, "Exit status should have been 0")
+
+      status, lines = _xdotool "search --onlyvisible --pid #{@windowpid}"
+      assert_equal(0, status, "Exit status should have been 0")
+      assert_equal(1, lines.size,
+                   "Expect only one match to our search (only one window" \
+                   "running that should match)")
+      assert_equal(@wid, lines[0].to_i,
+                   "Expected the correct windowid when searching for its pid")
+    end
   end
 
   def test_search_maxdeth_0_has_no_results
