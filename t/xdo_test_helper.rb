@@ -16,6 +16,8 @@ module XdoTestHelper
 
   def teardown
     Process.kill("TERM", @shellpid)
+    Process.wait(@windowpid) rescue nil
+    Process.wait(@shellpid) rescue nil
   end
 
   def _xdotool(args)
@@ -76,6 +78,7 @@ module XdoTestHelper
       rescue Test::Unit::AssertionFailedError => e
         $stderr.puts "Retrying..."
         last_exception = e
+        sleep(delay)
         next
       end # begin
 

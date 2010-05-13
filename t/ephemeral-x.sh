@@ -32,9 +32,11 @@ quiet() {
 
 cleanup() {
   if [ ! -z "$winmgrpid" ] ; then
-    kill -9 "$winmgrpid"
+    kill -TERM "$winmgrpid"
   fi
-  kill -9 "$xpid"
+  kill -TERM "$xpid"
+
+  pkill -KILL -P $$
 }
 
 
@@ -145,6 +147,5 @@ quiet || echo "Running: $@"
   "$@"
 )
 exitcode=$?
-
 cleanup
 exit $exitcode

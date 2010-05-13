@@ -8,17 +8,24 @@ class XdotoolSearchTests < Test::Unit::TestCase
   include XdoTestHelper
 
   def test_search_pid
-    status, lines = _xdotool "search --pid #{@windowpid}"
-    assert_equal(0, status, "Exit status should have been 0")
-    assert_equal(1, lines.size, "Expect only one match to our search (only one window running that should match)")
-    assert_equal(@wid, lines[0].to_i, "Expected the correct windowid when searching for its pid")
+    try do
+      status, lines = _xdotool "search --pid #{@windowpid}"
+      assert_equal(0, status, "Exit status should have been 0")
+      assert_equal(1, lines.size, "Expect only one match to our search (only one window running that should match)")
+      assert_equal(@wid, lines[0].to_i, "Expected the correct windowid when searching for its pid")
+    end
   end
 
   def test_search_title
     status, lines = _xdotool "search --title #{@title}"
-    assert_equal(0, status, "Exit status should have been 0")
-    assert_equal(1, lines.size, "Expect only one match to our search (only one window running that should match)")
-    assert_equal(@wid, lines[0].to_i, "Expected the correct windowid when searching for its pid")
+    try do
+      assert_equal(0, status, "Exit status should have been 0")
+      assert_equal(1, lines.size,
+                   "Expect only one match to our search (only one window " \
+                   "running that should match)")
+      assert_equal(@wid, lines[0].to_i,
+                   "Expected the correct windowid when searching for its pid")
+    end
   end
 
   def test_search_onlyvisible_with_pid
@@ -75,11 +82,13 @@ class XdotoolSearchTests < Test::Unit::TestCase
                   
 
     _xdotool "set_window --name '#{name}' #{@wid}"
-    status, lines = _xdotool "search --name '#{name}'"
-    assert_equal(0, status, "Search for name '#{name}' should exit zero")
-    assert_equal(1, lines.size, "Search for name '#{name}' have one result")
-    assert(lines.include?(@wid.to_s),
-           "Searched results should include our expected window")
+    try do
+      status, lines = _xdotool "search --name '#{name}'"
+      assert_equal(0, status, "Search for name '#{name}' should exit zero")
+      assert_equal(1, lines.size, "Search for name '#{name}' have one result")
+      assert(lines.include?(@wid.to_s),
+             "Searched results should include our expected window")
+    end
   end
 
   def test_search_by_class
@@ -94,11 +103,14 @@ class XdotoolSearchTests < Test::Unit::TestCase
                   
 
     _xdotool "set_window --class '#{name}' #{@wid}"
-    status, lines = _xdotool "search --class '#{name}'"
-    assert_equal(0, status, "Search for class '#{name}' should exit zero")
-    assert_equal(1, lines.size, "Search for class '#{name}' have one result")
-    assert(lines.include?(@wid.to_s),
-           "Searched results should include our expected window")
+
+    try do
+      status, lines = _xdotool "search --class '#{name}'"
+      assert_equal(0, status, "Search for class '#{name}' should exit zero")
+      assert_equal(1, lines.size, "Search for class '#{name}' have one result")
+      assert(lines.include?(@wid.to_s),
+             "Searched results should include our expected window")
+    end
   end
 
   def test_search_by_classname
@@ -113,10 +125,13 @@ class XdotoolSearchTests < Test::Unit::TestCase
                   
 
     _xdotool "set_window --classname '#{name}' #{@wid}"
-    status, lines = _xdotool "search --classname '#{name}'"
-    assert_equal(0, status, "Search for classname '#{name}' should exit zero")
-    assert_equal(1, lines.size, "Search for classname '#{name}' have one result")
-    assert(lines.include?(@wid.to_s),
-           "Searched results should include our expected window")
+
+    try do
+      status, lines = _xdotool "search --classname '#{name}'"
+      assert_equal(0, status, "Search for classname '#{name}' should exit zero")
+      assert_equal(1, lines.size, "Search for classname '#{name}' have one result")
+      assert(lines.include?(@wid.to_s),
+             "Searched results should include our expected window")
+    end
   end
 end # XdotoolSearchTests
