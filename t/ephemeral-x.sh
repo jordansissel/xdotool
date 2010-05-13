@@ -121,8 +121,7 @@ if [ ! -z "$WINMGR" ] ; then
   winmgrpid=$!
 
   # Wait for the window manager to startup
-  quiet || echo "Waiting for window manager '$WINMGRNAME' to be ready."
-  quiet || echo "$WINMGRNAME is ready."
+  quiet || echo "Waiting for window manager '$WINMGRNAME' to be healthy."
   # Wait for the window manager to start.
   for i in 1 2 3 4 5 6 7 8 9 10 ABORT ; do 
     # A good signal that the WM has started is that the WM_STATE property is

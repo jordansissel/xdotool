@@ -17,7 +17,7 @@ module XdoTestHelper
   end
 
   def _xdotool(args)
-    puts "Running: #{@xdotool} #{args}"
+    #puts "Running: #{@xdotool} #{args}"
     return runcmd("#{@xdotool} #{args}")
   end
 
