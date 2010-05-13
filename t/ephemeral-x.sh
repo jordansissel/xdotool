@@ -147,4 +147,5 @@ quiet || echo "Running: $@"
 )
 exitcode=$?
 
+cleanup
 exit $exitcode
