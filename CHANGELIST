@@ -1,6 +1,7 @@
 ????????????:
-  - Reworked testing to be more reliable (some tests were failing randomly)
+  - internal: Reworked testing to be less flakey
     http://code.google.com/p/semicomplete/issues/detail?id=30
+  - internal: split commands into one per C file
 
 1.20100415.*:
   - Add support for searching classnames (not just class)
