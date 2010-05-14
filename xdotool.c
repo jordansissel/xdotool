@@ -22,6 +22,7 @@
 #include <string.h>
 #include <strings.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "xdo.h"
 
@@ -57,6 +58,7 @@ int cmd_set_desktop_for_window(int argc, char **args);
 int cmd_get_desktop_for_window(int argc, char **args);
 
 xdo_t *xdo;
+char *PROGRAM;
 void window_print(Window wid);
 static int script_main(int argc, char **argv);
 static int args_main(int argc, char **argv);
@@ -172,7 +174,6 @@ int script_main(int argc, char **argv) {
 
 int args_main(int argc, char **argv) {
   char *cmd;
-  char *prog;
   int ret = 0;
   int cmd_found = 0;
   int i;
@@ -205,7 +206,7 @@ int args_main(int argc, char **argv) {
     }
   }
 
-  prog = *argv;
+  PROGRAM = *argv;
   argv++; argc--;
   cmd = *argv; /* argv[1] */
 
@@ -223,8 +224,8 @@ int args_main(int argc, char **argv) {
   }
 
   if (!cmd_found) {
-    fprintf(stderr, "%s: Unknown command: %s\n", strrchr(prog, '/') + 1, cmd);
-    fprintf(stderr, "Run '%s help' if you want a command list\n", prog);
+    fprintf(stderr, "%s: Unknown command: %s\n", strrchr(PROGRAM, '/') + 1, cmd);
+    fprintf(stderr, "Run '%s help' if you want a command list\n", PROGRAM);
     ret = 1;
   }
 
@@ -272,7 +273,7 @@ int cmd_mousemove(int argc, char **args) {
              "Usage: %s [options] <xcoord> <ycoord>\n"
             "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
             "--screen SCREEN        - which screen to move on, default is current screen\n"
-            "--window <windowid>    - specify a window to send keys to\n";
+            "--window <windowid>    - specify a window to move relative to\n";
   int option_index;
 
   while ((c = getopt_long_only(argc, args, "chs:w:", longopts, &option_index)) != -1) {
@@ -340,17 +341,23 @@ int cmd_mousemove_relative(int argc, char **args) {
     { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = "Usage: %s <xcoord> <ycoord>\n";
+  static const char *usage =
+            "Usage: %s <xcoord> <ycoord>\n"
+            "If you want to use negative numbers for a coordinate,\n"
+            "you'll need to invoke it this way (with the '--'):\n"
+            "  %s -- -20 -15\n"
+            "otherwise, normal usage looks like this:\n"
+            "  %s 100 140\n";
   int option_index;
 
   while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
-        printf(usage, cmd);
+        printf(usage, cmd, cmd, cmd);
         return EXIT_SUCCESS;
         break;
       default:
-        fprintf(stderr, usage, cmd);
+        fprintf(stderr, usage, cmd, cmd, cmd);
         return EXIT_FAILURE;
     }
   }
@@ -359,7 +366,7 @@ int cmd_mousemove_relative(int argc, char **args) {
   args += optind;
 
   if (argc != 2) {
-    fprintf(stderr, usage, cmd);
+    fprintf(stderr, usage, cmd, cmd, cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
     return 1;
   }
