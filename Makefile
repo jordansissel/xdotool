@@ -34,6 +34,15 @@ INC=$(shell pkg-config --cflags x11 xtst 2> /dev/null || echo "$(DEFAULT_INC)")
 
 CFLAGS+=-std=c99 $(INC)
 
+CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
+         cmd_mouseup.o cmd_getmouselocation.o cmd_type.o cmd_key.o \
+         cmd_windowmove.o cmd_windowactivate.o cmd_windowfocus.o \
+         cmd_windowraise.o cmd_windowsize.o cmd_set_window.o cmd_search.o \
+         cmd_getwindowfocus.o cmd_getwindowpid.o cmd_getactivewindow.o \
+         cmd_windowmap.o cmd_windowunmap.o cmd_set_num_desktops.o \
+         cmd_get_num_desktops.o cmd_set_desktop.o cmd_get_desktop.o \
+         cmd_set_desktop_for_window.o cmd_get_desktop_for_window.o
+
 all: xdotool.1 libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) xdotool
 
 install: pre-install installlib installprog installman installheader
@@ -87,8 +96,8 @@ libxdo.$(LIBSUFFIX): xdo.o xdo_search.o
 libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 	ln -s $< $@
 
-xdotool: xdotool.o libxdo.$(LIBSUFFIX)
-	$(CC) -o $@ xdotool.o -L. -lxdo $(LDFLAGS) 
+xdotool: xdotool.o $(CMDOBJS) libxdo.$(LIBSUFFIX)
+	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS) 
 
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@
