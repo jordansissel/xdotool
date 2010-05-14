@@ -1,3 +1,7 @@
+????????????:
+  - Reworked testing to be more reliable (some tests were failing randomly)
+    http://code.google.com/p/semicomplete/issues/detail?id=30
+
 1.20100415.*:
   - Add support for searching classnames (not just class)
   - Support switched xkbmaps. We do this by checking if the keycode found for a keysym

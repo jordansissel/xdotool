@@ -5,6 +5,15 @@ all: all-headless all-xephyr
 
 test: all
 
+loop-headless:
+	while $(MAKE) -j3 all-headless; do true; done
+
+loop-xephyr:
+	while $(MAKE) -j3 all-xephyr; do true; done
+
+loop-all:
+	while $(MAKE) -j3 all; do true; done
+
 do-test:
 	@echo " => Running tests on $${XSERVER%% *}/$${WM:-no-windowmanager}"; \
 	set -e; \
