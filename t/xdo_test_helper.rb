@@ -5,38 +5,60 @@ module XdoTestHelper
     @xdotool = "../xdotool"
     @title = "#{self.class.name}_#{rand}"
 
+    # Make sure X is healthy
+    healthy = false
+    (1 .. 10).each do
+      system("xdpyinfo > /dev/null 2>&1")
+      healthy = ($?.exitstatus == 0)
+      break if healthy
+      puts "Waiting for xserver on #{ENV["DISPLAY"]} to be healthy"
+      sleep 0.3
+    end
+
+    # Give up if we can't talk to the X server.
+    if !healthy
+      fail("X server on #{ENV["DISPLAY"]} was not responding. Aborting")
+    end
+
     # Clever pipe trick to get xterm to tell us its window id
     reader, writer = IO.pipe
-    @windowpid = fork {
+    @windowpid = fork do
+      reader.close
       exec("exec xterm -T '#{@title}' -e 'echo $WINDOWID >& #{writer.fileno}; echo $$ >& #{writer.fileno}; exec sleep 300'")
-    };
+    end # xterm fork
+    writer.close
     @wid = reader.readline.to_i
     @shellpid = reader.readline.to_i
-  end
+  end # def setup
 
   def teardown
-    Process.kill("TERM", @shellpid)
-    Process.wait(@windowpid) rescue nil
-    Process.wait(@shellpid) rescue nil
-  end
+    if @shellpid
+      Process.kill("TERM", @shellpid)
+      Process.wait(@shellpid) rescue nil
+    end
+
+    if @windowpid
+      Process.wait(@windowpid) rescue nil
+    end
+  end # def teardown
 
   def _xdotool(args)
     #puts "Running: #{@xdotool} #{args}"
     return runcmd("#{@xdotool} #{args}")
-  end
+  end # def _xdotool
 
   def _xdotool_ok(args)
     status, lines = _xdotool(args)
     assert_equal(0, status, "Exit code expected to be 0 for #{args}")
     return [status, lines]
-  end
+  end # def _xdotool_ok
 
   def runcmd(command)
     io = IO.popen(command)
     output = io.readlines.collect { |i| i.chomp }
     io.close
     return [$?.exitstatus, output]
-  end
+  end # def runcmd
 
   def assert_status_ok(status, msg="")
     assert_equal(0, status, "Exit status should have been 0, was #{status}. #{msg}")
@@ -69,7 +91,7 @@ module XdoTestHelper
 
   def try(options = {})
     times = options[:times] || 5
-    delay = options[:delay] || 0.1
+    delay = options[:delay] || 0.3
 
     last_exception = nil
     (1 .. times).each do
