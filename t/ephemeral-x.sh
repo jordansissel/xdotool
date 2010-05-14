@@ -65,6 +65,11 @@ if ! which "$XSERVERNAME" > /dev/null 2>&1 ; then
   exit 1
 fi
 
+if ! which lsof > /dev/null 2>&1 ; then
+  echo "Unable to find lsof. This is a required tool."
+  exit 1
+fi
+
 while true; do 
   num=$(expr $num + 1)
   xsocket=/tmp/.X11-unix/X$num
