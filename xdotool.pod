@@ -169,10 +169,10 @@ This makes getmouselocation output shell data you can eval. Example:
 
 =over
 
-=item B<search> I<[options]> I<somestring>
+=item B<search> I<[options]> I<pattern>
 
-Search  for windows with titles, names, or classes matching somestring.  The
-output is line-delimited list of X window identifiers
+Search for windows with titles, names, or classes with a regular expression
+pattern.  The output is line-delimited list of X window identifiers.
 
 The options available are:
 
