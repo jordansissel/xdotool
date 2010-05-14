@@ -23,7 +23,6 @@
 #include <string.h>
 #include <strings.h>
 #include <errno.h>
-#include <ctype.h>
 
 #include "xdo.h"
 #include "xdotool.h"
