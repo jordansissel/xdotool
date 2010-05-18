@@ -485,7 +485,6 @@ int xdo_window_raise(const xdo_t *xdo, Window wid) {
   return _is_success("XRaiseWindow", ret == 0);
 }
 
-/* XXX: Include 'screen number' support? */
 int xdo_mousemove(const xdo_t *xdo, int x, int y, int screen)  {
   int ret = 0;
   ret = XTestFakeMotionEvent(xdo->xdpy, screen, x, y, CurrentTime);

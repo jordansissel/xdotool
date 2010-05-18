@@ -6,6 +6,7 @@ int cmd_mousemove(int argc, char **args) {
   char *cmd = *args;
   xdo_active_mods_t *active_mods = NULL;
   int clear_modifiers = 0;
+  int polar_coordinates = 1;
 
   int c;
   int screen = 0;
@@ -15,16 +16,18 @@ int cmd_mousemove(int argc, char **args) {
     { "help", no_argument, NULL, 'h' },
     { "screen", required_argument, NULL, 's' },
     { "window", required_argument, NULL, 'w' },
+    { "polar", no_argment, NULL, 'p' },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-             "Usage: %s [options] <xcoord> <ycoord>\n"
-            "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
-            "--screen SCREEN        - which screen to move on, default is current screen\n"
-            "--window <windowid>    - specify a window to move relative to\n";
+             "Usage: %s [options] <x> <y>\n"
+            "-c, --clearmodifiers      - reset active modifiers (alt, etc) while typing\n"
+            "-s, -screen SCREEN        - which screen to move on, default is current screen\n"
+            "-w, --window <windowid>   - specify a window to move relative to\n"
+            "-p, --polar               - Use polar coordinates. X as an angle, Y as distance\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "chs:w:", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(argc, args, "chs:w:p", longopts, &option_index)) != -1) {
     switch (c) {
       case 'c':
         clear_modifiers = 1;
@@ -38,6 +41,9 @@ int cmd_mousemove(int argc, char **args) {
         break;
       case 'w':
         window = strtoul(optarg, NULL, 0);
+        break;
+      case 'p':
+        polar_coordinates = 1;
         break;
       default:
         fprintf(stderr, usage, cmd);
