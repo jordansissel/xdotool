@@ -97,7 +97,7 @@ libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 	ln -s $< $@
 
 xdotool: xdotool.o $(CMDOBJS) libxdo.$(LIBSUFFIX)
-	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS) 
+	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS)  -lm
 
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@

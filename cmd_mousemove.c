@@ -1,4 +1,5 @@
 #include "xdo_cmd.h"
+#include <math.h>
 
 int cmd_mousemove(int argc, char **args) {
   int ret = 0;
@@ -16,7 +17,7 @@ int cmd_mousemove(int argc, char **args) {
     { "help", no_argument, NULL, 'h' },
     { "screen", required_argument, NULL, 's' },
     { "window", required_argument, NULL, 'w' },
-    { "polar", no_argment, NULL, 'p' },
+    { "polar", no_argument, NULL, 'p' },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
@@ -66,6 +67,32 @@ int cmd_mousemove(int argc, char **args) {
   if (clear_modifiers) {
     active_mods = xdo_get_active_modifiers(xdo);
     xdo_clear_active_modifiers(xdo, window, active_mods);
+  }
+
+  if (polar_coordinates) {
+    /* x becomes angle (degrees), y becomes distance.
+     * XXX: Origin should be center (of window or screen)
+     */
+    int origin_x, origin_y;
+    if (window > 0) {
+      Window dummy_win;
+      int win_x, win_y;
+      unsigned int win_w, win_h, dummy_uint;
+      XGetGeometry(xdo->xdpy, window, &dummy_win, &win_x, &win_y, &win_w, &win_h,
+                   &dummy_uint, &dummy_uint);
+      origin_x = win_x + (win_w / 2);
+      origin_y = win_y + (win_h / 2);
+    } else { /* no window selected, move relative to screen */
+      Screen *s = ScreenOfDisplay(xdo->xdpy, screen);
+      origin_x = s->width / 2;
+      origin_y = s->height / 2;
+    }
+    double radians = (x * M_PI / 180);
+    double distance = y;
+    x = origin_x + (cos(radians) * distance);
+
+    /* Negative sin, since screen Y coordinates are top-down, where cartesian is reverse */
+    y = origin_y + (-sin(radians) * distance);
   }
 
   if (window > 0) {

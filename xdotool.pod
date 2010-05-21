@@ -105,15 +105,32 @@ Move the mouse to the specific X and Y coordinates on the screen
 Specify a window to move relative to. Coordinates 0,0
 are at the top left of the window you choose.
 
+=item B<--polar> 
+
+Use polar coordinates. This makes 'x' an angle (in degrees, 0-360, etc) and 'y'
+the distance.
+
+The origin defaults to the center of the current screen. If you specify a --window, 
+then the origin is the center of that window.
+
 =item B<--clearmodifiers> 
 
 See CLEARMODIFIERS
 
 =back
 
-=item B<mousemove_relative> I<x> I<y>
+=item B<mousemove_relative> [options] I<x> I<y>
 
 Move the mouse x,y pixels relative to the current position of the mouse cursor.
+
+=over 
+
+=item B<--polar> 
+
+Use polar coordinates. This makes 'x' an angle (in degrees, 0-360, etc) and 'y'
+the distance.
+
+=back
 
 =item B<click> I<[options]> I<button>
 
