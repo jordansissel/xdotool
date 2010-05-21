@@ -1,7 +1,13 @@
 ????????????:
+  - Added polar coordinate support to mouse movement. 'mousemove' and
+    'mousemove_relative' support this. Flag is --polar. 'x' becomes angle (degrees)
+    and 'y' becomes distance. The default origin is screen center. If you specify
+    a window (to mousemove) then the origin is the center of that window.
+    Requested by Paul S on the xdotool-users mailing list.
   - internal: Reworked testing to be less flakey
     http://code.google.com/p/semicomplete/issues/detail?id=30
   - internal: split commands into one per C file
+
 
 1.20100415.*:
   - Add support for searching classnames (not just class)
