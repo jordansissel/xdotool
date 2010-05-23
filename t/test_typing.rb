@@ -24,6 +24,17 @@ class XdotoolTypingTests < Test::Unit::TestCase
       @wid = lines.first.to_i
       sleep 0.2
     end
+
+    ready = false
+    while !ready
+      _xdotool "windowfocus #{@wid}"
+      status, lines = _xdotool "getwindowfocus"
+      if status == 0 and lines.first.to_i == @wid
+        ready = true
+      end
+      sleep 0.2
+    end
+
   end # def setup
 
   def readfile

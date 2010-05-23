@@ -32,11 +32,11 @@ quiet() {
 
 cleanup() {
   if [ ! -z "$winmgrpid" ] ; then
-    kill -TERM "$winmgrpid"
+    kill -TERM "$winmgrpid" || true
   fi
-  kill -TERM "$xpid"
+  kill -TERM "$xpid" || true
 
-  pkill -KILL -P $$
+  pkill -KILL -P $$ || true
 }
 
 

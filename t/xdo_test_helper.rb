@@ -24,6 +24,14 @@ module XdoTestHelper
     writer.close
     @wid = reader.readline.to_i
     @shellpid = reader.readline.to_i
+
+    healthy = false
+    while !healthy
+      status, lines = runcmd("xwininfo -id #{@wid}")
+      healthy = (status == 0)
+      sleep 0.2
+    end
+
   end # def setup_launch_xterm
   
   def setup_ensure_x_is_healthy

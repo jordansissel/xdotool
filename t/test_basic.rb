@@ -68,15 +68,19 @@ class XdotoolBasicTests < Test::Unit::TestCase
     #status, lines = runcmd("xdpyinfo")
     #rootwin = ("%d" % (lines.grep(/root window id:/).first[/0x[0-9A-Ea-e]+/])).to_i
 
-    status, lines = _xdotool "windowfocus #{@wid}"
-    assert_status_ok(status)
-    assert_equal(0, lines.length, "windowfocus should have no output")
+    try do
+      status, lines = _xdotool "windowfocus #{@wid}"
+      assert_status_ok(status)
+      assert_equal(0, lines.length, "windowfocus should have no output")
+    end
 
-    status, lines = _xdotool "getwindowfocus -f"
-    assert_status_ok(status)
-    assert_equal(1, lines.length, "getwindowfocus should have one line of output")
-    assert_equal(@wid, lines.first.to_i,
-                 "Our (#{@wid}) window should be focused")
+    try do
+      status, lines = _xdotool "getwindowfocus -f"
+      assert_status_ok(status)
+      assert_equal(1, lines.length, "getwindowfocus should have one line of output")
+      assert_equal(@wid, lines.first.to_i,
+                   "Our (#{@wid}) window should be focused")
+    end
   end
 
   def test_windowmove
@@ -86,36 +90,44 @@ class XdotoolBasicTests < Test::Unit::TestCase
     assert_status_ok(status)
     assert_equal(0, lines.length, "windowmove should have no output")
 
-    status, lines = runcmd("xwininfo -id #{@wid}")
-    reported_x = lines.grep(/Absolute upper-left X:/).first[/[0-9]+/].to_i
-    reported_y = lines.grep(/Absolute upper-left Y:/).first[/[0-9]+/].to_i
-    # Some windowmanagers don't strictly obey window size changes to the pixel.
-    # So, let's give a tolerance of 10 pixels for these values
-    # The reason for the is likely due to window borders and titlebars drawn
-    # by window managers.
-    assert_in_delta(x, reported_x, 10,
-                    "Reported X coordinate expected to be near #{x} (+- 10 pixels)")
-    assert_in_delta(y, reported_y, 30,
-                    "Reported Y coordinate expected to be near #{y} (+- 30 pixels)")
+    try do
+      status, lines = runcmd("xwininfo -id #{@wid}")
+      reported_x = lines.grep(/Absolute upper-left X:/).first[/[0-9]+/].to_i
+      reported_y = lines.grep(/Absolute upper-left Y:/).first[/[0-9]+/].to_i
+      # Some windowmanagers don't strictly obey window size changes to the pixel.
+      # So, let's give a tolerance of 10 pixels for these values
+      # The reason for the is likely due to window borders and titlebars drawn
+      # by window managers.
+      assert_in_delta(x, reported_x, 30,
+                      "Reported X coordinate expected to be near #{x} (+- 30 pixels)")
+      assert_in_delta(y, reported_y, 30,
+                      "Reported Y coordinate expected to be near #{y} (+- 30 pixels)")
+    end
   end
 
   def test_windowmapping
-    status, lines = _xdotool "windowunmap #{@wid}"
-    assert_status_ok(status)
-    assert_equal(0, lines.length, "windowunmap should have no output")
+    try do
+      status, lines = _xdotool "windowunmap #{@wid}"
+      assert_status_ok(status)
+      assert_equal(0, lines.length, "windowunmap should have no output")
+    end
 
-    status, lines = runcmd("xwininfo -id #{@wid}")
-    state = lines.grep(/Map State: /).first[/Is(UnMapped|Viewable)/]
-    assert_equal("IsUnMapped", state);
+    try do
+      status, lines = runcmd("xwininfo -id #{@wid}")
+      state = lines.grep(/Map State: /).first[/Is(UnMapped|Viewable)/]
+      assert_equal("IsUnMapped", state);
+    end
 
     # Now map it again
     status, lines = _xdotool "windowmap #{@wid}"
     assert_status_ok(status)
     assert_equal(0, lines.length, "windowmap should have no output")
  
-    status, lines = runcmd("xwininfo -id #{@wid}")
-    state = lines.grep(/Map State: /).first[/Is(UnMapped|Viewable)/]
-    assert_equal("IsViewable", state);
+    try do
+      status, lines = runcmd("xwininfo -id #{@wid}")
+      state = lines.grep(/Map State: /).first[/Is(UnMapped|Viewable)/]
+      assert_equal("IsViewable", state);
+    end
   end
 
   def test_misc
