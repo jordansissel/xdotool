@@ -56,7 +56,7 @@ int cmd_search(int argc, char **args) {
   int option_index;
 
   while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
-    switch (c) {
+    switch (longopts[option_index].val) {
       case 0:
         break;
       case opt_help:
@@ -111,11 +111,12 @@ int cmd_search(int argc, char **args) {
     return EXIT_FAILURE;
   }
 
-  if (search_title < 0 && search_name < 0 && search_class 
+  if (search_title < 0 && search_name < 0 && search_class < 0
       && search_classname < 0 && argc > 0) {
     fprintf(stderr, "Defaulting to search window title, class, classname, "
             "and name (title)\n");
-    search.searchmask |= (SEARCH_TITLE | SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
+    search.searchmask |= (SEARCH_TITLE | SEARCH_NAME 
+                          | SEARCH_CLASS | SEARCH_CLASSNAME);
     search_title = opt_title;
     search_name = opt_name;
     search_class = opt_class;

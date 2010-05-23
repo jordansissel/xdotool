@@ -1,6 +1,9 @@
 /* xdo library
  * - getwindowfocus contributed by Lee Pumphret
  * - keysequence_{up,down} contributed by Magnus Boman
+ *
+ * See the following url for an explanation of how keymaps work in X11
+ * http://www.in-ulm.de/~mascheck/X11/xmodmap.html
  */
 
 #ifndef _XOPEN_SOURCE
@@ -27,20 +30,31 @@
 #include "xdo_util.h"
 #include "xdo_version.h"
 
+/* I can't find a constant in Xlib that is 0x2000 (or 1 << 13) 
+ * Maybe it's in Xkb? Either way, 0x2000 is the state shown by xev(1)
+ * when we are shifted.  Example: 
+ * % setxkbmap -option * grp:switch,grp:shifts_toggle us,se
+ * Then hit both shift-keys simultaneously to switch to 'se' key layout */
+#define ModeSwitchMask 0x2000
+
+#define DEFAULT_DELAY 12
+
 static void _xdo_populate_charcode_map(xdo_t *xdo);
 static int _xdo_has_xtest(const xdo_t *xdo);
 
-static int _xdo_keycode_from_char(const xdo_t *xdo, char key);
-static int _xdo_get_shiftcode_if_needed(const xdo_t *xdo, char key);
+static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, char key);
+static KeySym _xdo_keysym_from_char(const xdo_t *xdo, char key);
+//static int _xdo_get_shiftcode_if_needed(const xdo_t *xdo, char key);
+static int _xdo_get_key_index(const xdo_t *xdo, char key);
 
 static int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
                                             charcodemap_t **keys, int *nkeys);
 static int _xdo_keysequence_do(const xdo_t *xdo, Window window, const char *keyseq,
-                               int pressed, int *modifier);
+                               int pressed, int *modifier, useconds_t delay);
 static int _xdo_ewmh_is_supported(const xdo_t *xdo, const char *feature);
 static void _xdo_init_xkeyevent(const xdo_t *xdo, XKeyEvent *xk);
-static void _xdo_send_key(const xdo_t *xdo, Window window, int keycode, int modstate,
-                          int is_press, useconds_t delay);
+static void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
+                          int modstate, int is_press, useconds_t delay);
 
 static int _xdo_query_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode);
 static int _xdo_cached_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode);
@@ -92,7 +106,6 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
     return NULL;
   }
 
-  xdo->modmap = XGetModifierMapping(xdo->xdpy);
   _xdo_populate_charcode_map(xdo);
   return xdo;
 }
@@ -106,6 +119,8 @@ void xdo_free(xdo_t *xdo) {
     XCloseDisplay(xdo->xdpy);
   if (xdo->modmap)
     XFreeModifiermap(xdo->modmap);
+  if (xdo->keymap)
+    XFree(xdo->keymap);
 
   free(xdo);
 }
@@ -606,7 +621,7 @@ int xdo_click(const xdo_t *xdo, Window window, int button) {
     fprintf(stderr, "xdo_mousedown failed, aborting click.\n");
     return ret;
   }
-  usleep(12000);
+  usleep(DEFAULT_DELAY);
   ret = xdo_mouseup(xdo, window, button);
   return ret;
 }
@@ -614,37 +629,85 @@ int xdo_click(const xdo_t *xdo, Window window, int button) {
 /* XXX: Return proper code if errors found */
 int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
   int i = 0;
-  char key = '\0';
-  int keycode = 0;
-  int shiftcode = 0;
-  int modstate = 0;
+  //char key = '\0';
+  //XXX: REMOVE //int keycode = 0;
+  //TODO(sissel): REMOVE //int key_index = 0;
 
   /* Since we're doing down/up, the delay should be based on the number
    * of keys pressed (including shift). Since up/down is two calls,
    * divide by two. */
   delay /= 2;
 
+  xdo_active_mods_t *current_mods = xdo_get_active_modifiers(xdo);
   /* XXX: Add error handling */
+  //int nkeys = strlen(string);
+  //charcodemap_t *keys = calloc(nkeys, sizeof(charcodemap_t));
+  charcodemap_t key;
+  //int modifier = 0;
   for (i = 0; string[i] != '\0'; i++) {
-    modstate = 0; /* No modifiers by default */
-    key = string[i];
-    keycode = _xdo_keycode_from_char(xdo, key);
-    shiftcode = _xdo_get_shiftcode_if_needed(xdo, key);
-    if (shiftcode) {
-      modstate |= ShiftMask;
+    key.key = string[i];
+    key.code = _xdo_keycode_from_char(xdo, key.key);
+    key.symbol = _xdo_keysym_from_char(xdo, key.key);
+    key.modmask = 0;
+    key.needs_binding = 0;
+    if (key.code == 0 && key.symbol == NoSymbol) {
+      fprintf(stderr, "I don't what key produces '%c', skipping.\n",
+              key.key);
+      continue;
     }
 
-    _xdo_send_key(xdo, window, keycode, modstate, True, delay);
-    _xdo_send_key(xdo, window, keycode, modstate, False, delay);
+    if (key.code > 0) {
+      key.index = _xdo_get_key_index(xdo, key.key);
+    } else {
+      key.needs_binding = 1;
+    }
+
+    /* I don't know how to type keys beyond key group 1 or 2 (index 4 and
+     * beyond). Index 4 and 5 are suppsedly means numlock is set. However,
+     * simply sending the Num_Lock key doesn't seem to work. We can work
+     * around this by binding a new key to the key and using that. */
+    if (key.index >= 4) {
+      key.needs_binding = 1;
+      //key.index = 0;
+    }
+
+    if (key.needs_binding == 0) {
+      if (key.index & 1) { /* odd numbered index are shifted */
+        //printf("Using ShiftMask\n");
+        key.modmask |= ShiftMask;
+      }
+      /* Keys with index 2 and 3 are accessed with Mode_switch key, which is 
+       * defaults to Mod5Mask */
+      if ((current_mods->input_state & ModeSwitchMask) == 0) {
+        if (key.index == 2 || key.index == 3) {
+          //printf("Using Mod5Mask\n");
+          key.modmask |= Mod5Mask; /* Set AltG/Mode_Shift */
+        }
+      } 
+    }
+
+
+    //printf(stderr,
+            //"Key '%c' maps to code %d / sym %lu with index %d / mods %d (%s)\n",
+            //key.key, key.code, key.symbol, key.index, key.modmask, 
+            //(key.needs_binding == 1) ? "needs binding" : "ok");
+
+    //_xdo_send_key(xdo, window, keycode, modstate, True, delay);
+    //_xdo_send_key(xdo, window, keycode, modstate, False, delay);
+    xdo_keysequence_list_do(xdo, window, &key, 1, True, NULL, delay);
+    xdo_keysequence_list_do(xdo, window, &key, 1, False, NULL, delay);
 
     /* XXX: Flush here or at the end? or never? */
-    XFlush(xdo->xdpy);
-  }
+    //XFlush(xdo->xdpy);
+  } /* walk string generating a keysequence */
 
+  //free(keys);
+  xdo_free_active_modifiers(current_mods);
   return XDO_SUCCESS;
 }
 
-int _xdo_keysequence_do(const xdo_t *xdo, Window window, const char *keyseq, int pressed, int *modifier) {
+int _xdo_keysequence_do(const xdo_t *xdo, Window window, const char *keyseq,
+                        int pressed, int *modifier, useconds_t delay) {
   int ret = 0;
   charcodemap_t *keys = NULL;
   int nkeys = 0;
@@ -654,7 +717,7 @@ int _xdo_keysequence_do(const xdo_t *xdo, Window window, const char *keyseq, int
     return 1;
   }
 
-  ret = xdo_keysequence_list_do(xdo, window, keys, nkeys, pressed, modifier);
+  ret = xdo_keysequence_list_do(xdo, window, keys, nkeys, pressed, modifier, delay);
   if (keys != NULL) {
     free(keys);
   }
@@ -663,7 +726,7 @@ int _xdo_keysequence_do(const xdo_t *xdo, Window window, const char *keyseq, int
 }
 
 int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys, 
-                            int nkeys, int pressed, int *modifier) {
+                            int nkeys, int pressed, int *modifier, useconds_t delay) {
   int i = 0;
   int modstate = 0;
   int keymapchanged;
@@ -672,9 +735,10 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
   KeySym *keysyms = NULL;
   int keysyms_per_keycode = 0;
   int scratch_keycode = 0; /* Scratch space for temporary keycode bindings */
-  keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low, 
-                                xdo->keycode_high - xdo->keycode_low,
-                                &keysyms_per_keycode);
+  //keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low, 
+                                //xdo->keycode_high - xdo->keycode_low,
+                                //&keysyms_per_keycode);
+  /* Find a keycode that is unused for scratchspace */
   for (i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
     int j = 0;
     int key_is_empty = 1;
@@ -701,14 +765,15 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
   for (i = 0; i < nkeys; i++) {
     if (keys[i].needs_binding == 1) {
       KeySym keysym_list[] = { keys[i].symbol };
+      //fprintf(stderr, "Mapping sym %lu to %d\n", keys[i].symbol, scratch_keycode);
       XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
       /* override the code in our current key to use the scratch_keycode */
       keys[i].code = scratch_keycode;
       keymapchanged = 1;
     }
 
-    //printf("Sending %d (mods %x)\n", keys[i].code, *modifier);
-    _xdo_send_key(xdo, window, keys[i].code, *modifier, pressed, 12000);
+    //fprintf(stderr, "Sending %c (%d, mods %x)\n", keys[i].key, keys[i].code, *modifier);
+    _xdo_send_key(xdo, window, &(keys[i]), *modifier, pressed, delay);
 
     if (keys[i].needs_binding == 1) {
       /* If we needed to make a new keymapping for this keystroke, we
@@ -736,19 +801,22 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
 }
 
   
-int xdo_keysequence_down(const xdo_t *xdo, Window window, const char *keyseq) {
-  return _xdo_keysequence_do(xdo, window, keyseq, True, NULL);
+int xdo_keysequence_down(const xdo_t *xdo, Window window, const char *keyseq,
+                         useconds_t delay) {
+  return _xdo_keysequence_do(xdo, window, keyseq, True, NULL, delay);
 }
 
-int xdo_keysequence_up(const xdo_t *xdo, Window window, const char *keyseq) {
-  return _xdo_keysequence_do(xdo, window, keyseq, False, NULL);
+int xdo_keysequence_up(const xdo_t *xdo, Window window, const char *keyseq,
+                       useconds_t delay) {
+  return _xdo_keysequence_do(xdo, window, keyseq, False, NULL, delay);
 }
 
-int xdo_keysequence(const xdo_t *xdo, Window window, const char *keyseq) {
+int xdo_keysequence(const xdo_t *xdo, Window window, const char *keyseq,
+                    useconds_t delay) {
   int ret = 0;
   int modifier = 0;
-  ret += _xdo_keysequence_do(xdo, window, keyseq, True, &modifier);
-  ret += _xdo_keysequence_do(xdo, window, keyseq, False, &modifier);
+  ret += _xdo_keysequence_do(xdo, window, keyseq, True, &modifier, delay);
+  ret += _xdo_keysequence_do(xdo, window, keyseq, False, &modifier, delay);
   return ret;
 }
 
@@ -812,24 +880,45 @@ int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret) {
 }
 
 /* Helper functions */
-static int _xdo_keycode_from_char(const xdo_t *xdo, char key) {
+static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, char key) {
   int i = 0;
-  int len = xdo->keycode_high - xdo->keycode_low;
+  int len = xdo->charcodes_len;
 
-  for (i = 0; i < len; i++)
-    if (xdo->charcodes[i].key == key)
+  for (i = 0; i < len; i++) {
+    if (xdo->charcodes[i].key == key) {
       return xdo->charcodes[i].code;
+    }
+  }
 
-  return -1;
+  return 0;
 }
 
-static int _xdo_get_shiftcode_if_needed(const xdo_t *xdo, char key) {
+static KeySym _xdo_keysym_from_char(const xdo_t *xdo, char key) {
   int i = 0;
-  int len = xdo->keycode_high - xdo->keycode_low;
+  int len = xdo->charcodes_len;
+
+  //printf("Finding symbol for key '%c'\n", key);
+  for (i = 0; i < len; i++) {
+    //printf("  => %c vs %c (%d)\n",
+           //key, xdo->charcodes[i].key, (xdo->charcodes[i].key == key));
+    if (xdo->charcodes[i].key == key) {
+      //printf("  => MATCH to symbol: %lu\n", xdo->charcodes[i].symbol);
+      return xdo->charcodes[i].symbol;
+    }
+  }
+
+  return NoSymbol;
+}
+
+/* TODO(sissel): Return the keycodes (for modifiers) required to type a given
+ * key */
+static int _xdo_get_key_index(const xdo_t *xdo, char key) {
+  int i = 0;
+  int len = xdo->charcodes_len;
 
   for (i = 0; i < len; i++)
     if (xdo->charcodes[i].key == key)
-      return xdo->charcodes[i].shift;
+      return xdo->charcodes[i].index;
 
   return -1;
 }
@@ -846,49 +935,65 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
   int i, j;
 
   XDisplayKeycodes(xdo->xdpy, &(xdo->keycode_low), &(xdo->keycode_high));
+  xdo->modmap = XGetModifierMapping(xdo->xdpy);
+  xdo->keymap = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low,
+                                    xdo->keycode_high - xdo->keycode_low + 1,
+                                    &xdo->keysyms_per_keycode);
 
-  /* Double size of keycode range because some 
-   * keys have "shift" values. ie; 'a' and 'A', '2' and '@' */
   /* Add 2 to the size because the range [low, high] is inclusive */
   /* Add 2 more for tab (\t) and newline (\n) */
-  keycodes_length = (xdo->keycode_high - xdo->keycode_low) * 2 + (2 + 2);
-  xdo->charcodes = malloc(keycodes_length * sizeof(charcodemap_t));
-  memset(xdo->charcodes, 0, keycodes_length * sizeof(charcodemap_t));
+  keycodes_length = (((xdo->keycode_high - xdo->keycode_low) + 1)
+                     * xdo->keysyms_per_keycode) + (2 + 2);
+  xdo->charcodes_len = keycodes_length;
+  xdo->charcodes = calloc(keycodes_length, sizeof(charcodemap_t));
+  //memset(xdo->charcodes, 0, keycodes_length * sizeof(charcodemap_t));
 
   /* Fetch the keycode for Shift_L */
   /* XXX: Make 'Shift_L' configurable? */
   shift_keycode = XKeysymToKeycode(xdo->xdpy, XK_Shift_L);
 
+  int idx = 0;
   for (i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
     char *keybuf = 0;
 
     /* Index '0' in KeycodeToKeysym == no shift key
      * Index '1' in ... == shift key held
      * hence this little loop. */
-    for (j = 0; j <= 1; j++) { 
-     int idx = (i - xdo->keycode_low) * 2 + j;
-     keybuf = XKeysymToString(XKeycodeToKeysym(xdo->xdpy, i, j));
+    for (j = 0; j < xdo->keysyms_per_keycode; j++) { 
+      //KeySym keysym = XKeycodeToKeysym(xdo->xdpy, i, j);
+      int keymap_index = ((i - xdo->keycode_low) * xdo->keysyms_per_keycode) + j;
+      KeySym keysym = xdo->keymap[keymap_index];
+      if (keysym != NoSymbol) {
+        keybuf = XKeysymToString(keysym);
+      } else {
+        keybuf = NULL;
+      }
 
-     xdo->charcodes[idx].key = _keysym_to_char(keybuf);
-     xdo->charcodes[idx].code = i;
-     xdo->charcodes[idx].shift = j ? shift_keycode : 0;
-     xdo->charcodes[idx].modmask = _xdo_query_keycode_to_modifier(xdo, i);
+      xdo->charcodes[idx].key = _keysym_to_char(keybuf);
+      xdo->charcodes[idx].code = i;
+      xdo->charcodes[idx].index = j;
+      xdo->charcodes[idx].modmask = _xdo_query_keycode_to_modifier(xdo, i);
+      xdo->charcodes[idx].symbol = keysym;
+
+      //printf("_xdo_populate_charcode_map(%d/%d). %d[%d] is %lu => %s aka '%c'\n",
+               //keymap_index, keycodes_length, i, j, keysym, keybuf, xdo->charcodes[idx].key);
+      idx++;
     }
   }
 
   /* Add special handling so we can translate ASCII newline and tab
    * to keycodes */
-  j = (xdo->keycode_high - xdo->keycode_low) * 2;
-  xdo->charcodes[j].key = '\n';
-  xdo->charcodes[j].code = XKeysymToKeycode(xdo->xdpy, XK_Return);
-  xdo->charcodes[j].shift = 0;
-  xdo->charcodes[j].modmask = 0;
+  //j = (xdo->keycode_high - xdo->keycode_low) * xdo->modmap->max_keypermod;
+  xdo->charcodes[idx].key = '\n';
+  xdo->charcodes[idx].code = XKeysymToKeycode(xdo->xdpy, XK_Return);
+  xdo->charcodes[idx].index = 0;
+  xdo->charcodes[idx].modmask = 0;
 
-  j++;
-  xdo->charcodes[j].key = '\t';
-  xdo->charcodes[j].code = XKeysymToKeycode(xdo->xdpy, XK_Tab);
-  xdo->charcodes[j].shift = 0;
-  xdo->charcodes[j].modmask = 0;
+  idx++;
+  xdo->charcodes[idx].key = '\t';
+  xdo->charcodes[idx].code = XKeysymToKeycode(xdo->xdpy, XK_Tab);
+  xdo->charcodes[idx].index = 0;
+  xdo->charcodes[idx].modmask = 0;
 }
 
 /* context-free functions */
@@ -900,14 +1005,17 @@ char _keysym_to_char(const char *keysym) {
 
   /* keysym_charmap comes from xdo_util.h */
   for (i = 0; keysym_charmap[i].keysym; i++) {
-    if (!strcmp(keysym_charmap[i].keysym, keysym))
+    if (!strcmp(keysym_charmap[i].keysym, keysym)) {
+      //printf("keysym (%s) %d => '%c'\n", keysym,
+             //keysym_charmap[i].keysym, keysym_charmap[i].key);
       return keysym_charmap[i].key;
+    }
   }
 
   if (strlen(keysym) == 1)
     return keysym[0];
 
-  return -1;
+  return '?';
 }
 
 int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
@@ -918,7 +1026,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
   int i = 0;
   int shift_keycode = 0;
   int input_state = 0;
-  
+
   /* Array of keys to press, in order given by keyseq */
   int keys_size = 10;
 
@@ -931,7 +1039,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
   input_state = xdo_get_input_state(xdo);
 
   *nkeys = 0;
-  *keys = malloc(keys_size * sizeof(charcodemap_t));
+  *keys = calloc(keys_size, sizeof(charcodemap_t));
   keyseq_copy = strptr = strdup(keyseq);
   while ((tok = strtok_r(strptr, "+", &tokctx)) != NULL) {
     KeySym sym;
@@ -973,12 +1081,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
        */
 
       int offset = 0;
-      /* I can't find a constant in Xlib that is 0x2000 (or 1 << 13) 
-       * Maybe it's in Xkb? Either way, 0x2000 is the state shown by xev(1)
-       * when we are shifted.  Example: 
-       * % setxkbmap -option * grp:switch,grp:shifts_toggle us,se
-       * Then hit both shift-keys simultaneously to switch to 'se' key layout */
-      if (input_state & 0x2000) { /* keymap shifted via xkb */
+      if (input_state & ModeSwitchMask) { /* keymap shifted via xkb */
         offset = 2;
       }
 
@@ -994,17 +1097,18 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
       (*keys)[*nkeys].needs_binding = 1;
       (*keys)[*nkeys].code = 0;
     } else {
-
       /* Inject a shift key if we need to press shift to reach this keysym */
+      //if (xdo->keymap[key * xdo->keysyms_per_keycode] == sym
+          //|| sym == NoSymbol) {
       if ((XKeycodeToKeysym(xdo->xdpy, key, 0) == sym)
           || sym == NoSymbol) {
         /* sym is NoSymbol if we give a keycode to type */
-        (*keys)[*nkeys].shift = 0;
+        (*keys)[*nkeys].index = 0;
       } else  {
         /* Inject a 'shift' key item if we should be using shift */
         (*keys)[*nkeys].symbol = NoSymbol;
         (*keys)[*nkeys].code = shift_keycode;
-        (*keys)[*nkeys].shift = 0;
+        (*keys)[*nkeys].index = 0;
         (*nkeys)++;
 
         if (*nkeys == keys_size) {
@@ -1017,6 +1121,9 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
       (*keys)[*nkeys].symbol = NoSymbol;
       (*keys)[*nkeys].needs_binding = 0;
       (*keys)[*nkeys].code = key;
+      (*keys)[*nkeys].modmask = 0;
+      (*keys)[*nkeys].key = _keysym_to_char(tok);
+      //printf("Ready for %s\n", tok);
     }
 
     (*nkeys)++;
@@ -1086,7 +1193,7 @@ int _xdo_ewmh_is_supported(const xdo_t *xdo, const char *feature) {
   Window root;
   Atom request;
   Atom feature_atom;
-  
+
   request = XInternAtom(xdo->xdpy, "_NET_SUPPORTED", False);
   feature_atom = XInternAtom(xdo->xdpy, feature, False);
   root = XDefaultRootWindow(xdo->xdpy);
@@ -1111,33 +1218,46 @@ void _xdo_init_xkeyevent(const xdo_t *xdo, XKeyEvent *xk) {
   xk->x = xk->y = xk->x_root = xk->y_root = 1;
 }
 
-void _xdo_send_key(const xdo_t *xdo, Window window, int keycode, int modstate,
-                   int is_press, useconds_t delay) {
+void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
+                          int modstate, int is_press, useconds_t delay) {
   if (window == CURRENTWINDOW) {
     /* Properly ensure the modstate is set by finding a key
      * that activates each bit in the modifier state */
+    int mask = modstate | key->modmask;
     int masks[] = { ShiftMask, LockMask, ControlMask, Mod1Mask, Mod2Mask,
-                    Mod3Mask, Mod4Mask, Mod5Mask };
+      Mod3Mask, Mod4Mask, Mod5Mask };
     unsigned int i = 0;
-    if (modstate != 0) {
-      for (i = 0; i < 8; i++) { /* 8 == number of masks */
-        if (modstate & masks[i]) {
-          KeyCode key;
-          key = _xdo_cached_modifier_to_keycode(xdo, masks[i]),
-          XTestFakeKeyEvent(xdo->xdpy, key, is_press, CurrentTime);
-        }
-      }
+    if (mask != 0) {
+      unsigned int masks_len = sizeof(masks) / sizeof(masks[0]);
+      for (i = 0; i < masks_len; i++) { /* length of masks array above */
+        if (mask & masks[i]) {
+          KeyCode modkey;
+          const char *maskname = "unknown";
+          switch(masks[i]) {
+            case ShiftMask:  maskname = "shift"; break;
+            case ControlMask: maskname = "control"; break;
+            case Mod3Mask: maskname = "mod3"; break;
+          }
+          modkey = _xdo_cached_modifier_to_keycode(xdo, masks[i]);
+          //printf("Sending modkey for mod %d, %s, (keycode %d) %s\n",
+                 //masks[i], maskname, modkey, is_press ? "down" : "up");
+          XTestFakeKeyEvent(xdo->xdpy, modkey, is_press, CurrentTime);
+          XSync(xdo->xdpy, False);
+        } /* if modestate includes this mask */
+      } /* loop over possible masks */
     }
 
-    XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
+    //printf("Sending key %d %s\n", key->code, is_press ? "down" : "up");
+    XTestFakeKeyEvent(xdo->xdpy, key->code, is_press, CurrentTime);
+    XSync(xdo->xdpy, False);
   } else {
     /* Since key events have 'state' (shift, etc) in the event, we don't
      * need to worry about key press ordering. */
     XKeyEvent xk;
     _xdo_init_xkeyevent(xdo, &xk);
     xk.window = window;
-    xk.keycode = keycode;
-    xk.state = modstate;
+    xk.keycode = key->code;
+    xk.state = modstate | key->modmask;
     xk.type = (is_press ? KeyPress : KeyRelease);
     XSendEvent(xdo->xdpy, xk.window, True, KeyPressMask, (XEvent *)&xk);
   }
@@ -1176,7 +1296,7 @@ int _xdo_query_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode) {
 
 int _xdo_cached_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode) {
   int i = 0;
-  int len = xdo->keycode_high - xdo->keycode_low;
+  int len = xdo->charcodes_len;
 
   for (i = 0; i < len; i++)
     if (xdo->charcodes[i].code == keycode)
@@ -1187,17 +1307,26 @@ int _xdo_cached_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode) {
 
 int _xdo_cached_modifier_to_keycode(const xdo_t *xdo, int modmask) {
   int i = 0;
-  int len = xdo->keycode_high - xdo->keycode_low;
 
-  for (i = 0; i < len; i++)
+  /* TODO(sissel): This should loop through all keycodes + indexes */
+
+  for (i = 0; i < xdo->charcodes_len; i++)
     if (xdo->charcodes[i].modmask == modmask)
       return xdo->charcodes[i].code;
+
+  const char *modname = "unknown";
+  switch (modmask) {
+    case ShiftMask:
+      modname = "ShiftMask";
+      break;
+  }
+  //fprintf(stderr, "No keycode found for modifier %d (%s)\n", modmask, modname);
 
   return 0;
 }
 
 int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
-                                          int *nkeys) {
+                                    int *nkeys) {
   /* For each keyboard device, if an active key is a modifier,
    * then add the keycode to the keycode list */
 
@@ -1219,7 +1348,7 @@ int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
 
       if (*nkeys == keys_size) {
         keys_size *= 2;
-        *keys = malloc(keys_size * sizeof(charcodemap_t));
+        *keys = realloc(keys, keys_size * sizeof(charcodemap_t));
       }
     }
   } 
@@ -1252,7 +1381,7 @@ xdo_active_mods_t *xdo_get_active_modifiers(const xdo_t *xdo) {
 
   active_mods = calloc(sizeof(xdo_active_mods_t), 1);
   xdo_active_keys_to_keycode_list(xdo, &(active_mods->keymods),
-                                       &(active_mods->nkeymods));
+                                  &(active_mods->nkeymods));
   active_mods->input_state = xdo_get_input_state(xdo);
   return active_mods;
 }
@@ -1260,7 +1389,7 @@ xdo_active_mods_t *xdo_get_active_modifiers(const xdo_t *xdo) {
 int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, xdo_active_mods_t *active_mods) {
   int ret = 0;
   xdo_keysequence_list_do(xdo, window, active_mods->keymods,
-                          active_mods->nkeymods, False, NULL);
+                          active_mods->nkeymods, False, NULL, DEFAULT_DELAY);
 
   if (active_mods->input_state & Button1MotionMask)
     ret = xdo_mouseup(xdo, window, 1);
@@ -1276,8 +1405,8 @@ int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, xdo_active_mods_
     /* explicitly use down+up here since xdo_keysequence alone will track the modifiers
      * incurred by a key (like shift, or caps) and send them on the 'up' sequence.
      * That seems to break things with Caps_Lock only, so let's be explicit here. */
-    ret = xdo_keysequence_down(xdo, window, "Caps_Lock");
-    ret += xdo_keysequence_up(xdo, window, "Caps_Lock");
+    ret = xdo_keysequence_down(xdo, window, "Caps_Lock", DEFAULT_DELAY);
+    ret += xdo_keysequence_up(xdo, window, "Caps_Lock", DEFAULT_DELAY);
   }
 
   XSync(xdo->xdpy, False);
@@ -1287,7 +1416,7 @@ int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, xdo_active_mods_
 int xdo_set_active_modifiers(const xdo_t *xdo, Window window, const xdo_active_mods_t *active_mods) {
   int ret = 0;
   xdo_keysequence_list_do(xdo, window, active_mods->keymods,
-                          active_mods->nkeymods, True, NULL);
+                          active_mods->nkeymods, True, NULL, DEFAULT_DELAY);
   if (active_mods->input_state & Button1MotionMask)
     ret = xdo_mousedown(xdo, window, 1);
   if (!ret && active_mods->input_state & Button2MotionMask)
@@ -1302,8 +1431,8 @@ int xdo_set_active_modifiers(const xdo_t *xdo, Window window, const xdo_active_m
     /* explicitly use down+up here since xdo_keysequence alone will track the modifiers
      * incurred by a key (like shift, or caps) and send them on the 'up' sequence.
      * That seems to break things with Caps_Lock only, so let's be explicit here. */
-    ret = xdo_keysequence_down(xdo, window, "Caps_Lock");
-    ret += xdo_keysequence_up(xdo, window, "Caps_Lock");
+    ret = xdo_keysequence_down(xdo, window, "Caps_Lock", DEFAULT_DELAY);
+    ret += xdo_keysequence_up(xdo, window, "Caps_Lock", DEFAULT_DELAY);
   }
 
   XSync(xdo->xdpy, False);

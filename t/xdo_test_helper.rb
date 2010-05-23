@@ -4,8 +4,29 @@ module XdoTestHelper
   def setup
     @xdotool = "../xdotool"
     @title = "#{self.class.name}_#{rand}"
+    setup_ensure_x_is_healthy
+    setup_launch_xterm
+  end # def setup
 
-    # Make sure X is healthy
+  def setup_launch(*cmd)
+    @launchpid = fork do
+      exec(*cmd)
+    end
+  end
+
+  def setup_launch_xterm
+    # Clever pipe trick to get xterm to tell us its window id
+    reader, writer = IO.pipe
+    @windowpid = fork do
+      reader.close
+      exec("exec xterm -T '#{@title}' -e 'echo $WINDOWID >& #{writer.fileno}; echo $$ >& #{writer.fileno}; exec sleep 300'")
+    end # xterm fork
+    writer.close
+    @wid = reader.readline.to_i
+    @shellpid = reader.readline.to_i
+  end # def setup_launch_xterm
+  
+  def setup_ensure_x_is_healthy
     healthy = false
     (1 .. 10).each do
       system("xdpyinfo > /dev/null 2>&1")
@@ -19,17 +40,7 @@ module XdoTestHelper
     if !healthy
       fail("X server on #{ENV["DISPLAY"]} was not responding. Aborting")
     end
-
-    # Clever pipe trick to get xterm to tell us its window id
-    reader, writer = IO.pipe
-    @windowpid = fork do
-      reader.close
-      exec("exec xterm -T '#{@title}' -e 'echo $WINDOWID >& #{writer.fileno}; echo $$ >& #{writer.fileno}; exec sleep 300'")
-    end # xterm fork
-    writer.close
-    @wid = reader.readline.to_i
-    @shellpid = reader.readline.to_i
-  end # def setup
+  end
 
   def teardown
     if @shellpid
@@ -39,6 +50,11 @@ module XdoTestHelper
 
     if @windowpid
       Process.wait(@windowpid) rescue nil
+    end
+
+    if @launchpid
+      Process.kill("TERM", @launchpid) rescue nil
+      Process.wait(@launchpid) rescue nil
     end
   end # def teardown
 
