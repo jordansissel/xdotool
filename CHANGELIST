@@ -1,4 +1,8 @@
-????????????:
+2.???????????:
+  - API changes that required a version bump.
+  - Fix http://code.google.com/p/semicomplete/issues/detail?id=21
+    Multiple keyboard layouts are now supported better. Added unit tests
+    to ensure consistency in typing across releases.
   - Added polar coordinate support to mouse movement. 'mousemove' and
     'mousemove_relative' support this. Flag is --polar. 'x' becomes angle (degrees)
     and 'y' becomes distance. The default origin is screen center. If you specify
