@@ -121,6 +121,7 @@ int xdo_window_setclass(const xdo_t *xdo, Window wid, const char *name, const ch
 int xdo_window_focus(const xdo_t *xdo, Window wid);
 int xdo_window_raise(const xdo_t *xdo, Window wid);
 int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret);
+int xdo_window_wait_for_focus(const xdo_t *xdo, Window window, int want_focus);
 int xdo_window_get_pid(const xdo_t *xdo, Window window);
 int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret);
 int xdo_window_activate(const xdo_t *xdo, Window wid);

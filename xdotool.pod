@@ -270,7 +270,17 @@ C<xdotool windowsize --usehints windowid 80 24>
 
 Move the window to the given position
 
-=item B<windowfocus> I<windowid>
+=item B<windowfocus> I<[options]> I<windowid>
+
+=over
+
+=item B<--sync> 
+
+After sending the window focus request, wait until the window is actually
+focused. This is useful for scripts that depend on actions being completed
+before moving on.
+
+=back
 
 Focus the window
 

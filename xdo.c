@@ -855,12 +855,33 @@ int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret) {
 
   ret = XGetInputFocus(xdo->xdpy, window_ret, &unused_revert_ret);
 
+  /* Xvfb with no window manager and given otherwise no input, with 
+   * a single client, will return the currenet focused window as '1'
+   * I think this is a bug, so let's alert the user. */
   if (*window_ret == 1) {
     fprintf(stderr, 
             "XGetInputFocus returned the focused window of %ld. "
             "This is likely a bug in the X server.\n", *window_ret);
   }
   return _is_success("XGetInputFocus", ret == 0);
+}
+
+int xdo_window_wait_for_focus(const xdo_t *xdo, Window wid, int want_focus) {
+  Window focuswin = 0;
+  int ret;
+  ret = xdo_window_get_focus(xdo, &focuswin);
+  if (ret != 0) {
+    return ret;
+  }
+
+  while (want_focus ? focuswin != wid : focuswin == wid) {
+    usleep(30000); /* TODO(sissel): Use exponential backoff up to 1 second */
+    ret = xdo_window_get_focus(xdo, &focuswin);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+  return 0;
 }
 
 /* Like xdo_window_get_focus, but return the first ancestor-or-self window
