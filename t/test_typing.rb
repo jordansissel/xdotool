@@ -49,9 +49,8 @@ class XdotoolTypingTests < Test::Unit::TestCase
 
   def type(input)
     status, lines = _xdotool "type --clearmodifiers '#{input}'"
-    puts lines
     _xdotool "key ctrl+s ctrl+q"
-    Process.wait(@launchpid)
+    Process.wait(@launchpid) rescue nil
     return readfile
   end
 

@@ -57,11 +57,13 @@ class XdotoolBasicTests < Test::Unit::TestCase
     assert_status_ok(status)
     assert_equal(0, lines.length, "No output expected from windowsize")
 
-    status, xwininfo_output = runcmd "xwininfo -id #{@wid}"
-    assert_status_ok(status)
-    geometry = xwininfo_output.grep(/^ *-geometry /)[0][/[0-9]+x[0-9]+/]
-    assert_equal("#{w}x#{h}", geometry,
-           "Expected xwininfo to report geometry of #{w}x#{h}, got #{geometry}")
+    try do
+      status, xwininfo_output = runcmd "xwininfo -id #{@wid}"
+      assert_status_ok(status)
+      geometry = xwininfo_output.grep(/^ *-geometry /)[0][/[0-9]+x[0-9]+/]
+      assert_equal("#{w}x#{h}", geometry,
+             "Expected xwininfo to report geometry of #{w}x#{h}, got #{geometry}")
+    end
   end
 
   def test_windowfocus

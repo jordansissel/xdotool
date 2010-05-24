@@ -10,6 +10,9 @@ module XdoTestHelper
 
   def setup_launch(*cmd)
     @launchpid = fork do
+      STDIN.reopen("/dev/null", "r")
+      STDOUT.reopen("/dev/null", "w")
+      STDERR.reopen("/dev/null", "w")
       exec(*cmd)
     end
   end
