@@ -5,21 +5,23 @@ all: all-headless all-xephyr
 
 test: all
 
+# The loop-* targets are mainly for spinning until a test fails 
+# so we can look for flakey tests.
 loop-headless:
-	while $(MAKE) -j3 all-headless; do true; done
+	while $(MAKE) $(MAKEARGS) all-headless; do true; done
 
 loop-xephyr:
-	while $(MAKE) -j3 all-xephyr; do true; done
+	while $(MAKE) $(MAKEARGS) all-xephyr; do true; done
 
 loop-all:
-	while $(MAKE) -j3 all; do true; done
+	while $(MAKE) $(MAKEARGS) all; do true; done
 
 do-test:
 	@echo " => Running tests on $${XSERVER%% *}/$${WM:-no-windowmanager}"; \
 	set -e; \
 	make -C ../; \
 	for i in test_*.rb ; do \
-		sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh ruby $$i; \
+		sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh -- ruby $$i; \
 	done 
 
 

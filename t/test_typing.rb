@@ -11,16 +11,19 @@ class XdotoolTypingTests < Test::Unit::TestCase
   # override XdoTestHelper#setup
   def setup
     @xdotool = "../xdotool"
+    @title = "#{self.class.name}_#{rand}"
+
     setup_ensure_x_is_healthy
     @file = Tempfile.new("xdotool-test")
 
-    # Launch an editor so we can test typing.
-    setup_launch("gedit", @file.path)
+    setup_launch("xterm -u8 -T '#{@title}' -e 'cat >> #{@file.path}'")
 
     found = false
     while !found
-      status, lines = _xdotool "search --onlyvisible --class gedit"
+      #status, lines = _xdotool "search --onlyvisible --pid #{@launchpid}"
+      status, lines = _xdotool "search --onlyvisible --title '#{@title}'"
       found = (status == 0)
+      assert(lines.length < 2, "Should only be at most 1 window matching #{@launchpid}")
       @wid = lines.first.to_i
       sleep 0.2
     end
@@ -34,7 +37,7 @@ class XdotoolTypingTests < Test::Unit::TestCase
       end
       sleep 0.2
     end
-
+    #puts "Window #{@wid} has focus"
   end # def setup
 
   def readfile
@@ -48,8 +51,10 @@ class XdotoolTypingTests < Test::Unit::TestCase
   end
 
   def type(input)
+    #status, lines = _xdotool "type --window #{@wid} --clearmodifiers '#{input}'"
+    #_xdotool "key ctrl+s ctrl+q"
     status, lines = _xdotool "type --clearmodifiers '#{input}'"
-    _xdotool "key ctrl+s ctrl+q"
+    _xdotool "key ctrl+d ctrl+d"
     Process.wait(@launchpid) rescue nil
     return readfile
   end
