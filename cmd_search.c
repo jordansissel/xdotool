@@ -8,10 +8,10 @@ int cmd_search(int argc, char **args) {
   int i;
   int c;
 
-  int search_title = -1;
-  int search_name = -1;
-  int search_class = -1;
-  int search_classname = -1;
+  int search_title = 0;
+  int search_name = 0;
+  int search_class = 0;
+  int search_classname = 0;
   typedef enum { 
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_class, opt_maxdepth,
     opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname
@@ -111,8 +111,8 @@ int cmd_search(int argc, char **args) {
     return EXIT_FAILURE;
   }
 
-  if (search_title < 0 && search_name < 0 && search_class < 0
-      && search_classname < 0 && argc > 0) {
+  if (!search_title && !search_name && !search_class && !search_classname 
+      && argc > 0) {
     fprintf(stderr, "Defaulting to search window title, class, classname, "
             "and name (title)\n");
     search.searchmask |= (SEARCH_TITLE | SEARCH_NAME 

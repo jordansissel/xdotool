@@ -1,5 +1,12 @@
 2.???????????:
-  - API changes that required a version bump.
+  - Add --sync flag to many commands. This flag will make any supporting command
+    block until the operation completes. For example, a 'windowmove --sync' will
+    only exit once the window has moved. Commands supported:
+    * windowactivate
+    * windowfocus
+    * windowmap
+    * windowmove
+    * windowunmap
   - Fix http://code.google.com/p/semicomplete/issues/detail?id=21
     Multiple keyboard layouts are now supported better. Added unit tests
     to ensure consistency in typing across releases.
@@ -11,6 +18,13 @@
   - internal: Reworked testing to be less flakey
     http://code.google.com/p/semicomplete/issues/detail?id=30
   - internal: split commands into one per C file
+  - API changes that required a version bump.
+    * xdo_keysequence and friends now take a delay.
+  - New libxdo functions:
+    * xdo_window_wait_for_map_state
+    * xdo_window_wait_for_active
+    * xdo_get_window_location
+    * xdo_window_wait_for_focus
 
 
 1.20100415.*:
