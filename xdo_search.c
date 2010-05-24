@@ -56,7 +56,8 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
   //printf("title: %s\n", search->title);
   //printf("name: %s\n", search->winname);
   //printf("class: %s\n", search->winclass);
-  //printf("/Search\n");
+  //printf("classname: %s\n", search->winclassname);
+  //printf("//Search\n");
 
   for (i = 0; i < ncandidate_windows; i++) {
     Window wid = candidate_window_list[i];
@@ -139,20 +140,8 @@ static int _xdo_window_match_title(const xdo_t *xdo, Window window, regex_t *re)
 }
 
 static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re) {
-  XWindowAttributes attr;
-  XClassHint classhint;
-  XGetWindowAttributes(xdo->xdpy, window, &attr);
-
-  if (XGetClassHint(xdo->xdpy, window, &classhint)) {
-    if ((classhint.res_name) && (regexec(re, classhint.res_name, 0, NULL, 0) == 0)) {
-      XFree(classhint.res_name);
-      XFree(classhint.res_class);
-      return True;
-    }
-    XFree(classhint.res_name);
-    XFree(classhint.res_class);
-  }
-  return False;
+  /* window name and title are probably the same thing */
+  return _xdo_window_match_title(xdo, window, re);
 }
 
 static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re) {
@@ -232,13 +221,13 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
 
   if (!compile_re(search->title, &title_re) \
       || !compile_re(search->winclass, &class_re) \
-      || !compile_re(search->winclass, &classname_re) \
+      || !compile_re(search->winclassname, &classname_re) \
       || !compile_re(search->winname, &name_re)) {
     return False;
   }
 
   /* Set this to 1 for dev debugging */
-  const int debug = 0;
+  static const int debug = 0;
 
   int visible_ok, pid_ok, title_ok, name_ok, class_ok, classname_ok;
   int visible_want, pid_want, title_want, name_want, class_want, classname_want;
@@ -301,14 +290,16 @@ static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *
     fprintf(stderr, "win: %ld, pid:%d, title:%d, name:%d, class:%d, visible:%d\n",
             wid, pid_ok, title_ok, name_ok, class_ok, visible_ok);
   }
+
   switch (search->require) {
     case SEARCH_ALL:
-      return visible_ok && pid_ok && title_ok && name_ok && class_ok;
+      return visible_ok && pid_ok && title_ok && name_ok && class_ok && classname_ok;
       break;
     case SEARCH_ANY:
       return visible_ok && ((pid_want && pid_ok) || (title_want && title_ok) \
                             || (name_want && name_ok) \
-                            || (class_want && class_ok));
+                            || (class_want && class_ok) \
+                            || (classname_want && classname_ok));
       break;
   }
   

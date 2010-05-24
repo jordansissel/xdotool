@@ -19,8 +19,8 @@ int cmd_search(int argc, char **args) {
   struct option longopts[] = {
     { "all", no_argument, NULL, opt_all },
     { "any", no_argument, NULL, opt_any },
-    { "class", no_argument, &search_class, opt_class },
-    { "classname", no_argument, &search_class, opt_classname },
+    { "class", no_argument, NULL, opt_class },
+    { "classname", no_argument, NULL, opt_classname },
     { "help", no_argument, NULL, opt_help },
     { "maxdepth", required_argument, NULL, opt_maxdepth },
     { "name", no_argument, NULL, opt_name },
