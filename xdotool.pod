@@ -266,7 +266,17 @@ than pixels.
 Example: To set a terminal to be 80x24 characters, you would use:
 C<xdotool windowsize --usehints windowid 80 24>
 
-=item B<windowmove> I<windowid> I<x> I<y>
+=item B<windowmove> I<[options]> I<windowid> I<x> I<y>
+
+=over
+
+=item B<--sync> 
+
+After sending the window move request, wait until the window is actually
+moved. If no movement is necessary, we will not wait. This is useful for
+scripts that depend on actions being completed before moving on.
+
+=back
 
 Move the window to the given position
 

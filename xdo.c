@@ -32,9 +32,10 @@
 
 /* I can't find a constant in Xlib that is 0x2000 (or 1 << 13) 
  * Maybe it's in Xkb? Either way, 0x2000 is the state shown by xev(1)
- * when we are shifted.  Example: 
+ * when we are shifted using the keyboard group shifting.  Example: 
  * % setxkbmap -option * grp:switch,grp:shifts_toggle us,se
- * Then hit both shift-keys simultaneously to switch to 'se' key layout */
+ * Then hit both shift-keys simultaneously to switch to 'se' key layout
+ * and back again. */
 #define ModeSwitchMask 0x2000
 
 #define DEFAULT_DELAY 12
@@ -151,6 +152,34 @@ int xdo_window_unmap(const xdo_t *xdo, Window wid) {
   ret = XUnmapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
   return _is_success("XUnmapWindow", ret == 0);
+}
+
+int xdo_get_window_location(const xdo_t *xdo, Window wid,
+                            int *x_ret, int *y_ret, Screen **screen_ret) {
+  int ret;
+  XWindowAttributes attr;
+  ret = XGetWindowAttributes(xdo->xdpy, wid, &attr);
+  if (ret != 0) {
+    int x, y;
+    Window unused_child;
+
+    /* The coordinates in attr are relative to the parent window which isn't
+     * likely to be the root window (screen), translate them. */
+    XTranslateCoordinates(xdo->xdpy, wid, attr.root,
+                          attr.x, attr.y, &x, &y, &unused_child);
+    if (x_ret != NULL) {
+      *x_ret = x;
+    }
+
+    if (y_ret != NULL) {
+      *y_ret = y;
+    }
+
+    if (screen_ret != NULL) {
+      *screen_ret = attr.screen;
+    }
+  }
+  return _is_success("XGetWindowAttributes", ret == 0);
 }
 
 int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y) {
