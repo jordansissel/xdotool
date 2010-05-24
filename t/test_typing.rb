@@ -86,8 +86,8 @@ class XdotoolTypingTests < Test::Unit::TestCase
 
   def test_se_symbol_typing
     system("setxkbmap se")
-    # SE keymap has no '^' (circum)
-    _test_typing("!@\#$%&*()")
+    # SE keymap has no '^' or '$'
+    _test_typing("!#%&*()")
   end
 
 end # class XdotoolTypingTests
