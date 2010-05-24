@@ -102,6 +102,9 @@ xdotool: xdotool.o $(CMDOBJS) libxdo.$(LIBSUFFIX)
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@
 
+showman: xdotool.1
+	nroff -man $< | $$PAGER
+
 xdotool.html: xdotool.pod
 	pod2html $< > $@
 

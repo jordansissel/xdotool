@@ -4,10 +4,15 @@ int cmd_windowunmap(int argc, char **args) {
   int ret = 0;
   Window wid;
   char *cmd = *args;
+  int opsync;
 
   int c;
+  typedef enum {
+    opt_unused, opt_help, opt_sync, opt_verbose
+  } optlist_t;
   static struct option longopts[] = {
-    { "help", no_argument, NULL, 'h' },
+    { "help", no_argument, NULL, opt_help },
+    { "sync", no_argument, NULL, opt_sync },
     { 0, 0, 0, 0 },
   };
   static const char *usage = "Usage: %s wid\n";
@@ -15,9 +20,12 @@ int cmd_windowunmap(int argc, char **args) {
 
   while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
     switch (c) {
-      case 'h':
+      case opt_help:
         printf(usage, cmd);
         return EXIT_SUCCESS;
+        break;
+      case opt_sync:
+        opsync = 1;
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -37,6 +45,10 @@ int cmd_windowunmap(int argc, char **args) {
   ret = xdo_window_unmap(xdo, wid);
   if (ret)
     fprintf(stderr, "xdo_window_unmap reported an error\n");
+
+  if (opsync) {
+    xdo_window_wait_for_map_state(xdo, wid, IsUnmapped);
+  }
   
   return ret;
 }

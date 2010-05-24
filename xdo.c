@@ -129,6 +129,16 @@ const char *xdo_version(void) {
   return XDO_VERSION;
 }
 
+int xdo_window_wait_for_map_state(const xdo_t *xdo, Window wid, int map_state) {
+  XWindowAttributes attr;
+  attr.map_state = IsUnmapped;
+  while (attr.map_state != map_state) {
+    XGetWindowAttributes(xdo->xdpy, wid, &attr);
+    usleep(30000); /* TODO(sissel): Use exponential backoff up to 1 second */
+  }
+  return 0;
+}
+
 int xdo_window_map(const xdo_t *xdo, Window wid) {
   int ret = 0;
   ret = XMapWindow(xdo->xdpy, wid);
@@ -233,6 +243,23 @@ int xdo_window_focus(const xdo_t *xdo, Window wid) {
   ret = XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
   XFlush(xdo->xdpy);
   return _is_success("XSetInputFocus", ret == 0);
+}
+
+int xdo_window_wait_for_active(const xdo_t *xdo, Window window, int active) {
+  Window activewin = 0;
+  int ret = 0;
+
+  /* If active is true, wait until activewin is our window
+   * otherwise, wait until activewin is not our window */
+  while (active ? activewin != window : activewin == window) {
+    ret = xdo_window_get_active(xdo, &activewin);
+    if (ret == XDO_ERROR) {
+      return ret;
+    }
+    usleep(30000);
+  }
+
+  return 0;
 }
 
 int xdo_window_activate(const xdo_t *xdo, Window wid) {

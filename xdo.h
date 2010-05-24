@@ -113,7 +113,7 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
                              int nkeys, int pressed, int *modifier, useconds_t delay);
 int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
                                          int *nkeys);
-
+int xdo_window_wait_for_map_state(const xdo_t *xdo, Window wid, int map_state);
 int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y);
 int xdo_window_setsize(const xdo_t *xdo, Window wid, int w, int h, int flags);
 int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property, const char *value);
@@ -124,6 +124,7 @@ int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret);
 int xdo_window_get_pid(const xdo_t *xdo, Window window);
 int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret);
 int xdo_window_activate(const xdo_t *xdo, Window wid);
+int xdo_window_wait_for_active(const xdo_t *xdo, Window window, int active);
 
 int xdo_window_map(const xdo_t *xdo, Window wid);
 int xdo_window_unmap(const xdo_t *xdo, Window wid);

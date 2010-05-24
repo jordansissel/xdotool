@@ -274,7 +274,17 @@ Move the window to the given position
 
 Focus the window
 
-=item B<windowmap> I<window_id>
+=item B<windowmap> I<[options]> I<window_id>
+
+=over
+
+=item B<--sync> 
+
+After requesting the window map, wait until the window is actually mapped
+(visible). This is useful for scripts that depend on actions being completed
+before moving on.
+
+=back
 
 Map a window. In X11 terminology, mapping a window means making it visible on
 the screen.
@@ -284,6 +294,16 @@ the screen.
 Raise the window to the top of the stack. This may not work on all window managers.
 
 =item B<windowunmap> I<window_id>
+
+=over
+
+=item B<--sync> 
+
+After requesting the window unmap, wait until the window is actually unmapped
+(hidden). This is useful for scripts that depend on actions being completed
+before moving on.
+
+=back
 
 Unmap a window, making it no longer appear on your screen.
 
@@ -326,7 +346,17 @@ MANAGER HINTS> for more information.
 
 =over 
 
-=item B<windowactivate> I<windowid>
+=item B<windowactivate> I<[options]> I<windowid>
+
+=over
+
+=item B<--sync> 
+
+After sending the window activation, wait until the window is actually
+activated. This is useful for scripts that depend on actions being completed
+before moving on.
+
+=back
 
 Activate the window. This command is different from windowfocus:
 if the window is on another desktop, we will switch to that desktop. It also
