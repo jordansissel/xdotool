@@ -268,6 +268,8 @@ C<xdotool windowsize --usehints windowid 80 24>
 
 =item B<windowmove> I<[options]> I<windowid> I<x> I<y>
 
+Move the window to the given position
+
 =over
 
 =item B<--sync> 
@@ -278,9 +280,10 @@ scripts that depend on actions being completed before moving on.
 
 =back
 
-Move the window to the given position
 
 =item B<windowfocus> I<[options]> I<windowid>
+
+Focus the window
 
 =over
 
@@ -292,9 +295,11 @@ before moving on.
 
 =back
 
-Focus the window
 
 =item B<windowmap> I<[options]> I<window_id>
+
+Map a window. In X11 terminology, mapping a window means making it visible on
+the screen.
 
 =over
 
@@ -306,14 +311,13 @@ before moving on.
 
 =back
 
-Map a window. In X11 terminology, mapping a window means making it visible on
-the screen.
-
 =item B<windowraise> I<window_id>
 
 Raise the window to the top of the stack. This may not work on all window managers.
 
 =item B<windowunmap> I<window_id>
+
+Unmap a window, making it no longer appear on your screen.
 
 =over
 
@@ -324,8 +328,6 @@ After requesting the window unmap, wait until the window is actually unmapped
 before moving on.
 
 =back
-
-Unmap a window, making it no longer appear on your screen.
 
 =item B<set_window> I<[options]> I<windowid>
 
@@ -368,6 +370,11 @@ MANAGER HINTS> for more information.
 
 =item B<windowactivate> I<[options]> I<windowid>
 
+Activate the window. This command is different from windowfocus:
+if the window is on another desktop, we will switch to that desktop. It also
+uses a different method for bringing the window up. I recommend trying this
+command before using windowfocus, as it will work on more window managers.
+
 =over
 
 =item B<--sync> 
@@ -377,11 +384,6 @@ activated. This is useful for scripts that depend on actions being completed
 before moving on.
 
 =back
-
-Activate the window. This command is different from windowfocus:
-if the window is on another desktop, we will switch to that desktop. It also
-uses a different method for bringing the window up. I recommend trying this
-command before using windowfocus, as it will work on more window managers.
 
 =item B<getactivewindow>
 
