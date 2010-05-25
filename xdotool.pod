@@ -35,6 +35,10 @@ Send keystrokes to a specific window id. See SENDEVENT below.
 
 Clear modifiers before sending keystrokes. See CLEARMODIFIERS below.
 
+=item B<--delay milliseconds> 
+
+Delay between keystrokes. Default is 12ms.
+
 =back
 
 Type a given keystroke. Examples being "alt+r", "Control_L+J",

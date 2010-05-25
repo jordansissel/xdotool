@@ -13,6 +13,7 @@ int cmd_key(int argc, char **args) {
   int c;
   char *cmd = *args;
   xdo_active_mods_t *active_mods = NULL;
+  useconds_t delay = 12000;
 
   /* Options */
   Window window = 0;
@@ -20,13 +21,17 @@ int cmd_key(int argc, char **args) {
 
   static struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, 'c' },
+    { "delay", required_argument, NULL, 'd' },
     { "help", no_argument, NULL, 'h' },
     { "window", required_argument, NULL, 'w' },
     { 0, 0, 0, 0 },
   };
 
   static const char *usage = 
-             "Usage: %s [--window windowid] [--clearmodifiers] <keyseq1> [keyseq2 ... keyseqN]\n"
+             "Usage: %s [options] <keysequence> [keysequence ...]\n"
+             "--window WINDOW      - send keystrokes to a specific window\n "
+             "--clearmodifiers     - clear active keyboard modifiers during keystrokes\n"
+             "--delay DELAY        - Use DELAY milliseconds between keystrokes\n"
              "Each keysequence can be any number of modifiers and keys, separated by plus (+)\n"
              "For example: alt+r\n"
              "Any letter or key symbol such as Shift_L, Return, Dollar, a, space are valid here.\n";
@@ -44,6 +49,10 @@ int cmd_key(int argc, char **args) {
         printf(usage, cmd);
         return EXIT_SUCCESS;
         break;
+      case 'd':
+        /* Argument is in milliseconds, keysequence delay is in microseconds. */
+        delay = strtoul(optarg, NULL, 0) * 1000;
+        break;
       default:
         fprintf(stderr, usage, cmd);
         return EXIT_FAILURE;
@@ -59,7 +68,7 @@ int cmd_key(int argc, char **args) {
     return 1;
   }
 
-  int (*func)(const xdo_t *, Window, const char *) = NULL;
+  int (*func)(const xdo_t *, Window, const char *, useconds_t) = NULL;
 
   if (!strcmp(cmd, "key")) {
     func = xdo_keysequence;
@@ -78,7 +87,7 @@ int cmd_key(int argc, char **args) {
   }
 
   for (i = 0; i < argc; i++) {
-    int tmp = func(xdo, window, args[i]);
+    int tmp = func(xdo, window, args[i], delay);
     if (tmp != 0)
       fprintf(stderr, "xdo_keysequence reported an error for string '%s'\n", args[i]);
     ret += tmp;

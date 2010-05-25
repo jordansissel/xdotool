@@ -82,11 +82,10 @@ int cmd_mousemove(int argc, char **args) {
      */
     int origin_x, origin_y;
     if (window > 0) {
-      Window dummy_win;
       int win_x, win_y;
-      unsigned int win_w, win_h, dummy_uint;
-      XGetGeometry(xdo->xdpy, window, &dummy_win, &win_x, &win_y, &win_w, &win_h,
-                   &dummy_uint, &dummy_uint);
+      unsigned int win_w, win_h;
+      xdo_get_window_location(xdo, window, &win_x, &win_y, NULL);
+      xdo_get_window_size(xdo, window, &win_w, &win_h);
       origin_x = win_x + (win_w / 2);
       origin_y = win_y + (win_h / 2);
     } else { /* no window selected, move relative to screen */
@@ -98,7 +97,7 @@ int cmd_mousemove(int argc, char **args) {
     double distance = y;
     x = origin_x + (cos(radians) * distance);
 
-    /* Negative sin, since screen Y coordinates are top-down, where cartesian is reverse */
+    /* Negative sin, since screen Y coordinates are descending, where cartesian is ascending */
     y = origin_y + (-sin(radians) * distance);
   }
 
@@ -132,8 +131,9 @@ int cmd_mousemove(int argc, char **args) {
     }
   }
 
-  if (ret)
+  if (ret) {
     fprintf(stderr, "xdo_mousemove reported an error\n");
+  }
 
   if (clear_modifiers) {
     xdo_set_active_modifiers(xdo, window, active_mods);

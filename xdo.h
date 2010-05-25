@@ -131,6 +131,8 @@ int xdo_window_map(const xdo_t *xdo, Window wid);
 int xdo_window_unmap(const xdo_t *xdo, Window wid);
 int xdo_get_window_location(const xdo_t *xdo, Window wid,
                             int *x_ret, int *y_ret, Screen **screen_ret);
+int xdo_get_window_size(const xdo_t *xdo, Window wid, unsigned int *width_ret,
+                        unsigned int *height_ret);
 
 /* pager-like behaviors */
 int xdo_window_get_active(const xdo_t *xdo, Window *window_ret);

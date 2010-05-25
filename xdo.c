@@ -182,6 +182,23 @@ int xdo_get_window_location(const xdo_t *xdo, Window wid,
   return _is_success("XGetWindowAttributes", ret == 0);
 }
 
+int xdo_get_window_size(const xdo_t *xdo, Window wid, unsigned int *width_ret,
+                        unsigned int *height_ret) {
+  int ret;
+  XWindowAttributes attr;
+  ret = XGetWindowAttributes(xdo->xdpy, wid, &attr);
+  if (ret != 0) {
+    if (width_ret != NULL) {
+      *width_ret = attr.width;
+    }
+
+    if (height_ret != NULL) {
+      *height_ret = attr.height;
+    }
+  }
+  return _is_success("XGetWindowAttributes", ret == 0);
+}
+
 int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y) {
   XWindowChanges wc;
   int ret = 0;
