@@ -121,6 +121,17 @@ then the origin is the center of that window.
 
 See CLEARMODIFIERS
 
+=item B<--sync> 
+
+After sending the mouse move request, wait until the mouse is actually
+moved. If no movement is necessary, we will not wait. This is useful for
+scripts that depend on actions being completed before moving on.
+
+Note that we wait until the mouse moves at all, not necessarily that it
+actually reaches your intended destination. Some applications lock the 
+mouse cursor to certain regions of the screen, so waiting for any movement is
+better in the general case than waiting for a specific target.
+
 =back
 
 =item B<mousemove_relative> [options] I<x> I<y>

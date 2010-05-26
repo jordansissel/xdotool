@@ -5,6 +5,8 @@ int cmd_mousemove(int argc, char **args) {
   int ret = 0;
   int x, y;
   char *cmd = *args;
+  int opsync = 0;
+
   xdo_active_mods_t *active_mods = NULL;
   int clear_modifiers = 0;
   int polar_coordinates = 0;
@@ -14,49 +16,58 @@ int cmd_mousemove(int argc, char **args) {
   int c;
   int screen = 0;
   Window window = 0;
+  typedef enum {
+    opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_polar,
+    opt_screen, opt_step, opt_delay, opt_window
+  } optlist_t;
   static struct option longopts[] = {
-    { "clearmodifiers", no_argument, NULL, 'c' },
-    { "help", no_argument, NULL, 'h' },
-    { "polar", no_argument, NULL, 'p' },
-    { "screen", required_argument, NULL, 's' },
-    { "step", required_argument, NULL, 't' },
-    { "delay", required_argument, NULL, 'd' },
-    { "window", required_argument, NULL, 'w' },
+    { "clearmodifiers", no_argument, NULL, opt_clearmodifiers },
+    { "help", no_argument, NULL, opt_help},
+    { "polar", no_argument, NULL, opt_polar },
+    { "screen", required_argument, NULL, opt_screen },
+    { "step", required_argument, NULL, opt_step },
+    { "sync", no_argument, NULL, opt_sync },
+    { "delay", required_argument, NULL, opt_delay },
+    { "window", required_argument, NULL, opt_window },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
              "Usage: %s [options] <x> <y>\n"
             "-c, --clearmodifiers      - reset active modifiers (alt, etc) while typing\n"
-            "-s, -screen SCREEN        - which screen to move on, default is current screen\n"
-            "-w, --window <windowid>   - specify a window to move relative to\n"
+            "-d, --delay <MS>          - sleeptime in milliseconds between steps.\n"
             "-p, --polar               - Use polar coordinates. X as an angle, Y as distance\n"
-            "-t, --step <STEP>         - pixels to move each time along path to x,y.\n"
-            "-d, --delay <MS>          - sleeptime in milliseconds between steps.\n";
+            "--screen SCREEN           - which screen to move on, default is current screen\n"
+            "--step <STEP>             - pixels to move each time along path to x,y.\n"
+            "--sync                    - only exit once the window has been mapped (is visible)\n"
+            "-w, --window <windowid>   - specify a window to move relative to\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "chs:w:pt:d:", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(argc, args, "chw:pd:", longopts, &option_index)) != -1) {
     switch (c) {
-      case 'c':
+      case opt_clearmodifiers:
         clear_modifiers = 1;
         break;
-      case 'h':
+      case opt_help:
         printf(usage, cmd);
         return EXIT_SUCCESS;
         break;
-      case 's':
+      case opt_screen:
         screen = atoi(optarg);
         break;
-      case 'w':
+      case opt_window:
         window = strtoul(optarg, NULL, 0);
         break;
-      case 'p':
+      case opt_polar:
         polar_coordinates = 1;
         break;
-      case 't':
+      case opt_step:
         step = atoi(optarg);
         break;
-      case 'd':
+      case opt_delay:
         delay = strtoul(optarg, NULL, 0) * 1000;
+        break;
+      case opt_sync:
+        opsync = 1;
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -101,6 +112,9 @@ int cmd_mousemove(int argc, char **args) {
     y = origin_y + (-sin(radians) * distance);
   }
 
+  int mx, my, mscreen;
+  xdo_mouselocation(xdo, &mx, &my, &mscreen);
+
   if (clear_modifiers) {
     active_mods = xdo_get_active_modifiers(xdo);
     xdo_clear_active_modifiers(xdo, window, active_mods);
@@ -113,10 +127,6 @@ int cmd_mousemove(int argc, char **args) {
       ret = xdo_mousemove(xdo, x, y, screen);
     }
   } else {
-    int mx, my, mscreen;
-    //double xleg, yleg;
-    xdo_mouselocation(xdo, &mx, &my, &mscreen);
-
     if (mx == x && my == y && mscreen == screen) {
       /* Nothing to move. Quit now. */
       return 0;
@@ -133,6 +143,11 @@ int cmd_mousemove(int argc, char **args) {
 
   if (ret) {
     fprintf(stderr, "xdo_mousemove reported an error\n");
+  } else {
+    if (opsync) {
+      /* Wait until the mouse moves away from its current position */
+      xdo_mouse_wait_for_move_from(xdo, mx, my);
+    }
   }
 
   if (clear_modifiers) {

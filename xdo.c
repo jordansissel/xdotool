@@ -1560,3 +1560,29 @@ int xdo_window_get_pid(const xdo_t *xdo, Window window) {
 
   return window_pid;
 }
+
+int xdo_mouse_wait_for_move_from(const xdo_t *xdo, int origin_x, int origin_y) {
+  int x, y;
+  int ret = 0;
+
+  ret = xdo_mouselocation(xdo, &x, &y, NULL);
+  while (x == origin_x && y == origin_y) {
+    usleep(30000);
+    ret = xdo_mouselocation(xdo, &x, &y, NULL);
+  }
+
+  return ret;
+}
+
+int xdo_mouse_wait_for_move_to(const xdo_t *xdo, int dest_x, int dest_y) {
+  int x, y;
+  int ret = 0;
+
+  ret = xdo_mouselocation(xdo, &x, &y, NULL);
+  while (x != dest_x && y != dest_y) {
+    usleep(30000);
+    ret = xdo_mouselocation(xdo, &x, &y, NULL);
+  }
+
+  return ret;
+}

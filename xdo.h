@@ -99,6 +99,8 @@ int xdo_mousemove_relative(const xdo_t *xdo, int x, int y);
 int xdo_mousedown(const xdo_t *xdo, Window window, int button);
 int xdo_mouseup(const xdo_t *xdo, Window window, int button);
 int xdo_mouselocation(const xdo_t *xdo, int *x, int *y, int *screen_num);
+int xdo_mouse_wait_for_move_from(const xdo_t *xdo, int origin_x, int origin_y);
+int xdo_mouse_wait_for_move_to(const xdo_t *xdo, int dest_x, int dest_y);
 
 int xdo_click(const xdo_t *xdo, Window window, int button);
 
