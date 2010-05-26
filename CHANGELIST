@@ -1,3 +1,7 @@
+2.20100525.*:
+  - Skip certain tests when the requirements aren't met (ie; no such window manager, etc)
+    Reported by Daniel Kahn Gillmor.
+
 2.20100524.*:
   - Add --sync flag to many commands. This flag will make any supporting command
     block until the operation completes. For example, a 'windowmove --sync' will
