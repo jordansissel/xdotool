@@ -62,11 +62,13 @@ num=-1
 XSERVERNAME=${XSERVER%% *}
 if ! which "$XSERVERNAME" > /dev/null 2>&1 ; then
   echo "Unable to find $XSERVERNAME. Aborting."
+  cleanup
   exit 1
 fi
 
 if ! which lsof > /dev/null 2>&1 ; then
   echo "Unable to find lsof. This is a required tool."
+  cleanup
   exit 1
 fi
 
@@ -114,6 +116,7 @@ quiet || echo "Using display: $DISPLAY"
 if [ ! -z "$WINMGR" ] ; then
   if ! which $WINMGR > /dev/null 2>&1 ; then
     echo "Cannot find $WINMGR. Aborting."
+    cleanup
     exit 1
   fi
   WINMGRNAME=${WINMGR%% *}
