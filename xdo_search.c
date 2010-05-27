@@ -118,10 +118,21 @@ static void _xdo_get_child_windows(const xdo_t *xdo, Window window,
 }
 
 static int _xdo_window_match_title(const xdo_t *xdo, Window window, regex_t *re) {
+  fprintf(stderr, "This function (match window by title) is deprecated."
+          " You want probably want to match by the window name.\n");
+  return _xdo_window_match_name(xdo, window, re);
+}
+
+static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re) {
+  /* historically in xdo, 'match_name' matched the classhint 'name' which we
+   * match in _xdo_window_match_classname. But really, most of the time 'name'
+   * refers to the window manager name for the window, which is displayed in
+   * the titlebar */
   int i;
   int count = 0;
   char **list = NULL;
   XTextProperty tp;
+
 
   XGetWMName(xdo->xdpy, window, &tp);
   if (tp.nitems > 0) {
@@ -138,18 +149,6 @@ static int _xdo_window_match_title(const xdo_t *xdo, Window window, regex_t *re)
   XFreeStringList(list);
   XFree(tp.value);
   return False;
-}
-
-static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re) {
-  /* historically 'match_name' matched the classhint 'name' which we
-   * match in _xdo_window_match_classname.
-   * But really, most of the time 'name' refers to the window manager name 
-   * for the window, which is displayed in the titlebar, so let's compromise
-   * and search both title and classname, I guess? */
-  fprintf(stderr, "This function (match window by name) is deprecated."
-          " You want either a match by classname or by the window title.\n");
-  return _xdo_window_match_title(xdo, window, re) \
-         || _xdo_window_match_classname(xdo, window, re);
 }
 
 static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re) {
@@ -201,6 +200,7 @@ static int _xdo_window_match_pid(const xdo_t *xdo, Window window, const int pid)
 static int compile_re(const char *pattern, regex_t *re) {
   int ret;
   if (pattern == NULL) {
+    regcomp(re, "^$", REG_EXTENDED | REG_ICASE);
     return True;
   }
 

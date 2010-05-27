@@ -36,16 +36,16 @@ int cmd_search(int argc, char **args) {
       " --class         check regexp_pattern agains the window class\n"
       " --classname     check regexp_pattern agains the window classname\n"
       " --maxdepth N    set search depth to N. Default is infinite.\n"
-      " --name          check regexp_pattern agains the window name\n"
+      "                 -1 also means infinite.\n"
       " --onlyvisible   matches only windows currently visible\n"
       " --pid PID       only show windows belonging to specific process\n"
-      "                 Not supported by all X11 applications"
+      "                 Not supported by all X11 applications\n"
       " --screen N      only search a specific screen. Default is all screens\n"
-      " --title         check regexp_pattern agains the window title\n"
-      "                 -1 also means infinite.\n"
+      " --name          check regexp_pattern agains the window name\n"
+      " --title         DEPRECATED. Same as --name.\n"
       " -h, --help      show this help output\n"
       "\n"
-      "* If none of --title, --class, and --name are specified,\n"
+      "If none of --name, --classname, or --class are specified,\n"
       "the defaults are to match any of them.\n";
 
   memset(&search, 0, sizeof(xdo_search_t));
@@ -84,15 +84,16 @@ int cmd_search(int argc, char **args) {
         search.only_visible = True;
         search.searchmask |= SEARCH_ONLYVISIBLE;
         break;
-      case opt_title:
-        search_title = True;
-        break;
       case opt_class:
         search_class = True;
         break;
       case opt_classname:
         search_classname = True;
         break;
+      case opt_title:
+        fprintf(stderr, "This flag is deprecated. Assuming you mean --name (the"
+                " window name).\n");
+        /* fall through */
       case opt_name:
         search_name = True;
         break;
@@ -114,17 +115,17 @@ int cmd_search(int argc, char **args) {
 
   if (!search_title && !search_name && !search_class && !search_classname 
       && argc > 0) {
-    fprintf(stderr, "Defaulting to search window title, class, and classname\n");
-    search.searchmask |= (SEARCH_TITLE | SEARCH_CLASS | SEARCH_CLASSNAME);
-    search_title = opt_title;
-    search_name = opt_name;
-    search_class = opt_class;
+    fprintf(stderr, "Defaulting to search window name, class, and classname\n");
+    search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
+    search_name = 1;
+    search_class = 1;
+    search_classname = 1;
   }
 
   if (argc > 0) {
     if (search_title) {
-      search.searchmask |= SEARCH_TITLE;
-      search.title = args[0];
+      search.searchmask |= SEARCH_NAME;
+      search.winname = args[0];
     }
     if (search_name) {
       search.searchmask |= SEARCH_NAME;

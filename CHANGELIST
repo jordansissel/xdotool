@@ -1,3 +1,10 @@
+2.20100527.*:
+  - Changed xdotool search flags. '--title' now means '--name' to match the
+    window name (shown in the window manager title bar for the window).
+    Related: http://code.google.com/p/semicomplete/issues/detail?id=33
+
+
+
 2.20100525.*:
   - Skip certain tests when the requirements aren't met (ie; no such window manager, etc)
     Reported by Daniel Kahn Gillmor.

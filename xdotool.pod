@@ -226,7 +226,8 @@ windows, set maxdepth of 1.
 
 =item B<--name>
 
-Match against the window name
+Match against the window name. This is the same string that is displayed in the
+window titlebar.
 
 =item B<--onlyvisible> 
 
@@ -245,11 +246,11 @@ using Xinerama.
 
 =item B<--title> 
 
-Match against the window title (what's displayed in the titlebar of the window)
+DEPRECATED. See --name.
 
 =back
 
-The default options are C<--title --name --class>
+The default options are C<--name --class --classname>
 
 =item B<getwindowfocus> [-f]
 
