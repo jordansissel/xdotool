@@ -20,6 +20,7 @@ static void _xdo_get_child_windows(const xdo_t *xdo, Window window, int max_dept
 static int compile_re(const char *pattern, regex_t *re);
 static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *search);
 static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re);
+static int _xdo_window_match_classname(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_window_match_title(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_window_match_pid(const xdo_t *xdo, Window window, int pid);
@@ -140,8 +141,15 @@ static int _xdo_window_match_title(const xdo_t *xdo, Window window, regex_t *re)
 }
 
 static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re) {
-  /* window name and title are probably the same thing */
-  return _xdo_window_match_title(xdo, window, re);
+  /* historically 'match_name' matched the classhint 'name' which we
+   * match in _xdo_window_match_classname.
+   * But really, most of the time 'name' refers to the window manager name 
+   * for the window, which is displayed in the titlebar, so let's compromise
+   * and search both title and classname, I guess? */
+  fprintf(stderr, "This function (match window by name) is deprecated."
+          " You want either a match by classname or by the window title.\n");
+  return _xdo_window_match_title(xdo, window, re) \
+         || _xdo_window_match_classname(xdo, window, re);
 }
 
 static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re) {

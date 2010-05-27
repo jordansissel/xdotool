@@ -44,9 +44,11 @@ int cmd_mousemove(int argc, char **args) {
 
   while ((c = getopt_long_only(argc, args, "chw:pd:", longopts, &option_index)) != -1) {
     switch (c) {
+      case 'c':
       case opt_clearmodifiers:
         clear_modifiers = 1;
         break;
+      case 'h':
       case opt_help:
         printf(usage, cmd);
         return EXIT_SUCCESS;
@@ -54,15 +56,18 @@ int cmd_mousemove(int argc, char **args) {
       case opt_screen:
         screen = atoi(optarg);
         break;
+      case 'w':
       case opt_window:
         window = strtoul(optarg, NULL, 0);
         break;
+      case 'p':
       case opt_polar:
         polar_coordinates = 1;
         break;
       case opt_step:
         step = atoi(optarg);
         break;
+      case 'd':
       case opt_delay:
         delay = strtoul(optarg, NULL, 0) * 1000;
         break;
@@ -70,6 +75,7 @@ int cmd_mousemove(int argc, char **args) {
         opsync = 1;
         break;
       default:
+        printf("unknown opt: %d\n", c);
         fprintf(stderr, usage, cmd);
         return EXIT_FAILURE;
     }

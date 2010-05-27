@@ -21,7 +21,8 @@ int cmd_windowmap(int argc, char **args) {
 
   int option_index;
   while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
-    switch (longopts[option_index].val) {
+    switch (c) {
+      case 'h':
       case opt_help:
         printf(usage, cmd);
         return EXIT_SUCCESS;

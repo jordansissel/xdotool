@@ -56,18 +56,19 @@ int cmd_mousemove_relative(int argc, char **args) {
     /* x becomes angle (degrees), y becomes distance.
      * XXX: Origin should be center (of window or screen)
      */
-    int origin_x, origin_y, dummy;
-    xdo_mouselocation(xdo, &origin_x, &origin_y, &dummy);
+    int origin_x, origin_y, screen;
+    xdo_mouselocation(xdo, &origin_x, &origin_y, &screen);
 
     double radians = (x * M_PI / 180);
     double distance = y;
     x = origin_x + (cos(radians) * distance);
     /* Negative sin, since screen Y coordinates are top-down, where cartesian is reverse */
     y = origin_y + (-sin(radians) * distance);
-    printf("%d,%d => %d,%d\n", origin_x, origin_y, x, y);
+    //printf("%d,%d => %d,%d\n", origin_x, origin_y, x, y);
+    ret = xdo_mousemove(xdo, x, y, screen);
+  } else {
+    ret = xdo_mousemove_relative(xdo, x, y);
   }
-
-  ret = xdo_mousemove_relative(xdo, x, y);
 
   if (ret)
     fprintf(stderr, "xdo_mousemove_relative reported an error\n");
