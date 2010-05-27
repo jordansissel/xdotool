@@ -47,4 +47,24 @@ class XdotoolMouseMoveTests < Test::Unit::TestCase
       end # x_list.each
     end # y_list.each 
   end # def test_mousemove
+
+  def test_mousemove_polar
+    dimensions = %x{xdpyinfo}.split("\n").grep(/dimensions:/).first.split[1]
+    w, h = dimensions.split("x").collect { |v| v.to_i }
+
+    center_x = (w/2).to_i
+    center_y = (h/2).to_i
+
+    xdotool_ok "mousemove --sync --polar 0 100"
+    assert_mouse_position(center_x + 100, center_y);
+
+    xdotool_ok "mousemove --sync --polar 90 100"
+    assert_mouse_position(center_x, center_y - 100);
+
+    xdotool_ok "mousemove --sync --polar 180 100"
+    assert_mouse_position(center_x - 100, center_y);
+
+    xdotool_ok "mousemove --sync --polar 270 100"
+    assert_mouse_position(center_x, center_y + 100);
+  end
 end # XdotoolMouseMoveTests

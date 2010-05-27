@@ -150,7 +150,7 @@ module XdoTestHelper
     status, lines = xdotool "getmouselocation --shell"
     mx = lines.grep(/^X=/).first[/[0-9]+/].to_i
     my = lines.grep(/^Y=/).first[/[0-9]+/].to_i
-    assert_equal(mx, x, "Mouse position expected to be #{x}, was #{mx}")
-    assert_equal(my, y, "Mouse position expected to be #{y}, was #{my}")
+    assert_equal(mx, x, "Mouse X position expected to be #{x}, was #{mx}")
+    assert_equal(my, y, "Mouse Y position expected to be #{y}, was #{my}")
   end # def assert_mouse_position
 end # module XdoTestHelper
