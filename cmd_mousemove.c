@@ -25,9 +25,9 @@ int cmd_mousemove(int argc, char **args) {
     { "help", no_argument, NULL, opt_help},
     { "polar", no_argument, NULL, opt_polar },
     { "screen", required_argument, NULL, opt_screen },
-    { "step", required_argument, NULL, opt_step },
+    //{ "step", required_argument, NULL, opt_step },
     { "sync", no_argument, NULL, opt_sync },
-    { "delay", required_argument, NULL, opt_delay },
+    //{ "delay", required_argument, NULL, opt_delay },
     { "window", required_argument, NULL, opt_window },
     { 0, 0, 0, 0 },
   };
@@ -37,8 +37,8 @@ int cmd_mousemove(int argc, char **args) {
             "-d, --delay <MS>          - sleeptime in milliseconds between steps.\n"
             "-p, --polar               - Use polar coordinates. X as an angle, Y as distance\n"
             "--screen SCREEN           - which screen to move on, default is current screen\n"
-            "--step <STEP>             - pixels to move each time along path to x,y.\n"
-            "--sync                    - only exit once the window has been mapped (is visible)\n"
+            //"--step <STEP>             - pixels to move each time along path to x,y.\n"
+            //"--sync                    - only exit once the window has been mapped (is visible)\n"
             "-w, --window <windowid>   - specify a window to move relative to\n";
   int option_index;
 
@@ -120,6 +120,12 @@ int cmd_mousemove(int argc, char **args) {
 
   int mx, my, mscreen;
   xdo_mouselocation(xdo, &mx, &my, &mscreen);
+
+  /* Break early if we don't need to move */
+  if (mx == x && my == y && mscreen == screen) {
+    return 0;
+  }
+  //printf("Move from %d,%d => %d,%d\n", mx, my, x, y);
 
   if (clear_modifiers) {
     active_mods = xdo_get_active_modifiers(xdo);

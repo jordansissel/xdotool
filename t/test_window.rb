@@ -9,7 +9,7 @@ class XdotoolWindowTests < Test::Unit::TestCase
 
   def test_set_name
     name = rand.to_s
-    status, lines = _xdotool "set_window --name '#{name}' #{@wid}"
+    status, lines = xdotool "set_window --name '#{name}' #{@wid}"
     assert_status_ok(status);
     assert_equal(0, lines.length, "set_window should have no output")
     xprop_status, xprop_output = runcmd("xprop -id #{@wid}")
@@ -21,11 +21,11 @@ class XdotoolWindowTests < Test::Unit::TestCase
     classname = rand.to_s
     _class = rand.to_s
 
-    status, lines = _xdotool "set_window --class '#{_class}' #{@wid}"
+    status, lines = xdotool "set_window --class '#{_class}' #{@wid}"
     assert_status_ok(status);
     assert_equal(0, lines.length, "set_window should have no output")
 
-    status, lines = _xdotool "set_window --classname '#{classname}' #{@wid}"
+    status, lines = xdotool "set_window --classname '#{classname}' #{@wid}"
     assert_status_ok(status);
     assert_equal(0, lines.length, "set_window should have no output")
 
@@ -37,7 +37,7 @@ class XdotoolWindowTests < Test::Unit::TestCase
 
   def test_set_icon
     icon = rand.to_s
-    status, lines = _xdotool "set_window --icon '#{icon}' #{@wid}"
+    status, lines = xdotool "set_window --icon '#{icon}' #{@wid}"
     assert_status_ok(status);
     assert_equal(0, lines.length, "set_window should have no output")
     xprop_status, xprop_output = runcmd("xprop -id #{@wid}")
@@ -47,7 +47,7 @@ class XdotoolWindowTests < Test::Unit::TestCase
 
   def test_set_role
     role = rand.to_s
-    status, lines = _xdotool "set_window --role '#{role}' #{@wid}"
+    status, lines = xdotool "set_window --role '#{role}' #{@wid}"
     assert_status_ok(status);
     assert_equal(0, lines.length, "set_window should have no output")
     xprop_status, xprop_output = runcmd("xprop -id #{@wid}")

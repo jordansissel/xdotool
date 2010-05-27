@@ -2,11 +2,16 @@ require "test/unit"
 
 module XdoTestHelper
   def setup
-    @xdotool = "../xdotool"
-    @title = "#{self.class.name}_#{rand}"
+    setup_vars
     setup_ensure_x_is_healthy
     setup_launch_xterm
   end # def setup
+
+
+  def setup_vars
+    @xdotool = "../xdotool"
+    @title = "#{self.class.name}_#{rand}"
+  end # def setup_vars
 
   def setup_launch(*cmd)
     @launchpid = fork do
@@ -69,16 +74,19 @@ module XdoTestHelper
     end
   end # def teardown
 
-  def _xdotool(args)
-    #puts "Running: #{@xdotool} #{args}"
-    return runcmd("#{@xdotool} #{args}")
-  end # def _xdotool
+  def xdotool(args)
+    if $DEBUG
+      puts "Running: #{@xdotool} #{args}"
+    end
 
-  def _xdotool_ok(args)
-    status, lines = _xdotool(args)
+    return runcmd("#{@xdotool} #{args}")
+  end # def xdotool
+
+  def xdotool_ok(args)
+    status, lines = xdotool(args)
     assert_equal(0, status, "Exit code expected to be 0 for #{args}")
     return [status, lines]
-  end # def _xdotool_ok
+  end # def xdotool_ok
 
   def runcmd(command)
     io = IO.popen(command)
@@ -89,11 +97,11 @@ module XdoTestHelper
 
   def assert_status_ok(status, msg="")
     assert_equal(0, status, "Exit status should have been 0, was #{status}. #{msg}")
-  end
+  end # def assert_status_ok
 
   def assert_status_fail(status, msg="")
     assert_not_equal(0, status, "Exit status should not have been 0, was #{status}. #{msg}")
-  end
+  end # def assert_status_fail
 
   def detect_window_manager
     status, lines = runcmd("xprop -root")
@@ -104,7 +112,7 @@ module XdoTestHelper
     end
 
     return :unknown
-  end
+  end # def detect_window_manager
 
   def wm_supports?(feature)
     status, lines = runcmd("xprop -root")
@@ -114,7 +122,7 @@ module XdoTestHelper
 
     features = supported.first.split(" = ")[-1].split(", ")
     return features.include?(feature)
-  end
+  end # def wm_supports?
 
   def try(options = {})
     times = options[:times] || 5
@@ -136,6 +144,13 @@ module XdoTestHelper
     end # loop 1 .. times
 
     raise last_exception
-  end
+  end # def try
 
-end
+  def assert_mouse_position(x, y)
+    status, lines = xdotool "getmouselocation --shell"
+    mx = lines.grep(/^X=/).first[/[0-9]+/].to_i
+    my = lines.grep(/^Y=/).first[/[0-9]+/].to_i
+    assert_equal(mx, x, "Mouse position expected to be #{x}, was #{mx}")
+    assert_equal(my, y, "Mouse position expected to be #{y}, was #{my}")
+  end # def assert_mouse_position
+end # module XdoTestHelper

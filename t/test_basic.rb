@@ -14,28 +14,28 @@ class XdotoolBasicTests < Test::Unit::TestCase
     # the X server, no WM, and launch an xterm (or nothing), XGetInputFocus yields '1'
     # as the window with focus. This is a bug we work-around by telling the X server
     # to focus our window.
-    _xdotool "windowfocus #{@wid}"
-    status, lines = _xdotool "getwindowfocus"
+    xdotool "windowfocus #{@wid}"
+    status, lines = xdotool "getwindowfocus"
     assert_status_ok(status)
     assert_equal(1, lines.length, "Only one line of output expected from getwindowfocus")
     assert_equal(@wid, lines[0].to_i)
   end
 
   def test_windowraise_succeeds_on_valid_window
-    status, lines = _xdotool "windowraise #{@wid}"
+    status, lines = xdotool "windowraise #{@wid}"
     assert_status_ok(status)
     assert_equal(0, lines.length, "No output from windowraise")
   end
 
   def test_windowraise_fails_on_invalid_window
-    status, lines = _xdotool "windowraise 1 2> /dev/null"
+    status, lines = xdotool "windowraise 1 2> /dev/null"
     assert_status_fail(status)
   end
 
   def test_windowsize_by_pixel_works
     w = 500
     h = 400
-    status, lines = _xdotool "windowsize #{@wid} #{w} #{h}"
+    status, lines = xdotool "windowsize #{@wid} #{w} #{h}"
     assert_status_ok(status)
     assert_equal(0, lines.length, "No output expected from windowsize")
 
@@ -53,7 +53,7 @@ class XdotoolBasicTests < Test::Unit::TestCase
   def test_windowsize_by_size_hints
     w = 120
     h = 50
-    status, lines = _xdotool "windowsize --usehints #{@wid} #{w} #{h}"
+    status, lines = xdotool "windowsize --usehints #{@wid} #{w} #{h}"
     assert_status_ok(status)
     assert_equal(0, lines.length, "No output expected from windowsize")
 
@@ -71,13 +71,13 @@ class XdotoolBasicTests < Test::Unit::TestCase
     #rootwin = ("%d" % (lines.grep(/root window id:/).first[/0x[0-9A-Ea-e]+/])).to_i
 
     try do
-      status, lines = _xdotool "windowfocus #{@wid}"
+      status, lines = xdotool "windowfocus #{@wid}"
       assert_status_ok(status)
       assert_equal(0, lines.length, "windowfocus should have no output")
     end
 
     try do
-      status, lines = _xdotool "getwindowfocus -f"
+      status, lines = xdotool "getwindowfocus -f"
       assert_status_ok(status)
       assert_equal(1, lines.length, "getwindowfocus should have one line of output")
       assert_equal(@wid, lines.first.to_i,
@@ -88,7 +88,7 @@ class XdotoolBasicTests < Test::Unit::TestCase
   def test_windowmove
     x = 300
     y = 400
-    status, lines = _xdotool "windowmove #{@wid} #{x} #{y}"
+    status, lines = xdotool "windowmove #{@wid} #{x} #{y}"
     assert_status_ok(status)
     assert_equal(0, lines.length, "windowmove should have no output")
 
@@ -109,7 +109,7 @@ class XdotoolBasicTests < Test::Unit::TestCase
 
   def test_windowmapping
     try do
-      status, lines = _xdotool "windowunmap #{@wid}"
+      status, lines = xdotool "windowunmap #{@wid}"
       assert_status_ok(status)
       assert_equal(0, lines.length, "windowunmap should have no output")
     end
@@ -121,7 +121,7 @@ class XdotoolBasicTests < Test::Unit::TestCase
     end
 
     # Now map it again
-    status, lines = _xdotool "windowmap #{@wid}"
+    status, lines = xdotool "windowmap #{@wid}"
     assert_status_ok(status)
     assert_equal(0, lines.length, "windowmap should have no output")
  
@@ -167,13 +167,13 @@ class XdotoolBasicTests < Test::Unit::TestCase
     end
 
     cmds.each do |cmd|
-      status, lines = _xdotool cmd
+      status, lines = xdotool cmd
       assert_status_ok(status, cmd)
       assert_equal(0, lines.length, "'#{cmd}' should have no output")
     end
 
     cmds_withoutput.each do |cmd|
-      status, lines = _xdotool cmd
+      status, lines = xdotool cmd
       assert_status_ok(status, cmd)
       assert_equal(1, lines.length, "'#{cmd}' should have one line of output")
     end

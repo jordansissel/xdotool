@@ -20,8 +20,8 @@ class XdotoolTypingTests < Test::Unit::TestCase
 
     found = false
     while !found
-      #status, lines = _xdotool "search --onlyvisible --pid #{@launchpid}"
-      status, lines = _xdotool "search --onlyvisible --title '#{@title}'"
+      #status, lines = xdotool "search --onlyvisible --pid #{@launchpid}"
+      status, lines = xdotool "search --onlyvisible --title '#{@title}'"
       found = (status == 0)
       assert(lines.length < 2, "Should only be at most 1 window matching #{@launchpid}")
       @wid = lines.first.to_i
@@ -30,8 +30,8 @@ class XdotoolTypingTests < Test::Unit::TestCase
 
     ready = false
     while !ready
-      _xdotool "windowfocus #{@wid}"
-      status, lines = _xdotool "getwindowfocus"
+      xdotool "windowfocus #{@wid}"
+      status, lines = xdotool "getwindowfocus"
       if status == 0 and lines.first.to_i == @wid
         ready = true
       end
@@ -51,10 +51,10 @@ class XdotoolTypingTests < Test::Unit::TestCase
   end
 
   def type(input)
-    #status, lines = _xdotool "type --window #{@wid} --clearmodifiers '#{input}'"
+    #status, lines = xdotool "type --window #{@wid} --clearmodifiers '#{input}'"
     #_xdotool "key ctrl+s ctrl+q"
-    status, lines = _xdotool "type --clearmodifiers '#{input}'"
-    _xdotool "key ctrl+d ctrl+d"
+    status, lines = xdotool "type --clearmodifiers '#{input}'"
+    xdotool "key ctrl+d ctrl+d"
     Process.wait(@launchpid) rescue nil
     return readfile
   end
