@@ -43,37 +43,57 @@ CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
          cmd_get_num_desktops.o cmd_set_desktop.o cmd_get_desktop.o \
          cmd_set_desktop_for_window.o cmd_get_desktop_for_window.o
 
+.PHONY: all
 all: xdotool.1 libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) xdotool
 
-install: pre-install installlib installprog installman installheader
+.PHONY: install
+install: pre-install installlib installprog installman installheader post-install
 
+.PHONY: pre-install
 pre-install:
 	install -d $(DPREFIX)
 
+.PHONY: post-install
+post-install:
+	@if [ "$$(uname)" = "Linux" ] ; then \
+		echo "Running ldconfig to update library cache"; \
+		ldconfig \
+		  || echo "Failed running 'ldconfig'. Maybe you need to be root?"; \
+	fi
+
+
+.PHONY: installprog
 installprog: xdotool
 	install -d $(DINSTALLBIN)
 	install -m 755 xdotool $(DINSTALLBIN)/
 
+.PHONY: installlib
 installlib: libxdo.$(LIBSUFFIX)
 	install -d $(DINSTALLLIB)
 	install libxdo.$(LIBSUFFIX) $(DINSTALLLIB)/libxdo.$(VERLIBSUFFIX)
 	ln -sf libxdo.$(VERLIBSUFFIX) $(DINSTALLLIB)/libxdo.$(LIBSUFFIX)
 
+.PHONY: installheader
 installheader: xdo.h
 	install -d $(DINSTALLINCLUDE)
 	install xdo.h $(DINSTALLINCLUDE)/xdo.h
 
+.PHONY: installman
 installman: xdotool.1
 	install -d $(DINSTALLMAN)/man1
 	install -m 644 xdotool.1 $(DINSTALLMAN)/man1/
 
+.PHONY: deinstall
 deinstall: uninstall
+
+.PHONY: uninstall
 uninstall: 
 	rm -f $(DINSTALLBIN)/xdotool
 	rm -f $(DINSTALLMAN)/xdotool.1
 	rm -f $(DINSTALLLIB)/libxdo.$(LIBSUFFIX)
 	rm -f $(DINSTALLLIB)/libxdo.$(VERLIBSUFFIX)
 
+.PHONY: clean
 clean:
 	rm -f *.o xdotool xdotool.1 xdotool.html libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) || true
 
@@ -108,8 +128,10 @@ showman: xdotool.1
 xdotool.html: xdotool.pod
 	pod2html $< > $@
 
+.PHONY: package
 package: test-package-build create-package
 
+.PHONY: test
 test: xdotool libxdo.$(VERLIBSUFFIX)
 	$(MAKE) -C t
 
@@ -119,9 +141,11 @@ xdo_version.h:
 VERSION:
 	sh version.sh --shell > $@
 
+.PHONY: pre-create-package
 pre-create-package:
 	rm -f VERSION xdo_version.h
 
+.PHONY: create-package
 create-package: pre-create-package VERSION xdo_version.h
 	@NAME=xdotool-$(VERSION); \
 	echo "Creating package: $$NAME"; \
@@ -132,6 +156,7 @@ create-package: pre-create-package VERSION xdo_version.h
 	rm VERSION
 
 # Make sure the package we're building compiles.
+.PHONY: test-package-build
 test-package-build: create-package
 	@NAME=xdotool-$(VERSION) && \
 	echo "Testing package $$NAME" && \
