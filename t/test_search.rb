@@ -17,7 +17,7 @@ class XdotoolSearchTests < Test::Unit::TestCase
   end
 
   def test_search_title
-    status, lines = xdotool "search --title #{@title}"
+    status, lines = xdotool "search --name #{@title}"
     try do
       assert_equal(0, status, "Exit status should have been 0")
       assert_equal(1, lines.size,

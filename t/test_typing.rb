@@ -21,7 +21,7 @@ class XdotoolTypingTests < Test::Unit::TestCase
     found = false
     while !found
       #status, lines = xdotool "search --onlyvisible --pid #{@launchpid}"
-      status, lines = xdotool "search --onlyvisible --title '#{@title}'"
+      status, lines = xdotool "search --onlyvisible --name '#{@title}'"
       found = (status == 0)
       assert(lines.length < 2, "Should only be at most 1 window matching #{@launchpid}")
       @wid = lines.first.to_i
