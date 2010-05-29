@@ -56,15 +56,15 @@ class XdotoolMouseMoveTests < Test::Unit::TestCase
     center_y = (h/2).to_i
 
     xdotool_ok "mousemove --sync --polar 0 100"
-    assert_mouse_position(center_x + 100, center_y);
-
-    xdotool_ok "mousemove --sync --polar 90 100"
     assert_mouse_position(center_x, center_y - 100);
 
+    xdotool_ok "mousemove --sync --polar 90 100"
+    assert_mouse_position(center_x + 100, center_y);
+
     xdotool_ok "mousemove --sync --polar 180 100"
-    assert_mouse_position(center_x - 100, center_y);
+    assert_mouse_position(center_x, center_y + 100);
 
     xdotool_ok "mousemove --sync --polar 270 100"
-    assert_mouse_position(center_x, center_y + 100);
+    assert_mouse_position(center_x - 100, center_y);
   end
 end # XdotoolMouseMoveTests

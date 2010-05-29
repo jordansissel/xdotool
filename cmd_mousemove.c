@@ -110,7 +110,12 @@ int cmd_mousemove(int argc, char **args) {
       origin_x = s->width / 2;
       origin_y = s->height / 2;
     }
-    double radians = (x * M_PI / 180);
+
+    /* The original request for polar support was that '0' degrees is up
+     * and that rotation was clockwise, so 0 is up, 90 right, 180 down, 270
+     * left. This conversion can be done with (360 - degrees) + 90 */
+    //double radians = (x * M_PI / 180);
+    double radians = ((360 - x) + 90) * M_PI / 180;
     double distance = y;
     x = origin_x + (cos(radians) * distance);
 
