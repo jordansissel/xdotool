@@ -22,9 +22,10 @@ do-test:
 	make -C ../; \
 	sh check-for-tools.sh || exit 0; \
 	for i in test_*.rb ; do \
-		sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh -- ruby $$i; \
+	  sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh -- ruby $$i; \
 	done 
 
+#sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh -- ruby alltests.rb
 
 test-xephyr:
 	QUIET=1 XSERVER="Xephyr -ac -screen 1280x768x24" $(MAKE) do-test

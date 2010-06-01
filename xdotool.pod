@@ -121,6 +121,9 @@ The default is the current screen.
 Use polar coordinates. This makes 'x' an angle (in degrees, 0-360, etc) and 'y'
 the distance.
 
+Rotation starts at 'up' (0 degrees) and rotates clockwise: 90 = right, 180 =
+down, 270 = left.
+
 The origin defaults to the center of the current screen. If you specify a --window, 
 then the origin is the center of that window.
 
@@ -151,6 +154,9 @@ Move the mouse x,y pixels relative to the current position of the mouse cursor.
 
 Use polar coordinates. This makes 'x' an angle (in degrees, 0-360, etc) and 'y'
 the distance.
+
+Rotation starts at 'up' (0 degrees) and rotates clockwise: 90 = right, 180 =
+down, 270 = left.
 
 =item B<--sync>
 
@@ -237,11 +243,11 @@ The options available are:
 
 =item B<--class> 
 
-Match against the window class
+Match against the window class.
 
 =item B<--classname> 
 
-Match against the window classname
+Match against the window classname.
 
 =item B<--maxdepth> N 
 

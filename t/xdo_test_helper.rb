@@ -95,7 +95,7 @@ module XdoTestHelper
   end # def xdotool_fail
 
   def runcmd(command)
-    io = IO.popen(command)
+    io = IO.popen("#{command} 2> /dev/null")
     output = io.readlines.collect { |i| i.chomp }
     io.close
     return [$?.exitstatus, output]
