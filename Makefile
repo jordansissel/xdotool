@@ -150,7 +150,7 @@ create-package: pre-create-package VERSION xdo_version.h
 	@NAME=xdotool-$(VERSION); \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
-	rsync --exclude .svn -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* version.sh platform.sh VERSION 2> /dev/null` $${NAME}/; \
+	rsync --exclude .svn --exclude '.*' -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* version.sh platform.sh VERSION 2> /dev/null` $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -r $${NAME}
 	rm VERSION
