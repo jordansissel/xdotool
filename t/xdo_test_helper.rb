@@ -152,11 +152,24 @@ module XdoTestHelper
     raise last_exception
   end # def try
 
-  def assert_mouse_position(x, y)
+  def get_mouse_position
     status, lines = xdotool "getmouselocation --shell"
     mx = lines.grep(/^X=/).first[/[0-9]+/].to_i
     my = lines.grep(/^Y=/).first[/[0-9]+/].to_i
+    return mx, my
+  end # def get_mouse_position
+
+  def assert_mouse_position(x, y)
+    mx, my = get_mouse_position
     assert_equal(mx, x, "Mouse X position expected to be #{x}, was #{mx}")
     assert_equal(my, y, "Mouse Y position expected to be #{y}, was #{my}")
+  end # def assert_mouse_position
+
+  def assert_mouse_position_near(x, y, tolerance=5)
+    mx, my = get_mouse_position
+    assert_in_delta(mx, x, tolerance, 
+        "Mouse X position expected to be near #{x}, is #{mx} (+- #{tolerance} pixels)")
+    assert_in_delta(my, y, tolerance, 
+        "Mouse Y position expected to be near #{y}, is #{my} (+- #{tolerance} pixels)")
   end # def assert_mouse_position
 end # module XdoTestHelper

@@ -56,21 +56,21 @@ class XdotoolMouseMoveTests < Test::Unit::TestCase
     center_y = (h/2).to_i
 
     xdotool_ok "mousemove --sync --polar 0 100"
-    assert_mouse_position(center_x, center_y - 100);
+    assert_mouse_position_near(center_x, center_y - 100);
 
     xdotool_ok "mousemove --sync --polar 90 100"
-    assert_mouse_position(center_x + 100, center_y);
+    assert_mouse_position_near(center_x + 100, center_y);
 
     xdotool_ok "mousemove --sync --polar 180 100"
-    assert_mouse_position(center_x, center_y + 100);
+    assert_mouse_position_near(center_x, center_y + 100);
 
     xdotool_ok "mousemove --sync --polar 270 100"
-    assert_mouse_position(center_x - 100, center_y);
+    assert_mouse_position_near(center_x - 100, center_y);
   end
 
   def test_mousemove_relative
     start_x = 300
-    start_y = 200;
+    start_y = 200
 
     xdotool_ok "mousemove --sync #{start_x} #{start_y}"
 
@@ -81,7 +81,7 @@ class XdotoolMouseMoveTests < Test::Unit::TestCase
       y_list.each do |y|
         xdotool_ok "mousemove --sync #{start_x} #{start_y}"
         status, lines = xdotool_ok "mousemove_relative --sync -- #{x} #{y}"
-        assert_mouse_position(start_x + x, start_y + y)
+        assert_mouse_position_near(start_x + x, start_y + y)
       end # x_list.each
     end # y_list.each 
   end
@@ -92,18 +92,18 @@ class XdotoolMouseMoveTests < Test::Unit::TestCase
 
     xdotool_ok "mousemove --sync #{start_x} #{start_y}"
     xdotool_ok "mousemove_relative --sync --polar 0 100"
-    assert_mouse_position(start_x, start_y - 100);
+    assert_mouse_position_near(start_x, start_y - 100);
 
     xdotool_ok "mousemove --sync #{start_x} #{start_y}"
     xdotool_ok "mousemove_relative --sync --polar 90 100"
-    assert_mouse_position(start_x + 100, start_y);
+    assert_mouse_position_near(start_x + 100, start_y);
 
     xdotool_ok "mousemove --sync #{start_x} #{start_y}"
     xdotool_ok "mousemove_relative --sync --polar 180 100"
-    assert_mouse_position(start_x, start_y + 100);
+    assert_mouse_position_near(start_x, start_y + 100);
 
     xdotool_ok "mousemove --sync #{start_x} #{start_y}"
     xdotool_ok "mousemove_relative --sync --polar 270 100"
-    assert_mouse_position(start_x - 100, start_y);
+    assert_mouse_position_near(start_x - 100, start_y);
   end
 end # XdotoolMouseMoveTests
