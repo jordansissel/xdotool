@@ -13,7 +13,11 @@ int cmd_getwindowfocus(int argc, char **args) {
     { NULL, no_argument, NULL, 'f' },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = "Usage: %s -f\n";
+  static const char *usage = 
+    "Usage: %s [-f]\n"
+    "-f     - Report the window with focus even if we don't think it is a \n"
+    "         top-level window. The default is to find the top-level window\n"
+    "         that has focus.\n";
   int option_index;
 
   while ((c = getopt_long_only(argc, args, "fh", longopts, &option_index)) != -1) {

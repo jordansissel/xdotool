@@ -18,7 +18,7 @@ int cmd_windowmove(int argc, char **args) {
   };
   static const char *usage = 
     "Usage: %s [options] wid x y\n"
-    "--sync    - only exit once the window has been mapped (is visible)\n";
+    "--sync    - only exit once the window has moved\n";
 
   int option_index;
   while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {

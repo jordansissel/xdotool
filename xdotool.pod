@@ -109,6 +109,13 @@ Move the mouse to the specific X and Y coordinates on the screen
 Specify a window to move relative to. Coordinates 0,0
 are at the top left of the window you choose.
 
+=item B<--screen SCREEN>
+
+Move the mouse to the specified screen to move to. This is only useful if you
+have multiple screens and ARE NOT using Xinerama.
+
+The default is the current screen.
+
 =item B<--polar> 
 
 Use polar coordinates. This makes 'x' an angle (in degrees, 0-360, etc) and 'y'
@@ -127,7 +134,7 @@ After sending the mouse move request, wait until the mouse is actually
 moved. If no movement is necessary, we will not wait. This is useful for
 scripts that depend on actions being completed before moving on.
 
-Note that we wait until the mouse moves at all, not necessarily that it
+Note: We wait until the mouse moves at all, not necessarily that it
 actually reaches your intended destination. Some applications lock the 
 mouse cursor to certain regions of the screen, so waiting for any movement is
 better in the general case than waiting for a specific target.
@@ -147,6 +154,15 @@ the distance.
 
 =item B<--sync>
 
+After sending the mouse move request, wait until the mouse is actually
+moved. If no movement is necessary, we will not wait. This is useful for
+scripts that depend on actions being completed before moving on.
+
+Note that we wait until the mouse moves at all, not necessarily that it
+actually reaches your intended destination. Some applications lock the 
+mouse cursor to certain regions of the screen, so waiting for any movement is
+better in the general case than waiting for a specific target.
+
 =item B<--clearmodifiers> 
 
 See CLEARMODIFIERS
@@ -155,7 +171,11 @@ See CLEARMODIFIERS
 
 =item B<click> I<[options]> I<button>
 
-Send mousedown followed by mouseup for the given button
+Send a click, that is, a mousedown followed by mouseup for the given button
+with a short delay between the two (currently 12ms).
+
+Buttons generally map this way: Left mouse is 1, middle is 2, right is 3,
+wheel up is 4, wheel down is 5.
 
 =over
 
@@ -163,20 +183,20 @@ Send mousedown followed by mouseup for the given button
 
 Clear modifiers before clicking. See CLEARMODIFIERS below.
 
-=item B<--window> 
+=item B<--window> WINDOW 
 
-WINDOW - Specify a window to send a click to. See SENDEVENT below for caveats.
-Uses the current mouse position when generating the event.
+Specify a window to send a click to. See SENDEVENT below for caveats. Uses the
+current mouse position when generating the event.
 
 =back
 
 =item B<mousedown> I<[options]> I<button>
 
-Same as above, except only a mouse down is sent.
+Same as B<click>, except only a mouse down is sent.
 
 =item B<mouseup> I<[options]> I<button>
 
-Same as above, except only a mouse up is sent.
+Same as B<click>, except only a mouse up is sent.
 
 =item B<getmouselocation> I<[--shell]>
 
@@ -199,7 +219,6 @@ This makes getmouselocation output shell data you can eval. Example:
  714,324
 
 =back
-
 
 =back
 
@@ -237,7 +256,8 @@ window titlebar.
 
 =item B<--onlyvisible> 
 
-Show only visible windows in the results.
+Show only visible windows in the results. This means ones with map state
+IsViewable.
 
 =item B<--pid PID> 
 
@@ -254,9 +274,35 @@ using Xinerama.
 
 DEPRECATED. See --name.
 
+=item B<--all>
+
+Require that all conditions be met. For example:
+
+ xdotool search --all --pid 1424 --name "Hello World"
+
+This will match only windows that have "Hello World" as a name and are owned by
+pid 1424.
+
+=item B<--any>
+
+Match windows that match any condition (logically, 'or'). This is on by
+default. For example:
+
+ xdotool search --any --pid 1424 --name "Hello World"
+
+This will match any windows owned by pid 1424 or windows with name "Hello
+World"
+
 =back
 
 The default options are C<--name --class --classname>
+
+=item B<getwindowpid> I<window>
+
+Output the PID owning a given window. This requires effort from the application
+owning a window and may not work for all windows. This uses _NET_WM_PID
+property of the window. See L<EXTENDED WINDOW MANAGER HINTS> below for more
+information.
 
 =item B<getwindowfocus> [-f]
 
@@ -290,7 +336,7 @@ C<xdotool windowsize --usehints windowid 80 24>
 
 =item B<windowmove> I<[options]> I<windowid> I<x> I<y>
 
-Move the window to the given position
+Move the window to the given position.
 
 =over
 
@@ -305,7 +351,7 @@ scripts that depend on actions being completed before moving on.
 
 =item B<windowfocus> I<[options]> I<windowid>
 
-Focus the window
+Focus the window.
 
 =over
 
@@ -559,6 +605,12 @@ these commands: C<set_desktop_for_window>, C<get_desktop_for_window>.
 Allows you to query and set the active window by asking the window manager to
 bring it forward. Support for this enables these commands: C<windowactivate>, C<getactivewindow>.
 
+=item _NET_WM_PID
+
+This feature is application dependent, not window-manager dependent. Query the
+PID owning a given window. Support for this enables these commands:
+C<getwindowpid>.
+
 =back
 
 =head1 SEE ALSO
@@ -568,6 +620,8 @@ L<xprop(1)>, L<xwininfo(1)>,
 Project site: L<http://www.semicomplete.com/projects/xdotool>
 
 Google Code: L<http://semicomplete.googlecode.com/>
+
+EWMH specification: L<http://standards.freedesktop.org/wm-spec/wm-spec-1.3.html>
 
 =head1 CONTACT
 

@@ -38,9 +38,10 @@ int cmd_getwindowpid(int argc, char **args) {
   pid = xdo_window_get_pid(xdo, wid);
   if (pid == 0) {
     fprintf(stderr, "window %ld has no pid associated with it.\n", wid);
+    return EXIT_FAILURE;
+  } else {
+    printf("%d\n", pid);
+    return EXIT_SUCCESS;
   }
-
-  printf("%d\n", pid);
-  return pid != 0;
 }
 

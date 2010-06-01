@@ -11,7 +11,9 @@ int cmd_getmouselocation(int argc, char **args) {
     { "shell", no_argument, NULL, 's' },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = "Usage: %s\n";
+  static const char *usage = 
+    "Usage: %s [--shell]\n"
+    "--shell     - output shell variables for use with eval\n";
   int option_index;
   int output_shell = 0;
 

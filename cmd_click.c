@@ -16,9 +16,12 @@ int cmd_click(int argc, char **args) {
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-            "Usage: %s [--clearmodifiers] [--window WINDOW] <button>\n"
-            "--window <windowid>    - specify a window to send keys to\n"
-            "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n";
+            "Usage: %s [options] <button>\n"
+            "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
+            "--window <windowid>    - specify a window to send click to\n"
+            "\n"
+            "Button is a button number. Generally, left = 1, middle = 2, \n"
+            "right = 3, wheel up = 4, wheel down = 5\n";
   int option_index;
 
   while ((c = getopt_long_only(argc, args, "cw:h", longopts, &option_index)) != -1) {

@@ -88,6 +88,12 @@ module XdoTestHelper
     return [status, lines]
   end # def xdotool_ok
 
+  def xdotool_fail(args)
+    status, lines = xdotool(args)
+    assert_not_equal(0, status, "Exit code expected to not be 0 for #{args}")
+    return [status, lines]
+  end # def xdotool_fail
+
   def runcmd(command)
     io = IO.popen(command)
     output = io.readlines.collect { |i| i.chomp }

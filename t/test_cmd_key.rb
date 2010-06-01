@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+#
+
+require "test/unit"
+require "xdo_test_helper"
+
+class XdotoolCommandKeyTests < Test::Unit::TestCase
+  include XdoTestHelper
+
+  def test_flags
+    %w{key keyup keydown}.each do |command|
+      xdotool_fail "#{command}"
+      xdotool_ok "#{command} Return"
+
+      xdotool_ok "#{command} --clearmodifiers Return"
+      xdotool_fail "#{command} --clearmodifiers"
+
+      xdotool_ok "#{command} --delay 30 Return"
+      xdotool_fail "#{command} --delay Return"
+      xdotool_fail "#{command} --delay 100"
+      xdotool_fail "#{command} --delay"
+
+      xdotool_ok "#{command} --help"
+
+      xdotool_ok "#{command} --window #{@wid} Return"
+      xdotool_fail "#{command} --window"
+      xdotool_fail "#{command} --window Return"
+
+      # window -1 should be invalid, right?
+      xdotool_fail "#{command} --window -1 Return"
+
+      xdotool_ok "#{command} --delay 10 --clearmodifiers Return Return shift+Return"
+    end # %w{ ... }.each
+  end # def test_flags
+end # def 
+

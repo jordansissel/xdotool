@@ -178,5 +178,21 @@ class XdotoolBasicTests < Test::Unit::TestCase
       assert_equal(1, lines.length, "'#{cmd}' should have one line of output")
     end
   end
+
+  def test_xdotool_exits_failure_with_bad_flags
+    commands = %w{getactivewindow getwindowfocus getwindowpid search click
+                  getmouselocation key keydown keyup mousedown mousemove
+                  mousemove_relative mouseup type windowactivate windowfocus
+                  windowmap windowmove windowraise windowsize windowunmap
+                  set_window set_num_desktops get_num_desktops set_desktop
+                  get_desktop set_desktop_for_window get_desktop_for_window
+    }
+
+    commands.each do |command|
+      status, lines = xdotool "#{command} --some-invalid-flag"
+      assert_not_equal(0, status,
+                       "Expected failing exit status (!= 0), got #{status}")
+    end
+  end # def test_xdotool_exits_failure_with_bad_flags
 end
 

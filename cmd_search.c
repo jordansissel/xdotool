@@ -33,20 +33,22 @@ int cmd_search(int argc, char **args) {
   static const char *usage = 
       "Usage: xdotool %s "
       "[options] regexp_pattern\n"
-      " --class         check regexp_pattern agains the window class\n"
-      " --classname     check regexp_pattern agains the window classname\n"
-      " --maxdepth N    set search depth to N. Default is infinite.\n"
-      "                 -1 also means infinite.\n"
-      " --onlyvisible   matches only windows currently visible\n"
-      " --pid PID       only show windows belonging to specific process\n"
-      "                 Not supported by all X11 applications\n"
-      " --screen N      only search a specific screen. Default is all screens\n"
-      " --name          check regexp_pattern agains the window name\n"
-      " --title         DEPRECATED. Same as --name.\n"
-      " -h, --help      show this help output\n"
+      "--class         check regexp_pattern agains the window class\n"
+      "--classname     check regexp_pattern agains the window classname\n"
+      "--maxdepth N    set search depth to N. Default is infinite.\n"
+      "                -1 also means infinite.\n"
+      "--onlyvisible   matches only windows currently visible\n"
+      "--pid PID       only show windows belonging to specific process\n"
+      "                Not supported by all X11 applications\n"
+      "--screen N      only search a specific screen. Default is all screens\n"
+      "--name          check regexp_pattern agains the window name\n"
+      "--title         DEPRECATED. Same as --name.\n"
+      "--all           Require all conditions match a window. Default is --any\n"
+      "--any           Windows matching any condition will be reported\n"
+      "-h, --help      show this help output\n"
       "\n"
-      "If none of --name, --classname, or --class are specified,\n"
-      "the defaults are to match any of them.\n";
+      "If none of --name, --classname, or --class are specified, the \n"
+      "defaults are: --name --classname --class\n";
 
   memset(&search, 0, sizeof(xdo_search_t));
   search.max_depth = -1;
@@ -98,8 +100,8 @@ int cmd_search(int argc, char **args) {
         search_name = True;
         break;
       default:
-        printf("Invalid usage\n");
-        printf(usage, cmd);
+        fprintf(stderr, "Invalid usage\n");
+        fprintf(stderr, usage, cmd);
         return EXIT_FAILURE;
     }
   }
@@ -109,7 +111,7 @@ int cmd_search(int argc, char **args) {
 
   /* We require a pattern or a pid to search for */
   if (argc != 1 && search.pid == 0) {
-    printf(usage, cmd);
+    fprintf(stderr, usage, cmd);
     return EXIT_FAILURE;
   }
 

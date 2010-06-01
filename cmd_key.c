@@ -28,16 +28,16 @@ int cmd_key(int argc, char **args) {
   };
 
   static const char *usage = 
-             "Usage: %s [options] <keysequence> [keysequence ...]\n"
-             "--window WINDOW      - send keystrokes to a specific window\n "
-             "--clearmodifiers     - clear active keyboard modifiers during keystrokes\n"
-             "--delay DELAY        - Use DELAY milliseconds between keystrokes\n"
-             "Each keysequence can be any number of modifiers and keys, separated by plus (+)\n"
-             "For example: alt+r\n"
-             "Any letter or key symbol such as Shift_L, Return, Dollar, a, space are valid here.\n";
+     "Usage: %s [options] <keysequence> [keysequence ...]\n"
+     "--clearmodifiers     - clear active keyboard modifiers during keystrokes\n"
+     "--delay DELAY        - Use DELAY milliseconds between keystrokes\n"
+     "--window WINDOW      - send keystrokes to a specific window\n"
+     "Each keysequence can be any number of modifiers and keys, separated by plus (+)\n"
+     "For example: alt+r\n"
+     "Any letter or key symbol such as Shift_L, Return, Dollar, a, space are valid.\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "hcw:", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(argc, args, "d:hcw:", longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':
         window = strtoul(optarg, NULL, 0);
@@ -68,14 +68,14 @@ int cmd_key(int argc, char **args) {
     return 1;
   }
 
-  int (*func)(const xdo_t *, Window, const char *, useconds_t) = NULL;
+  int (*keyfunc)(const xdo_t *, Window, const char *, useconds_t) = NULL;
 
   if (!strcmp(cmd, "key")) {
-    func = xdo_keysequence;
+    keyfunc = xdo_keysequence;
   } else if (!strcmp(cmd, "keyup")) {
-    func = xdo_keysequence_up;
+    keyfunc = xdo_keysequence_up;
   } else if (!strcmp(cmd, "keydown")) {
-    func = xdo_keysequence_down;
+    keyfunc = xdo_keysequence_down;
   } else {
     fprintf(stderr, "Unknown command '%s'\n", cmd);
     return 1;
@@ -87,7 +87,7 @@ int cmd_key(int argc, char **args) {
   }
 
   for (i = 0; i < argc; i++) {
-    int tmp = func(xdo, window, args[i], delay);
+    int tmp = keyfunc(xdo, window, args[i], delay);
     if (tmp != 0)
       fprintf(stderr, "xdo_keysequence reported an error for string '%s'\n", args[i]);
     ret += tmp;

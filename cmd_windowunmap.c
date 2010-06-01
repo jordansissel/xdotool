@@ -15,9 +15,11 @@ int cmd_windowunmap(int argc, char **args) {
     { "sync", no_argument, NULL, opt_sync },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = "Usage: %s wid\n";
-  int option_index;
+  static const char *usage = 
+    "Usage: %s [--sync] wid\n"
+    "--sync    - only exit once the window has been unmapped (is hidden)\n";
 
+  int option_index;
   while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':

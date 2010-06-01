@@ -131,7 +131,6 @@ int cmd_mousemove(int argc, char **args) {
   if (mx == x && my == y && mscreen == screen) {
     return 0;
   }
-  //printf("Move from %d,%d => %d,%d\n", mx, my, x, y);
 
   if (clear_modifiers) {
     active_mods = xdo_get_active_modifiers(xdo);

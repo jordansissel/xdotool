@@ -25,7 +25,7 @@ int cmd_set_window(int argc, char** args) {
   static const char *usage = "Usage: %s [--name name] [--icon-name name] "
             "[--role role] [--classname classname] [--class class] wid\n";
 
-  while ((c = getopt_long_only(argc, args, "hn:i:r:C:", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(argc, args, "hn:i:r:C:N:", longopts, &option_index)) != -1) {
     switch(c) {
       case 'n': 
         name = strdup(optarg); 

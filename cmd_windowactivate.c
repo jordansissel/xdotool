@@ -18,8 +18,8 @@ int cmd_windowactivate(int argc, char **args) {
   static const char *usage = 
     "Usage: %s [options] wid\n"
     "--sync    - only exit once the window is active (is visible + active)\n";
-  int option_index;
 
+  int option_index;
   while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':

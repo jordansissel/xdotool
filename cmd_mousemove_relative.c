@@ -31,9 +31,11 @@ int cmd_mousemove_relative(int argc, char **args) {
       "Using polar coordinate mode makes 'x' the angle (in degrees) and\n"
       "'y' the distance.\n"
       "\n"
-      "If you want to use negative numbers for a coordinate,\n"
-      "you'll need to invoke it this way (with the '--'): %s -- -20 -15\n"
-      "otherwise, normal usage looks like this: %s 100 140\n";
+      "If you want to use negative numbers for a coordinate, you'll need to\n"
+      "invoke it this way (with the '--'):\n"
+      "   %s -- -20 -15\n"
+      "otherwise, normal usage looks like this:\n"
+      "   %s 100 140\n";
   int option_index;
 
   while ((c = getopt_long_only(argc, args, "cph", longopts, &option_index)) != -1) {

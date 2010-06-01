@@ -62,8 +62,9 @@ int cmd_mousedown(int argc, char **args) {
     xdo_free_active_modifiers(active_mods);
   }
 
-  if (ret)
+  if (ret) {
     fprintf(stderr, "xdo_mousedown reported an error\n");
+  }
+
   return ret;
 }
-

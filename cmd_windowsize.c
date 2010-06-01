@@ -18,7 +18,7 @@ int cmd_windowsize(int argc, char **args) {
   int option_index;
   static const char *usage =
             "Usage: %s [--usehints] windowid width height\n" \
-            "--usehints  - Use window sizing hints (like characters in terminals)\n";
+            "--usehints  - Use window sizing hints (like font size in terminals)\n";
 
   while ((c = getopt_long_only(argc, args, "uh", longopts, &option_index)) != -1) {
     switch (c) {
