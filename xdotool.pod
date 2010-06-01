@@ -145,6 +145,12 @@ Move the mouse x,y pixels relative to the current position of the mouse cursor.
 Use polar coordinates. This makes 'x' an angle (in degrees, 0-360, etc) and 'y'
 the distance.
 
+=item B<--sync>
+
+=item B<--clearmodifiers> 
+
+See CLEARMODIFIERS
+
 =back
 
 =item B<click> I<[options]> I<button>

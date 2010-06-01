@@ -32,14 +32,14 @@ int cmd_mousemove(int argc, char **args) {
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-             "Usage: %s [options] <x> <y>\n"
-            "-c, --clearmodifiers      - reset active modifiers (alt, etc) while typing\n"
-            "-d, --delay <MS>          - sleeptime in milliseconds between steps.\n"
-            "-p, --polar               - Use polar coordinates. X as an angle, Y as distance\n"
-            "--screen SCREEN           - which screen to move on, default is current screen\n"
-            //"--step <STEP>             - pixels to move each time along path to x,y.\n"
-            //"--sync                    - only exit once the window has been mapped (is visible)\n"
-            "-w, --window <windowid>   - specify a window to move relative to\n";
+      "Usage: %s [options] <x> <y>\n"
+      "-c, --clearmodifiers      - reset active modifiers (alt, etc) while typing\n"
+      //"-d, --delay <MS>          - sleeptime in milliseconds between steps.\n"
+      //"--step <STEP>             - pixels to move each time along path to x,y.\n"
+      "-p, --polar               - Use polar coordinates. X as an angle, Y as distance\n"
+      "--screen SCREEN           - which screen to move on, default is current screen\n"
+      "--sync                    - only exit once the mouse has moved\n"
+      "-w, --window <windowid>   - specify a window to move relative to.\n";
   int option_index;
 
   while ((c = getopt_long_only(argc, args, "chw:pd:", longopts, &option_index)) != -1) {
@@ -119,7 +119,8 @@ int cmd_mousemove(int argc, char **args) {
     double distance = y;
     x = origin_x + (cos(radians) * distance);
 
-    /* Negative sin, since screen Y coordinates are descending, where cartesian is ascending */
+    /* Negative sin, since screen Y coordinates are descending, where cartesian
+     * is ascending */
     y = origin_y + (-sin(radians) * distance);
   }
 
