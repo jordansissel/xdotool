@@ -1,4 +1,4 @@
-2.201006??.*:
+2.20100601.*:
   - Add --sync and --clearmodifiers support to mousemove_relative
   - Fix bug in mousemove_relative --polar (Reported by Paul S via mailing list)
   - Change polar coordinates to be 'north'-oriented (0 is up, 90 is right...)
