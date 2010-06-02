@@ -43,7 +43,9 @@ test-xephyr-openbox:
 	WM=openbox-session $(MAKE) test-xephyr
 
 test-xvfb-gnome:
+	@echo "=> Note about gnome: Gnome tests will fail if you are already running gnome."
 	WM=gnome-session $(MAKE) test-xvfb
 
 test-xephyr-gnome:
+	@echo "=> Note about gnome: Gnome tests will fail if you are already running gnome."
 	WM=gnome-session $(MAKE) test-xephyr
