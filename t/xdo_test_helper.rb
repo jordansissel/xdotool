@@ -39,7 +39,6 @@ module XdoTestHelper
       healthy = (status == 0)
       sleep 0.2
     end
-
   end # def setup_launch_xterm
   
   def setup_ensure_x_is_healthy
@@ -65,7 +64,10 @@ module XdoTestHelper
     end
 
     if @windowpid
-      Process.wait(@windowpid) rescue nil
+      status = Process.wait(@windowpid) rescue nil
+      if ($?.exitstatus != 0)
+        fail("xterm (via setup_launch_xterm) exit status should be 0, was #{$?.exitstatus}")
+      end
     end
 
     if @launchpid
