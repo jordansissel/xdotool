@@ -122,8 +122,13 @@ xdotool: xdotool.o $(CMDOBJS) libxdo.$(LIBSUFFIX)
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@
 
+.PHONY: showman
 showman: xdotool.1
 	nroff -man $< | $$PAGER
+
+.PHONY: docs
+docs: Doxyfile xdo.h
+	doxygen
 
 xdotool.html: xdotool.pod
 	pod2html $< > $@
@@ -164,4 +169,5 @@ test-package-build: create-package
 	make -C $${NAME} test && \
 	echo "Package ready: $${NAME}"; \
 	rm -rf $${NAME}
+
 

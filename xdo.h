@@ -1,7 +1,5 @@
-/*
- * xdo library header
- * - include this if you have code that uses xdo
- *
+/**
+ * @file xdo.h
  */
 #ifndef _XDO_H_
 #define _XDO_H_
@@ -14,19 +12,44 @@
 #include <X11/Xlib.h>
 #include <unistd.h>
 
-#define SEARCH_IGNORE_TRANSIENTS (1L << 4)
-#define SEARCH_IGNORE_WINDOW_INPUTONLY (1L << 5)
+/**
+ * @mainpage
+ * Testin
+ */
 
+/**
+ * When issuing a window size change, giving this flag will make the
+ * size change be relative to the size hints of the window.
+ * For example, if your terminal uses a 7x11 pixel font, the 
+ * size hint will allow you to set the row and columns (by font size)
+ * of the window. 
+ */
 #define SIZE_USEHINTS (1L << 0)
+
+/**
+ * CURRENTWINDOW is a special identify for xdo input faking (mouse and
+ * keyboard) functions like xdo_keysequence that indicate we should target the
+ * current window, not a specific window.
+ *
+ * Generally, this means we will use XTEST instead of XSendEvent when
+ * sending events.
+ */
 #define CURRENTWINDOW (0)
 
-/* Map keysym name to actual ascii */
+/**
+ * @internal
+ * Map keysym name to actual ascii 
+ */
 typedef struct keysym_charmap {
   const char *keysym;
   char key;
 } keysym_charmap_t;
 
-/* map character to keycode */
+/**
+ * @internal
+ * Map character to whatever information we need to be able to send
+ * this key (keycode, modifiers, key index, etc)
+ */
 typedef struct charcodemap {
   char key;
   KeyCode code;
@@ -36,18 +59,39 @@ typedef struct charcodemap {
   int needs_binding;
 } charcodemap_t;
 
+/**
+ * The main xdo context.
+ */
 typedef struct xdo {
+
+  /** The Display for Xlib */
   Display *xdpy;
+
+  /** The display name */
   char *display_name;
+
+  /** @internal Array of known keys/characters */
   charcodemap_t *charcodes;
+
+  /** @internal Lenth of charcodes array */
   int charcodes_len;
+
+  /** @internal result from XGetModifierMapping */
   XModifierKeymap *modmap;
 
+  /** @internal current keyboard mapping (via XGetKeyboardMapping) */
   KeySym *keymap;
+
+  /** @internal highest keycode value */
   int keycode_high; /* highest and lowest keycodes */
+
+  /** @internal lowest keycode value */
   int keycode_low;  /* used by this X server */
+  
+  /** @internal number of keysyms per keycode */
   int keysyms_per_keycode;
 
+  /** Should we close the display when calling xdo_free? */
   int close_display_when_freed;
 } xdo_t;
 
@@ -86,7 +130,24 @@ typedef struct xdo_search {
 #define XDO_ERROR 1
 #define XDO_SUCCESS 0
 
+/**
+ * Create a new xdo_t instance.
+ *
+ * @param display the string display name, such as ":0". If null, uses the
+ * environment variable DISPLAY.
+ *
+ * @return Pointer to a new xdo_t or NULL on failure
+ */
 xdo_t* xdo_new(char *display);
+
+/**
+ * Create a new xdo_t instance with an existing X11 Display instance.
+ *
+ * @param xdpy the Display pointer given by a previous XOpenDisplay()
+ * @param display the string display name
+ * @param close_display_when_freed If true, we will close the display when
+ * xdo_free is called. Otherwise, we leave it open.
+ */
 xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
                                    int close_display_when_freed);
 
