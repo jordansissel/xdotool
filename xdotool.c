@@ -45,6 +45,36 @@ void consume_args(context_t *context, int argc) {
   context->argc -= argc;
 }
 
+void window_list(context_t *context, int window_arg,
+                 Window **windowlist_ret, int *nwindows_ret,
+                 int add_to_list) {
+  if (!strcmp(context->argv[window_arg], "-")) {
+    if (context->windows == NULL) {
+      fprintf(stderr, "There are no windows on the stack, Can't continue.\n");
+      *nwindows_ret = 0;
+      *windowlist_ret = NULL;
+      return;
+    }
+
+    *windowlist_ret = context->windows;
+    *nwindows_ret = context->nwindows;
+  } else {
+    /* We can't return a pointer to a piece of the stack in this function,
+     * so we'll store the window in the context_t and return a pointer
+     * to that.
+     */
+    Window window = (Window)strtol(context->argv[window_arg], NULL, 0);
+    context->window_placeholder = window;
+    *nwindows_ret = 1;
+    *windowlist_ret = &(context->window_placeholder);
+  }
+
+  if (add_to_list) {
+    /* save the window to the windowlist */
+  }
+}
+
+
 struct dispatch {
   const char *name;
   int (*func)(context_t *context);
@@ -174,7 +204,7 @@ int args_main(int argc, char **argv) {
     exit(1);
   }
 
-  while ((opt = getopt_long_only(argc, argv, "+h", long_options, &option_index)) != -1) {
+  while ((opt = getopt_long_only(argc, argv, "+hv", long_options, &option_index)) != -1) {
     switch (opt) {
       case 'h':
         cmd_help(NULL);
@@ -210,6 +240,7 @@ int args_main(int argc, char **argv) {
     for (i = 0; dispatch[i].name != NULL && !cmd_found; i++) {
       if (!strcasecmp(dispatch[i].name, cmd)) {
         cmd_found = 1;
+        optind = 0;
         ret = dispatch[i].func(&context);
       }
     }
@@ -222,6 +253,11 @@ int args_main(int argc, char **argv) {
   } /* while ... */
 
   xdo_free(context.xdo);
+
+  if (context.windows != NULL) {
+    free(context.windows);
+  }
+
   return ret;
 } /* int args_main(int, char **) */
 

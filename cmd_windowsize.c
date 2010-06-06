@@ -43,17 +43,31 @@ int cmd_windowsize(context_t *context) {
 
   if (context->argc < 3) {
     fprintf(stderr, usage, cmd);
-    return 1;
+    fprintf(stderr, "Invalid argument count, got %d, expected %d\n", 
+            3, context->argc);
+    return EXIT_FAILURE;
   }
 
   wid = (Window)strtol(context->argv[0], NULL, 0);
   width = (int)strtol(context->argv[1], NULL, 0);
   height = (int)strtol(context->argv[2], NULL, 0);
+
+  Window *windows;
+  int nwindows;
+  window_list(context, 0, &windows, &nwindows, False);
   consume_args(context, 3);
 
-  ret = xdo_window_setsize(context->xdo, wid, width, height, size_flags);
-  if (ret)
-    fprintf(stderr, "xdo_window_setsize reported an error\n");
+  int i = 0;
+  for (i = 0; i < nwindows; i++) {
+    wid = windows[i];
+    //printf("window: %ld\n", wid);
+    ret = xdo_window_setsize(context->xdo, wid, width, height, size_flags);
+    if (ret) {
+      fprintf(stderr, "xdo_window_setsize on window:%ld reported an error\n", wid);
+      return ret;
+    }
+  }
+
   return ret;
 }
 

@@ -150,7 +150,12 @@ int cmd_search(context_t *context) {
   }
 
   /* Free list as it's malloc'd by xdo_window_search */
-  free(list);
+  //free(list);
+  if (context->windows != NULL) {
+    free(context->windows);
+  }
+  context->windows = list;
+  context->nwindows = nwindows;
 
   consume_args(context, 1);
 
