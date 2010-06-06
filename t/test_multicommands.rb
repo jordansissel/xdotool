@@ -49,12 +49,14 @@ class XdotoolSimpleCommandTests < Test::Unit::TestCase
 
   def test_output_expectations
     @cmds.each do |cmd|
+      xdotool "windowmap --sync #{@wid}"
       status, lines = xdotool cmd
       assert_status_ok(status, cmd)
       assert_equal(0, lines.length, "'#{cmd}' should have no output")
     end
 
     @cmds_withoutput.each do |cmd|
+      xdotool "windowmap --sync #{@wid}"
       status, lines = xdotool cmd
       assert_status_ok(status, cmd)
       assert_equal(1, lines.length, "'#{cmd}' should have one line of output")
