@@ -1,9 +1,9 @@
 #include "xdo_cmd.h"
 
-int cmd_getmouselocation(int argc, char **args) {
+int cmd_getmouselocation(context_t *context) {
   int x, y, screen_num;
   int ret;
-  char *cmd = *args;
+  char *cmd = context->argv[0];
 
   int c;
   static struct option longopts[] = {
@@ -17,10 +17,12 @@ int cmd_getmouselocation(int argc, char **args) {
   int option_index;
   int output_shell = 0;
 
-  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "h",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
         break;
       case 's':
@@ -32,15 +34,14 @@ int cmd_getmouselocation(int argc, char **args) {
     }
   }
 
-  argc -= optind;
-  args += optind;
+  consume_args(context, optind);
 
-  if (argc != 0) {
-    fprintf(stderr, usage, cmd);
-    return 1;
-  }
+  //if (context->argc != 0) {
+    //fprintf(stderr, usage, cmd);
+    //return 1;
+  //}
 
-  ret = xdo_mouselocation(xdo, &x, &y, &screen_num);
+  ret = xdo_mouselocation(context->xdo, &x, &y, &screen_num);
 
   if (output_shell) {
     printf("X=%d\n", x);

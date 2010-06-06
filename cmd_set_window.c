@@ -7,8 +7,8 @@
 
 #include "xdo_cmd.h"
 
-int cmd_set_window(int argc, char** args) {
-  char *cmd = *args;
+int cmd_set_window(context_t *context) {
+  char *cmd = *context->argv;
   int c;
   char *role = NULL, *icon = NULL, *name = NULL, *class = NULL, *classname = NULL;
 
@@ -25,7 +25,8 @@ int cmd_set_window(int argc, char** args) {
   static const char *usage = "Usage: %s [--name name] [--icon-name name] "
             "[--role role] [--classname classname] [--class class] wid\n";
 
-  while ((c = getopt_long_only(argc, args, "hn:i:r:C:N:", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "hn:i:r:C:N:",
+                               longopts, &option_index)) != -1) {
     switch(c) {
       case 'n': 
         name = strdup(optarg); 
@@ -44,6 +45,7 @@ int cmd_set_window(int argc, char** args) {
         break;
       case 'h':
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
       default:
         fprintf(stderr, usage, cmd);
@@ -51,25 +53,25 @@ int cmd_set_window(int argc, char** args) {
     }    
   }
 
-  /* adjust argc, argv */
-  args += optind;
-  argc -= optind;
+  /* adjust context->argc, argv */
+  consume_args(context, optind);
 
-  if (argc != 1) {
+  if (context->argc != 1) {
     fprintf(stderr, usage, cmd);
     return 1;
   }
 
-  Window wid  = (Window)strtol(args[0], NULL, 0);
+  Window wid  = (Window)strtol(context->argv[0], NULL, 0);
+  consume_args(context, 1);
 
   if (name)
-    xdo_window_setprop(xdo, wid, "WM_NAME", name);
+    xdo_window_setprop(context->xdo, wid, "WM_NAME", name);
   if (icon)
-    xdo_window_setprop(xdo, wid, "WM_ICON_NAME", icon);
+    xdo_window_setprop(context->xdo, wid, "WM_ICON_NAME", icon);
   if (role)
-    xdo_window_setprop(xdo, wid, "WM_WINDOW_ROLE", role);
+    xdo_window_setprop(context->xdo, wid, "WM_WINDOW_ROLE", role);
   if (classname || class)
-    xdo_window_setclass(xdo, wid, classname, class);
+    xdo_window_setclass(context->xdo, wid, classname, class);
 
   return 0;
 }

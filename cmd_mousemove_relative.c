@@ -1,10 +1,10 @@
 #include "xdo_cmd.h"
 #include <math.h>
 
-int cmd_mousemove_relative(int argc, char **args) {
+int cmd_mousemove_relative(context_t *context) {
   int x, y;
   int ret = 0;
-  char *cmd = *args;
+  char *cmd = *context->argv;
   int polar_coordinates = 0;
   int clear_modifiers = 0;
   int opsync = 0;
@@ -38,11 +38,13 @@ int cmd_mousemove_relative(int argc, char **args) {
       "   %s 100 140\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "cph", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "cph",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
       case opt_help:
         printf(usage, cmd, cmd, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
         break;
       case 'p':
@@ -62,17 +64,17 @@ int cmd_mousemove_relative(int argc, char **args) {
     }
   }
 
-  argc -= optind;
-  args += optind;
+  consume_args(context, optind);
 
-  if (argc != 2) {
+  if (context->argc < 2) {
     fprintf(stderr, usage, cmd, cmd, cmd);
-    fprintf(stderr, "You specified the wrong number of args.\n");
-    return 1;
+    fprintf(stderr, "You specified the wrong number of args (expected 2).\n");
+    return EXIT_FAILURE;
   }
 
-  x = atoi(args[0]);
-  y = atoi(args[1]);
+  x = atoi(context->argv[0]);
+  y = atoi(context->argv[1]);
+  consume_args(context, 2);
 
   /* Quit early if we don't have to move. */
   if (x == 0 && y == 0) {
@@ -93,27 +95,27 @@ int cmd_mousemove_relative(int argc, char **args) {
   }
  
   if (clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(xdo);
-    xdo_clear_active_modifiers(xdo, CURRENTWINDOW, active_mods);
+    active_mods = xdo_get_active_modifiers(context->xdo);
+    xdo_clear_active_modifiers(context->xdo, CURRENTWINDOW, active_mods);
   }
 
   if (opsync) {
-    xdo_mouselocation(xdo, &origin_x, &origin_y, NULL);
+    xdo_mouselocation(context->xdo, &origin_x, &origin_y, NULL);
   }
 
-  ret = xdo_mousemove_relative(xdo, x, y);
+  ret = xdo_mousemove_relative(context->xdo, x, y);
 
   if (ret) {
     fprintf(stderr, "xdo_mousemove_relative reported an error\n");
   } else {
     if (opsync) {
       /* Wait until the mouse moves away from its current position */
-      xdo_mouse_wait_for_move_from(xdo, origin_x, origin_y);
+      xdo_mouse_wait_for_move_from(context->xdo, origin_x, origin_y);
     }
   }
 
   if (clear_modifiers) {
-    xdo_set_active_modifiers(xdo, CURRENTWINDOW, active_mods);
+    xdo_set_active_modifiers(context->xdo, CURRENTWINDOW, active_mods);
     xdo_free_active_modifiers(active_mods);
   }
 

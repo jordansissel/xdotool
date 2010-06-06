@@ -194,5 +194,18 @@ class XdotoolBasicTests < Test::Unit::TestCase
                        "Expected failing exit status (!= 0), got #{status}")
     end
   end # def test_xdotool_exits_failure_with_bad_flags
+
+  def test_xdotool_exits_success_with_help_flag
+    commands = %w{getactivewindow getwindowfocus getwindowpid search click
+                  getmouselocation key keydown keyup mousedown mousemove
+                  mousemove_relative mouseup type windowactivate windowfocus
+                  windowmap windowmove windowraise windowsize windowunmap
+                  set_window set_num_desktops get_num_desktops set_desktop
+                  get_desktop set_desktop_for_window get_desktop_for_window
+    }
+    commands.each do |command|
+      xdotool_ok "#{command} --help"
+    end
+  end
 end
 

@@ -13,6 +13,9 @@
 #include "xdo.h"
 #include "xdotool.h"
 
-extern xdo_t *xdo;
 extern char *PROGRAM;
+
+/* implementation is in xdotool.c */
+extern void consume_args(context_t *context, int argc);
+
 #endif /* _XDO_CMD_H_ */

@@ -5,35 +5,43 @@
  * size of Window (could be 4 or 8 bytes depending on platform */
 #define window_print(window) (printf("%ld\n", window))
 
-int cmd_click(int argc, char **args);
-int cmd_getwindowfocus(int argc, char **args);
-int cmd_getwindowpid(int argc, char **args);
-int cmd_getactivewindow(int argc, char **args);
-int cmd_help(int argc, char **args);
-int cmd_key(int argc, char **args);
-int cmd_mousedown(int argc, char **args);
-int cmd_mousemove(int argc, char **args);
-int cmd_mousemove_relative(int argc, char **args);
-int cmd_mouseup(int argc, char **args);
-int cmd_getmouselocation(int argc, char **args);
-int cmd_search(int argc, char **args);
-int cmd_type(int argc, char **args);
-int cmd_windowactivate(int argc, char **args);
-int cmd_windowfocus(int argc, char **args);
-int cmd_windowmap(int argc, char **args);
-int cmd_windowmove(int argc, char **args);
-int cmd_windowraise(int argc, char **args);
-int cmd_windowsize(int argc, char **args);
-int cmd_windowunmap(int argc, char **args);
-int cmd_set_window(int argc, char** args);
-int cmd_version(int argc, char** args);
+typedef struct context {
+  xdo_t *xdo;
+  int argc;
+  char **argv;
+  Window *windows;
+  int nwindows;
+} context_t;
+
+int cmd_click(context_t *context);
+int cmd_getwindowfocus(context_t *context);
+int cmd_getwindowpid(context_t *context);
+int cmd_getactivewindow(context_t *context);
+int cmd_help(context_t *context);
+int cmd_key(context_t *context);
+int cmd_mousedown(context_t *context);
+int cmd_mousemove(context_t *context);
+int cmd_mousemove_relative(context_t *context);
+int cmd_mouseup(context_t *context);
+int cmd_getmouselocation(context_t *context);
+int cmd_search(context_t *context);
+int cmd_type(context_t *context);
+int cmd_windowactivate(context_t *context);
+int cmd_windowfocus(context_t *context);
+int cmd_windowmap(context_t *context);
+int cmd_windowmove(context_t *context);
+int cmd_windowraise(context_t *context);
+int cmd_windowsize(context_t *context);
+int cmd_windowunmap(context_t *context);
+int cmd_set_window(context_t *context);
+int cmd_version(context_t *context);
   
 /* pager-like commands */
-int cmd_set_num_desktops(int argc, char **args);
-int cmd_get_num_desktops(int argc, char **args);
-int cmd_set_desktop(int argc, char **args);
-int cmd_get_desktop(int argc, char **args);
-int cmd_set_desktop_for_window(int argc, char **args);
-int cmd_get_desktop_for_window(int argc, char **args);
+int cmd_set_num_desktops(context_t *context);
+int cmd_get_num_desktops(context_t *context);
+int cmd_set_desktop(context_t *context);
+int cmd_get_desktop(context_t *context);
+int cmd_set_desktop_for_window(context_t *context);
+int cmd_get_desktop_for_window(context_t *context);
 
 #endif /* _XDOTOOL_H_ */

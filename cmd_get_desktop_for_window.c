@@ -1,8 +1,8 @@
 #include "xdo_cmd.h"
 
-int cmd_get_desktop_for_window(int argc, char **args) {
+int cmd_get_desktop_for_window(context_t *context) {
   int ret = 0;
-  char *cmd = *args;
+  char *cmd = context->argv[0];
   long desktop = 0;
   Window window = 0;
 
@@ -14,10 +14,12 @@ int cmd_get_desktop_for_window(int argc, char **args) {
   static const char *usage = "Usage: %s <window>\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "h",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
         break;
       default:
@@ -26,17 +28,17 @@ int cmd_get_desktop_for_window(int argc, char **args) {
     }
   }
 
-  argc -= optind;
-  args += optind;
+  consume_args(context, optind);
 
-  if (argc != 1) {
+  if (context->argc < 1) {
     fprintf(stderr, usage, cmd);
     return 1;
   }
 
-  window = (Window)strtol(args[0], NULL, 0);
+  window = (Window)strtol(context->argv[0], NULL, 0);
+  consume_args(context, 1);
 
-  ret = xdo_get_desktop_for_window(xdo, window, &desktop);
+  ret = xdo_get_desktop_for_window(context->xdo, window, &desktop);
   printf("%ld\n", desktop);
   return ret;
 }

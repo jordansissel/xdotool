@@ -1,8 +1,8 @@
 #include "xdo_cmd.h"
 
-int cmd_click(int argc, char **args) {
+int cmd_click(context_t *context) {
   int button;
-  char *cmd = *args;
+  char *cmd = context->argv[0];
   int ret;
   int clear_modifiers = 0;
   Window window = 0;
@@ -24,10 +24,12 @@ int cmd_click(int argc, char **args) {
             "right = 3, wheel up = 4, wheel down = 5\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "cw:h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "cw:h",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
         break;
       case 'c':
@@ -42,28 +44,28 @@ int cmd_click(int argc, char **args) {
     }
   }
 
-  argc -= optind;
-  args += optind;
+  consume_args(context, optind);
 
-  if (argc != 1) {
+  if (context->argc < 1) {
     fprintf(stderr, usage, cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
-    return 1;
+    return EXIT_FAILURE;
   }
 
-  button = atoi(args[0]);
+  button = atoi(context->argv[0]);
 
   if (clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(xdo);
-    xdo_clear_active_modifiers(xdo, window, active_mods);
+    active_mods = xdo_get_active_modifiers(context->xdo);
+    xdo_clear_active_modifiers(context->xdo, window, active_mods);
   }
 
-  ret = xdo_click(xdo, window, button);
+  ret = xdo_click(context->xdo, window, button);
 
   if (clear_modifiers) {
-    xdo_set_active_modifiers(xdo, window, active_mods);
+    xdo_set_active_modifiers(context->xdo, window, active_mods);
     xdo_free_active_modifiers(active_mods);
   }
 
+  consume_args(context, 1);
   return ret;
 }

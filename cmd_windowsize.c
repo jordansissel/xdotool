@@ -1,6 +1,6 @@
 #include "xdo_cmd.h"
 
-int cmd_windowsize(int argc, char **args) {
+int cmd_windowsize(context_t *context) {
   int ret = 0;
   int width, height;
   Window wid;
@@ -14,16 +14,18 @@ int cmd_windowsize(int argc, char **args) {
   };
 
   int size_flags = 0;
-  char *cmd = *args;
+  char *cmd = *context->argv;
   int option_index;
   static const char *usage =
             "Usage: %s [--usehints] windowid width height\n" \
             "--usehints  - Use window sizing hints (like font size in terminals)\n";
 
-  while ((c = getopt_long_only(argc, args, "uh", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "uh",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
       case 'u':
         use_hints = 1;
@@ -37,19 +39,19 @@ int cmd_windowsize(int argc, char **args) {
   if (use_hints)
     size_flags |= SIZE_USEHINTS;
 
-  args += optind;
-  argc -= optind;
+  consume_args(context, optind);
 
-  if (argc != 3) {
+  if (context->argc < 3) {
     fprintf(stderr, usage, cmd);
     return 1;
   }
 
-  wid = (Window)strtol(args[0], NULL, 0);
-  width = (int)strtol(args[1], NULL, 0);
-  height = (int)strtol(args[2], NULL, 0);
+  wid = (Window)strtol(context->argv[0], NULL, 0);
+  width = (int)strtol(context->argv[1], NULL, 0);
+  height = (int)strtol(context->argv[2], NULL, 0);
+  consume_args(context, 3);
 
-  ret = xdo_window_setsize(xdo, wid, width, height, size_flags);
+  ret = xdo_window_setsize(context->xdo, wid, width, height, size_flags);
   if (ret)
     fprintf(stderr, "xdo_window_setsize reported an error\n");
   return ret;

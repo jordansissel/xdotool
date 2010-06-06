@@ -1,9 +1,9 @@
 #include "xdo_cmd.h"
 
-int cmd_windowraise(int argc, char **args) {
+int cmd_windowraise(context_t *context) {
   int ret = 0;
   Window wid;
-  char *cmd = *args;
+  char *cmd = *context->argv;
 
   int c;
   static struct option longopts[] = {
@@ -13,10 +13,12 @@ int cmd_windowraise(int argc, char **args) {
   static const char *usage = "Usage: %s wid\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "h",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
         break;
       default:
@@ -25,16 +27,16 @@ int cmd_windowraise(int argc, char **args) {
     }
   }
 
-  argc -= optind;
-  args += optind;
+  consume_args(context, optind);
 
-  if (argc != 1) {
+  if (context->argc < 1) {
     fprintf(stderr, usage, cmd);
     return 1;
    }
 
-  wid = (Window)strtol(args[0], NULL, 0);
-  ret = xdo_window_raise(xdo, wid);
+  wid = (Window)strtol(context->argv[0], NULL, 0);
+  consume_args(context, 1);
+  ret = xdo_window_raise(context->xdo, wid);
   if (ret)
     fprintf(stderr, "xdo_window_raise reported an error\n");
   

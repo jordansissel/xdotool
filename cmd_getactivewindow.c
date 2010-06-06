@@ -1,9 +1,9 @@
 #include "xdo_cmd.h"
 
-int cmd_getactivewindow(int argc, char **args) {
+int cmd_getactivewindow(context_t *context) {
   Window wid = 0;
   int ret;
-  char *cmd = *args;
+  char *cmd = context->argv[0];
 
   int c;
   static struct option longopts[] = {
@@ -13,10 +13,12 @@ int cmd_getactivewindow(int argc, char **args) {
   static const char *usage = "Usage: %s\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "h",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
         break;
       default:
@@ -25,15 +27,14 @@ int cmd_getactivewindow(int argc, char **args) {
     }
   }
 
-  argc -= optind;
-  args += optind;
+  consume_args(context, optind);
 
-  if (argc != 0) {
-    fprintf(stderr, usage, cmd);
-    return 1;
-  }
+  //if (context->argc != 0) {
+    //fprintf(stderr, usage, cmd);
+    //return 1;
+  //}
 
-  ret = xdo_window_get_active(xdo, &wid);
+  ret = xdo_window_get_active(context->xdo, &wid);
 
   if (ret) {
     fprintf(stderr, "xdo_get_active_window reported an error\n");

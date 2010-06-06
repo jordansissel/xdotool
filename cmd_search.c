@@ -1,7 +1,7 @@
 #include "xdo_cmd.h"
 #include <string.h>
 
-int cmd_search(int argc, char **args) {
+int cmd_search(context_t *context) {
   Window *list;
   xdo_search_t search;
   int nwindows;
@@ -54,16 +54,18 @@ int cmd_search(int argc, char **args) {
   search.max_depth = -1;
   search.require = SEARCH_ANY;
 
-  char *cmd = *args;
+  char *cmd = *context->argv;
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "h",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 0:
         break;
       case 'h':
       case opt_help:
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
       case opt_maxdepth:
         search.max_depth = strtol(optarg, NULL, 0);
@@ -106,17 +108,16 @@ int cmd_search(int argc, char **args) {
     }
   }
 
-  args += optind;
-  argc -= optind;
+  consume_args(context, optind);
 
   /* We require a pattern or a pid to search for */
-  if (argc != 1 && search.pid == 0) {
+  if (context->argc < 1 && search.pid == 0) {
     fprintf(stderr, usage, cmd);
     return EXIT_FAILURE;
   }
 
   if (!search_title && !search_name && !search_class && !search_classname 
-      && argc > 0) {
+      && context->argc > 0) {
     fprintf(stderr, "Defaulting to search window name, class, and classname\n");
     search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
     search_name = 1;
@@ -124,31 +125,34 @@ int cmd_search(int argc, char **args) {
     search_classname = 1;
   }
 
-  if (argc > 0) {
+  if (context->argc > 0) {
     if (search_title) {
       search.searchmask |= SEARCH_NAME;
-      search.winname = args[0];
+      search.winname = context->argv[0];
     }
     if (search_name) {
       search.searchmask |= SEARCH_NAME;
-      search.winname = args[0];
+      search.winname = context->argv[0];
     }
     if (search_class) {
       search.searchmask |= SEARCH_CLASS;
-      search.winclass = args[0];
+      search.winclass = context->argv[0];
     }
     if (search_classname) {
       search.searchmask |= SEARCH_CLASSNAME;
-      search.winclassname = args[0];
+      search.winclassname = context->argv[0];
     }
   }
 
-  xdo_window_search(xdo, &search, &list, &nwindows);
-  for (i = 0; i < nwindows; i++)
+  xdo_window_search(context->xdo, &search, &list, &nwindows);
+  for (i = 0; i < nwindows; i++) {
     window_print(list[i]);
+  }
 
   /* Free list as it's malloc'd by xdo_window_search */
   free(list);
+
+  consume_args(context, 1);
 
   /* error if number of windows found is zero (behave like grep) */
   return (nwindows ? EXIT_SUCCESS : EXIT_FAILURE);

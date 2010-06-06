@@ -1,10 +1,10 @@
 #include "xdo_cmd.h"
 
-int cmd_type(int argc, char **args) {
+int cmd_type(context_t *context) {
   int ret = 0;
   int i;
   int c;
-  char *cmd = *args;
+  char *cmd = *context->argv;
   xdo_active_mods_t *active_mods = NULL;
 
   /* Options */
@@ -29,7 +29,8 @@ int cmd_type(int argc, char **args) {
             "-h, --help             - show this help output\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "w:d:ch", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "w:d:ch",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':
         window = strtoul(optarg, NULL, 0);
@@ -43,6 +44,7 @@ int cmd_type(int argc, char **args) {
         break;
       case 'h':
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
         break;
       default:
@@ -51,22 +53,21 @@ int cmd_type(int argc, char **args) {
     }
   }
 
-  args += optind;
-  argc -= optind;
+  consume_args(context, optind);
 
-  if (argc == 0) {
+  if (context->argc == 0) {
     fprintf(stderr, "You specified the wrong number of args.\n");
     fprintf(stderr, usage, cmd);
     return 1;
   }
 
   if (clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(xdo);
-    xdo_clear_active_modifiers(xdo, window, active_mods);
+    active_mods = xdo_get_active_modifiers(context->xdo);
+    xdo_clear_active_modifiers(context->xdo, window, active_mods);
   }
 
-  for (i = 0; i < argc; i++) {
-    int tmp = xdo_type(xdo, window, args[i], delay);
+  for (i = 0; i < context->argc; i++) {
+    int tmp = xdo_type(context->xdo, window, context->argv[i], delay);
 
     if (tmp) {
       fprintf(stderr, "xdo_type reported an error\n");
@@ -76,10 +77,11 @@ int cmd_type(int argc, char **args) {
   }
 
   if (clear_modifiers) {
-    xdo_set_active_modifiers(xdo, window, active_mods);
+    xdo_set_active_modifiers(context->xdo, window, active_mods);
     xdo_free_active_modifiers(active_mods);
   }
 
+  consume_args(context, context->argc);
   return ret > 0;
 }
 

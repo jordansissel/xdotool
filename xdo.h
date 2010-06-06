@@ -619,7 +619,7 @@ int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop);
  */
 int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop);
 
-/*
+/**
  * Search for windows.
  *
  * @param search the search query.

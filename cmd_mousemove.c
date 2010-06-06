@@ -1,10 +1,10 @@
 #include "xdo_cmd.h"
 #include <math.h>
 
-int cmd_mousemove(int argc, char **args) {
+int cmd_mousemove(context_t *context) {
   int ret = 0;
   int x, y;
-  char *cmd = *args;
+  char *cmd = *context->argv;
   int opsync = 0;
 
   xdo_active_mods_t *active_mods = NULL;
@@ -42,7 +42,8 @@ int cmd_mousemove(int argc, char **args) {
       "-w, --window <windowid>   - specify a window to move relative to.\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "chw:pd:", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "chw:pd:",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 'c':
       case opt_clearmodifiers:
@@ -51,6 +52,7 @@ int cmd_mousemove(int argc, char **args) {
       case 'h':
       case opt_help:
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
         break;
       case opt_screen:
@@ -81,17 +83,18 @@ int cmd_mousemove(int argc, char **args) {
     }
   }
 
-  argc -= optind;
-  args += optind;
+  consume_args(context, optind);
 
-  if (argc != 2) {
+  if (context->argc < 2) {
     fprintf(stderr, usage, cmd);
-    fprintf(stderr, "You specified the wrong number of args.\n");
+    fprintf(stderr, "You specified the wrong number of args (expected 2).\n");
     return 1;
   }
 
-  x = atoi(args[0]);
-  y = atoi(args[1]);
+  x = atoi(context->argv[0]);
+  y = atoi(context->argv[1]);
+
+  consume_args(context, 2);
 
   if (polar_coordinates) {
     /* x becomes angle (degrees), y becomes distance.
@@ -101,12 +104,12 @@ int cmd_mousemove(int argc, char **args) {
     if (window > 0) {
       int win_x, win_y;
       unsigned int win_w, win_h;
-      xdo_get_window_location(xdo, window, &win_x, &win_y, NULL);
-      xdo_get_window_size(xdo, window, &win_w, &win_h);
+      xdo_get_window_location(context->xdo, window, &win_x, &win_y, NULL);
+      xdo_get_window_size(context->xdo, window, &win_w, &win_h);
       origin_x = win_x + (win_w / 2);
       origin_y = win_y + (win_h / 2);
     } else { /* no window selected, move relative to screen */
-      Screen *s = ScreenOfDisplay(xdo->xdpy, screen);
+      Screen *s = ScreenOfDisplay(context->xdo->xdpy, screen);
       origin_x = s->width / 2;
       origin_y = s->height / 2;
     }
@@ -125,7 +128,7 @@ int cmd_mousemove(int argc, char **args) {
   }
 
   int mx, my, mscreen;
-  xdo_mouselocation(xdo, &mx, &my, &mscreen);
+  xdo_mouselocation(context->xdo, &mx, &my, &mscreen);
 
   /* Break early if we don't need to move */
   if (mx == x && my == y && mscreen == screen) {
@@ -133,15 +136,15 @@ int cmd_mousemove(int argc, char **args) {
   }
 
   if (clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(xdo);
-    xdo_clear_active_modifiers(xdo, window, active_mods);
+    active_mods = xdo_get_active_modifiers(context->xdo);
+    xdo_clear_active_modifiers(context->xdo, window, active_mods);
   }
 
   if (step == 0) {
     if (window > 0) {
-      ret = xdo_mousemove_relative_to_window(xdo, window, x, y);
+      ret = xdo_mousemove_relative_to_window(context->xdo, window, x, y);
     } else {
-      ret = xdo_mousemove(xdo, x, y, screen);
+      ret = xdo_mousemove(context->xdo, x, y, screen);
     }
   } else {
     if (mx == x && my == y && mscreen == screen) {
@@ -152,9 +155,9 @@ int cmd_mousemove(int argc, char **args) {
     fprintf(stderr, "--step support not yet implemented\n");
 
     if (window > 0) {
-      ret = xdo_mousemove_relative_to_window(xdo, window, x, y);
+      ret = xdo_mousemove_relative_to_window(context->xdo, window, x, y);
     } else {
-      ret = xdo_mousemove(xdo, x, y, screen);
+      ret = xdo_mousemove(context->xdo, x, y, screen);
     }
   }
 
@@ -163,12 +166,12 @@ int cmd_mousemove(int argc, char **args) {
   } else {
     if (opsync) {
       /* Wait until the mouse moves away from its current position */
-      xdo_mouse_wait_for_move_from(xdo, mx, my);
+      xdo_mouse_wait_for_move_from(context->xdo, mx, my);
     }
   }
 
   if (clear_modifiers) {
-    xdo_set_active_modifiers(xdo, window, active_mods);
+    xdo_set_active_modifiers(context->xdo, window, active_mods);
     xdo_free_active_modifiers(active_mods);
   }
 

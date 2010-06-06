@@ -1,7 +1,7 @@
 #include "xdo_cmd.h"
 
-int cmd_set_num_desktops(int argc, char **args) {
-  char *cmd = *args;
+int cmd_set_num_desktops(context_t *context) {
+  char *cmd = *context->argv;
   long ndesktops;
 
   int c;
@@ -12,10 +12,12 @@ int cmd_set_num_desktops(int argc, char **args) {
   static const char *usage = "Usage: %s num_desktops\n";
   int option_index;
 
-  while ((c = getopt_long_only(argc, args, "h", longopts, &option_index)) != -1) {
+  while ((c = getopt_long_only(context->argc, context->argv, "h",
+                               longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
         printf(usage, cmd);
+        consume_args(context, context->argc);
         return EXIT_SUCCESS;
         break;
       default:
@@ -24,16 +26,16 @@ int cmd_set_num_desktops(int argc, char **args) {
     }
   }
 
-  argc -= optind;
-  args += optind;
+  consume_args(context, optind);
 
-  if (argc != 1) {
+  if (context->argc < 1) {
     fprintf(stderr, usage, cmd);
     return 1;
   }
 
-  ndesktops = strtol(args[0], NULL, 0);
+  ndesktops = strtol(context->argv[0], NULL, 0);
 
-  return xdo_set_number_of_desktops(xdo, ndesktops);
+  consume_args(context, 1);
+  return xdo_set_number_of_desktops(context->xdo, ndesktops);
 }
 

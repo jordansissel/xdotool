@@ -5,7 +5,6 @@
  * getwindowfocus contributed by Lee Pumphret
  * keyup/down contributed by Lee Pumphret
  *
- * XXX: Need to use 'Window' instead of 'int' where appropriate.
  * vim:expandtab shiftwidth=2 softtabstop=2
  */
 
@@ -27,14 +26,28 @@
 #include "xdo.h"
 #include "xdotool.h"
 
-xdo_t *xdo;
 char *PROGRAM;
 static int script_main(int argc, char **argv);
 static int args_main(int argc, char **argv);
+void consume_args(context_t *context, int argc);
+
+void consume_args(context_t *context, int argc) {
+  if (argc > context->argc) {
+    fprintf(stderr,
+            "Can't consume %d args; are only %d available. This is a bug.\n",
+            argc, context->argc);
+    context->argv += context->argc;
+    context->argc = 0;
+    return;
+  }
+
+  context->argv += argc;
+  context->argc -= argc;
+}
 
 struct dispatch {
   const char *name;
-  int (*func)(int argc, char **args);
+  int (*func)(context_t *context);
 } dispatch[] = {
   /* Query functions */
   { "getactivewindow", cmd_getactivewindow, },
@@ -157,17 +170,17 @@ int args_main(int argc, char **argv) {
 
   if (argc < 2) {
     fprintf(stderr, usage, argv[0]);
-    cmd_help(0, NULL);
+    cmd_help(NULL);
     exit(1);
   }
 
   while ((opt = getopt_long_only(argc, argv, "+h", long_options, &option_index)) != -1) {
     switch (opt) {
       case 'h':
-        cmd_help(0, NULL);
+        cmd_help(NULL);
         exit(EXIT_SUCCESS);
       case 'v':
-        cmd_version(0, NULL);
+        cmd_version(NULL);
         exit(EXIT_SUCCESS);
       default:
         fprintf(stderr, usage, argv[0]);
@@ -177,32 +190,42 @@ int args_main(int argc, char **argv) {
 
   PROGRAM = *argv;
   argv++; argc--;
-  cmd = *argv; /* argv[1] */
 
-  xdo = xdo_new(getenv("DISPLAY"));
-  if (xdo == NULL) {
+  context_t context;
+  context.xdo = xdo_new(NULL);
+  context.argc = argc;
+  context.argv = argv;
+  context.windows = NULL;
+  context.nwindows = 0;
+
+  if (context.xdo == NULL) {
     fprintf(stderr, "Failed creating new xdo instance\n");
     return 1;
   }
 
-  for (i = 0; dispatch[i].name != NULL && !cmd_found; i++) {
-    if (!strcasecmp(dispatch[i].name, cmd)) {
-      ret = dispatch[i].func(argc, argv);
-      cmd_found = 1;
+  /* Loop until all argv is consumed. */
+  while (context.argc > 0 && ret == XDO_SUCCESS) {
+    cmd = context.argv[0];
+    cmd_found = 0;
+    for (i = 0; dispatch[i].name != NULL && !cmd_found; i++) {
+      if (!strcasecmp(dispatch[i].name, cmd)) {
+        cmd_found = 1;
+        ret = dispatch[i].func(&context);
+      }
     }
-  }
 
-  if (!cmd_found) {
-    fprintf(stderr, "%s: Unknown command: %s\n", strrchr(PROGRAM, '/') + 1, cmd);
-    fprintf(stderr, "Run '%s help' if you want a command list\n", PROGRAM);
-    ret = 1;
-  }
+    if (!cmd_found) {
+      fprintf(stderr, "%s: Unknown command: %s\n", PROGRAM, cmd);
+      fprintf(stderr, "Run '%s help' if you want a command list\n", PROGRAM);
+      ret = 1;
+    }
+  } /* while ... */
 
-  xdo_free(xdo);
+  xdo_free(context.xdo);
   return ret;
-}
+} /* int args_main(int, char **) */
 
-int cmd_help(int unused_argc, char **unused_args) {
+int cmd_help(context_t *unused_context) {
   int i;
   printf("Available commands:\n");
   for (i = 0; dispatch[i].name != NULL; i++)
@@ -211,7 +234,7 @@ int cmd_help(int unused_argc, char **unused_args) {
   return 0;
 }
 
-int cmd_version(int unused_argc, char **unused_args) {
+int cmd_version(context_t *unused_context) {
   printf("xdotool version %s\n", xdo_version());
   return 0;
 }
