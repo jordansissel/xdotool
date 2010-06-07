@@ -1,7 +1,6 @@
 #include "xdo_cmd.h"
 
 int cmd_getwindowpid(context_t *context) {
-  Window wid = 0;
   int pid;
   char *cmd = context->argv[0];
 
@@ -34,16 +33,19 @@ int cmd_getwindowpid(context_t *context) {
     return 1;
   }
 
-  wid = (Window)strtol(context->argv[0], NULL, 0);
-  pid = xdo_window_get_pid(context->xdo, wid);
+  window_each(context, context->argv[0], {
+    pid = xdo_window_get_pid(context->xdo, window);
+    if (pid == 0) {
+      /* TODO(sissel): probably shouldn't exit failure when iterating over
+       * a list of windows. What should we do? */
+      fprintf(stderr, "window %ld has no pid associated with it.\n", window);
+      return EXIT_FAILURE;
+    } else {
+      printf("%d\n", pid);
+    }
+  }); /* window_each(...) */
 
   consume_args(context, 1);
-  if (pid == 0) {
-    fprintf(stderr, "window %ld has no pid associated with it.\n", wid);
-    return EXIT_FAILURE;
-  } else {
-    printf("%d\n", pid);
-    return EXIT_SUCCESS;
-  }
+  return EXIT_SUCCESS;
 }
 

@@ -17,8 +17,10 @@ extern char *PROGRAM;
 
 /* implementation is in xdotool.c */
 extern void consume_args(context_t *context, int argc);
-extern void window_list(context_t *context, char *window_arg,
+extern void window_list(context_t *context, const char *window_arg,
                         Window **windowlist_ret, int *nwindows_ret,
-                        int add_to_list);
+                        const int add_to_list);
+
+extern void window_save(context_t *context, Window window);
 
 #endif /* _XDO_CMD_H_ */

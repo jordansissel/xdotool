@@ -2,7 +2,6 @@
 
 int cmd_windowmap(context_t *context) {
   int ret = 0;
-  Window wid;
   char *cmd = *context->argv;
   int opsync = 0;
 
@@ -16,7 +15,7 @@ int cmd_windowmap(context_t *context) {
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-    "Usage: %s [options] wid\n"
+    "Usage: %s [options] window\n"
     "--sync    - only exit once the window has been mapped (is visible)\n";
 
   int option_index;
@@ -45,17 +44,17 @@ int cmd_windowmap(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  wid = (Window)strtol(context->argv[0], NULL, 0);
-  consume_args(context, 1);
-
-  ret = xdo_window_map(context->xdo, wid);
-  if (ret) {
-    fprintf(stderr, "xdo_window_map reported an error\n");
-  } else {
-    if (opsync) {
-      xdo_window_wait_for_map_state(context->xdo, wid, IsViewable);
+  window_each(context, context->argv[0], {
+    ret = xdo_window_map(context->xdo, window);
+    if (ret) {
+      fprintf(stderr, "xdo_window_map reported an error\n");
+    } else {
+      if (opsync) {
+        xdo_window_wait_for_map_state(context->xdo, window, IsViewable);
+      }
     }
-  }
+  }); /* window_each(...) */
+  consume_args(context, 1);
   
   return ret;
 }

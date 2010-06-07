@@ -1,10 +1,11 @@
 #include "xdo_cmd.h"
+#include <string.h>
 
 int cmd_mouseup(context_t *context) {
   int ret = 0;
   int button;
   char *cmd = *context->argv;
-  Window window = 0;
+  char *window_arg = NULL;
   xdo_active_mods_t *active_mods = NULL;
   int clear_modifiers = 0;
 
@@ -33,7 +34,7 @@ int cmd_mouseup(context_t *context) {
         clear_modifiers = 1;
         break;
       case 'w':
-        window = strtoul(optarg, NULL, 0);
+        window_arg = strdup(optarg);
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -51,22 +52,28 @@ int cmd_mouseup(context_t *context) {
 
   button = atoi(context->argv[0]);
 
-  if (clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(context->xdo);
-    xdo_clear_active_modifiers(context->xdo, window, active_mods);
+  window_each(context, window_arg, {
+    if (clear_modifiers) {
+      active_mods = xdo_get_active_modifiers(context->xdo);
+      xdo_clear_active_modifiers(context->xdo, window, active_mods);
+    }
+
+    ret = xdo_mouseup(context->xdo, window, button);
+
+    if (clear_modifiers) {
+      xdo_set_active_modifiers(context->xdo, window, active_mods);
+      xdo_free_active_modifiers(active_mods);
+    }
+
+    if (ret) {
+      fprintf(stderr, "xdo_mouseup reported an error on window %ld\n", window);
+      return ret;
+    }
+  }); /* window_each(...) */
+
+  if (window_arg != NULL) {
+    free(window_arg);
   }
-
-  ret = xdo_mouseup(context->xdo, window, button);
-
-  if (clear_modifiers) {
-    xdo_set_active_modifiers(context->xdo, window, active_mods);
-    xdo_free_active_modifiers(active_mods);
-  }
-
-  if (ret) {
-    fprintf(stderr, "xdo_mouseup reported an error\n");
-  }
-
   consume_args(context, 1);
   return ret;
 }

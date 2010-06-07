@@ -3,7 +3,7 @@
 int cmd_set_desktop_for_window(context_t *context) {
   char *cmd = *context->argv;
   long desktop = 0;
-  Window window = 0;
+  int ret;
 
   int c;
   static struct option longopts[] = {
@@ -34,8 +34,17 @@ int cmd_set_desktop_for_window(context_t *context) {
     return 1;
   }
 
-  window = (Window)strtol(context->argv[0], NULL, 0);
   desktop = strtol(context->argv[1], NULL, 0);
+  window_each(context, context->argv[0], {
+    ret = xdo_set_desktop_for_window(context->xdo, window, desktop);
+    if (ret != XDO_SUCCESS) {
+      fprintf(stderr, 
+              "xdo_set_desktop_for_window on window %ld, desktop %ld failed\n", 
+              window, desktop);
+      return ret;
+    }
+  }); /* window_each(...) */
   consume_args(context, 2);
-  return xdo_set_desktop_for_window(context->xdo, window, desktop);
+
+  return ret;
 }

@@ -2,7 +2,6 @@
 
 int cmd_windowraise(context_t *context) {
   int ret = 0;
-  Window wid;
   char *cmd = *context->argv;
 
   int c;
@@ -10,7 +9,7 @@ int cmd_windowraise(context_t *context) {
     { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = "Usage: %s wid\n";
+  static const char *usage = "Usage: %s window\n";
   int option_index;
 
   while ((c = getopt_long_only(context->argc, context->argv, "h",
@@ -34,12 +33,15 @@ int cmd_windowraise(context_t *context) {
     return 1;
    }
 
-  wid = (Window)strtol(context->argv[0], NULL, 0);
+  window_each(context, context->argv[0], {
+    ret = xdo_window_raise(context->xdo, window);
+    if (ret) {
+      fprintf(stderr, "xdo_window_raise reported an error on window %ld\n",
+              window);
+    }
+  }); /* window_each(...) */
+
   consume_args(context, 1);
-  ret = xdo_window_raise(context->xdo, wid);
-  if (ret)
-    fprintf(stderr, "xdo_window_raise reported an error\n");
-  
   return ret;
 }
 

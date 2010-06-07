@@ -4,7 +4,7 @@
 int cmd_getwindowfocus(context_t *context) {
   int ret = 0;
   int get_toplevel_focus = 1;
-  Window wid = 0;
+  Window window = 0;
   char *cmd = context->argv[0];
 
   int c;
@@ -45,15 +45,16 @@ int cmd_getwindowfocus(context_t *context) {
   //}
 
   if (get_toplevel_focus) {
-    ret = xdo_window_sane_get_focus(context->xdo, &wid);
+    ret = xdo_window_sane_get_focus(context->xdo, &window);
   } else {
-    ret = xdo_window_get_focus(context->xdo, &wid);
+    ret = xdo_window_get_focus(context->xdo, &window);
   }
 
   if (ret) {
     fprintf(stderr, "xdo_window_focus reported an error\n");
   } else { 
-    window_print(wid);
+    window_print(window);
+    window_save(context, window);
   }
 
   return ret;

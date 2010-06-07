@@ -1,21 +1,37 @@
 #include "xdo_cmd.h"
 #include <math.h>
+#include <string.h>
+
+struct mousemove {
+  Window window;
+  int clear_modifiers;
+  int opsync;
+  int polar_coordinates;
+  int x;
+  int y;
+  int screen;
+  useconds_t delay;
+
+  int step;
+};
+
+static int _mousemove(context_t *context, struct mousemove *mousemove);
 
 int cmd_mousemove(context_t *context) {
   int ret = 0;
-  int x, y;
   char *cmd = *context->argv;
-  int opsync = 0;
+  char *window_arg = NULL;
 
-  xdo_active_mods_t *active_mods = NULL;
-  int clear_modifiers = 0;
-  int polar_coordinates = 0;
-  int step = 0;
-  useconds_t delay = 0;
+  struct mousemove mousemove;
+  mousemove.clear_modifiers = 0;
+  mousemove.polar_coordinates = 0;
+  mousemove.opsync = 0;
+  mousemove.screen = 0;
+  mousemove.x = 0;
+  mousemove.y = 0;
+  mousemove.step = 0;
 
   int c;
-  int screen = 0;
-  Window window = 0;
   typedef enum {
     opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_polar,
     opt_screen, opt_step, opt_delay, opt_window
@@ -35,8 +51,7 @@ int cmd_mousemove(context_t *context) {
       "Usage: %s [options] <x> <y>\n"
       "-c, --clearmodifiers      - reset active modifiers (alt, etc) while typing\n"
       //"-d, --delay <MS>          - sleeptime in milliseconds between steps.\n"
-      //"--step <STEP>             - pixels to move each time along path to x,y.\n"
-      "-p, --polar               - Use polar coordinates. X as an angle, Y as distance\n"
+      //"--step <STEP>             - pixels to move each time along path to x,y.\n" "-p, --polar               - Use polar coordinates. X as an angle, Y as distance\n"
       "--screen SCREEN           - which screen to move on, default is current screen\n"
       "--sync                    - only exit once the mouse has moved\n"
       "-w, --window <windowid>   - specify a window to move relative to.\n";
@@ -47,7 +62,7 @@ int cmd_mousemove(context_t *context) {
     switch (c) {
       case 'c':
       case opt_clearmodifiers:
-        clear_modifiers = 1;
+        mousemove.clear_modifiers = 1;
         break;
       case 'h':
       case opt_help:
@@ -56,25 +71,25 @@ int cmd_mousemove(context_t *context) {
         return EXIT_SUCCESS;
         break;
       case opt_screen:
-        screen = atoi(optarg);
+        mousemove.screen = atoi(optarg);
         break;
       case 'w':
       case opt_window:
-        window = strtoul(optarg, NULL, 0);
+        window_arg = strdup(optarg);
         break;
       case 'p':
       case opt_polar:
-        polar_coordinates = 1;
+        mousemove.polar_coordinates = 1;
         break;
       case opt_step:
-        step = atoi(optarg);
+        mousemove.step = atoi(optarg);
         break;
       case 'd':
       case opt_delay:
-        delay = strtoul(optarg, NULL, 0) * 1000;
+        mousemove.delay = strtoul(optarg, NULL, 0) * 1000;
         break;
       case opt_sync:
-        opsync = 1;
+        mousemove.opsync = 1;
         break;
       default:
         printf("unknown opt: %d\n", c);
@@ -91,17 +106,37 @@ int cmd_mousemove(context_t *context) {
     return 1;
   }
 
-  x = atoi(context->argv[0]);
-  y = atoi(context->argv[1]);
+  mousemove.x = atoi(context->argv[0]);
+  mousemove.y = atoi(context->argv[1]);
 
   consume_args(context, 2);
 
-  if (polar_coordinates) {
+  window_each(context, window_arg, {
+    mousemove.window = window;
+    ret = _mousemove(context, &mousemove);
+    if (ret != XDO_SUCCESS) {
+      return ret;
+    }
+  }); /* window_each(...) */
+
+  return ret;
+}
+
+static int _mousemove(context_t *context, struct mousemove *mousemove) {
+  int ret;
+  xdo_active_mods_t *active_mods = NULL;
+
+  int x = mousemove->x;
+  int y = mousemove->y;
+  int screen = mousemove->screen;
+  Window window = mousemove->window;
+  
+  if (mousemove->polar_coordinates) {
     /* x becomes angle (degrees), y becomes distance.
      * XXX: Origin should be center (of window or screen)
      */
     int origin_x, origin_y;
-    if (window > 0) {
+    if (mousemove->window != CURRENTWINDOW) {
       int win_x, win_y;
       unsigned int win_w, win_h;
       xdo_get_window_location(context->xdo, window, &win_x, &win_y, NULL);
@@ -135,13 +170,13 @@ int cmd_mousemove(context_t *context) {
     return 0;
   }
 
-  if (clear_modifiers) {
+  if (mousemove->clear_modifiers) {
     active_mods = xdo_get_active_modifiers(context->xdo);
     xdo_clear_active_modifiers(context->xdo, window, active_mods);
   }
 
-  if (step == 0) {
-    if (window > 0) {
+  if (mousemove->step == 0) {
+    if (window != CURRENTWINDOW && !mousemove->polar_coordinates) {
       ret = xdo_mousemove_relative_to_window(context->xdo, window, x, y);
     } else {
       ret = xdo_mousemove(context->xdo, x, y, screen);
@@ -164,16 +199,16 @@ int cmd_mousemove(context_t *context) {
   if (ret) {
     fprintf(stderr, "xdo_mousemove reported an error\n");
   } else {
-    if (opsync) {
+    if (mousemove->opsync) {
       /* Wait until the mouse moves away from its current position */
       xdo_mouse_wait_for_move_from(context->xdo, mx, my);
     }
   }
 
-  if (clear_modifiers) {
+  if (mousemove->clear_modifiers) {
     xdo_set_active_modifiers(context->xdo, window, active_mods);
     xdo_free_active_modifiers(active_mods);
   }
 
-  return ret;
-}
+  return 0;
+} /* int mousemove ... */

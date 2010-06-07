@@ -14,9 +14,9 @@ int cmd_key(context_t *context) {
   char *cmd = *context->argv;
   xdo_active_mods_t *active_mods = NULL;
   useconds_t delay = 12000;
+  char *window_arg = NULL;
 
   /* Options */
-  Window window = 0;
   int clear_modifiers = 0;
 
   static struct option longopts[] = {
@@ -41,7 +41,7 @@ int cmd_key(context_t *context) {
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':
-        window = strtoul(optarg, NULL, 0);
+        window_arg = strdup(optarg);
         break;
       case 'c':
         clear_modifiers = 1;
@@ -82,21 +82,27 @@ int cmd_key(context_t *context) {
     return 1;
   }
 
-  if (clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(context->xdo);
-    xdo_clear_active_modifiers(context->xdo, window, active_mods);
-  }
+  window_each(context, window_arg, {
+    if (clear_modifiers) {
+      active_mods = xdo_get_active_modifiers(context->xdo);
+      xdo_clear_active_modifiers(context->xdo, window, active_mods);
+    }
 
-  for (i = 0; i < context->argc; i++) {
-    int tmp = keyfunc(context->xdo, window, context->argv[i], delay);
-    if (tmp != 0)
-      fprintf(stderr, "xdo_keysequence reported an error for string '%s'\n", context->argv[i]);
-    ret += tmp;
-  }
+    for (i = 0; i < context->argc; i++) {
+      int tmp = keyfunc(context->xdo, window, context->argv[i], delay);
+      if (tmp != 0)
+        fprintf(stderr, "xdo_keysequence reported an error for string '%s'\n", context->argv[i]);
+      ret += tmp;
+    }
 
-  if (clear_modifiers) {
-    xdo_set_active_modifiers(context->xdo, window, active_mods);
-    xdo_free_active_modifiers(active_mods);
+    if (clear_modifiers) {
+      xdo_set_active_modifiers(context->xdo, window, active_mods);
+      xdo_free_active_modifiers(active_mods);
+    }
+  }); /* window_each(...) */
+
+  if (window_arg != NULL) {
+    free(window_arg);
   }
 
   /* Consume all arguments */

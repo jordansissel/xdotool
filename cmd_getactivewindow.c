@@ -1,7 +1,7 @@
 #include "xdo_cmd.h"
 
 int cmd_getactivewindow(context_t *context) {
-  Window wid = 0;
+  Window window = 0;
   int ret;
   char *cmd = context->argv[0];
 
@@ -34,12 +34,13 @@ int cmd_getactivewindow(context_t *context) {
     //return 1;
   //}
 
-  ret = xdo_window_get_active(context->xdo, &wid);
+  ret = xdo_window_get_active(context->xdo, &window);
 
   if (ret) {
     fprintf(stderr, "xdo_get_active_window reported an error\n");
   } else {
-    window_print(wid);
+    window_print(window);
+    window_save(context, window);
   }
 
   return ret;

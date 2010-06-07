@@ -1,12 +1,13 @@
 #include "xdo_cmd.h"
+#include <string.h>
 
 int cmd_click(context_t *context) {
   int button;
   char *cmd = context->argv[0];
-  int ret;
+  int ret = 0;
   int clear_modifiers = 0;
-  Window window = 0;
   xdo_active_mods_t *active_mods = NULL;
+  char *window_arg = NULL;
 
   int c;
   static struct option longopts[] = {
@@ -36,7 +37,7 @@ int cmd_click(context_t *context) {
         clear_modifiers = 1;
         break;
       case 'w':
-        window = strtoul(optarg, NULL, 0);
+        window_arg = strdup(optarg);
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -54,17 +55,23 @@ int cmd_click(context_t *context) {
 
   button = atoi(context->argv[0]);
 
-  if (clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(context->xdo);
-    xdo_clear_active_modifiers(context->xdo, window, active_mods);
-  }
+  window_each(context, window_arg, {
+    if (clear_modifiers) {
+      active_mods = xdo_get_active_modifiers(context->xdo);
+      xdo_clear_active_modifiers(context->xdo, window, active_mods);
+    }
 
-  ret = xdo_click(context->xdo, window, button);
+    ret = xdo_click(context->xdo, window, button);
+    if (ret != XDO_SUCCESS) {
+      fprintf(stderr, "xdo_click failed on window %ld\n", window);
+      return ret;
+    }
 
-  if (clear_modifiers) {
-    xdo_set_active_modifiers(context->xdo, window, active_mods);
-    xdo_free_active_modifiers(active_mods);
-  }
+    if (clear_modifiers) {
+      xdo_set_active_modifiers(context->xdo, window, active_mods);
+      xdo_free_active_modifiers(active_mods);
+    }
+  }); /* window_each(...) */
 
   consume_args(context, 1);
   return ret;

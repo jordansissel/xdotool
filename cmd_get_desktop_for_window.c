@@ -4,7 +4,6 @@ int cmd_get_desktop_for_window(context_t *context) {
   int ret = 0;
   char *cmd = context->argv[0];
   long desktop = 0;
-  Window window = 0;
 
   int c;
   static struct option longopts[] = {
@@ -35,11 +34,11 @@ int cmd_get_desktop_for_window(context_t *context) {
     return 1;
   }
 
-  window = (Window)strtol(context->argv[0], NULL, 0);
+  window_each(context, context->argv[0], {
+    ret = xdo_get_desktop_for_window(context->xdo, window, &desktop);
+    printf("%ld\n", desktop);
+  }); /* window_each(...) */
   consume_args(context, 1);
-
-  ret = xdo_get_desktop_for_window(context->xdo, window, &desktop);
-  printf("%ld\n", desktop);
   return ret;
 }
 

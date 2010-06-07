@@ -1,12 +1,13 @@
 #include "xdo_cmd.h"
+#include <string.h>
 
 int cmd_mousedown(context_t *context) {
   int ret = 0;
   int button;
   char *cmd = *context->argv;
-  Window window = 0;
   xdo_active_mods_t *active_mods = NULL;
   int clear_modifiers = 0;
+  char *window_arg = NULL;
 
   int c;
   static struct option longopts[] = {
@@ -33,7 +34,7 @@ int cmd_mousedown(context_t *context) {
         return EXIT_SUCCESS;
         break;
       case 'w':
-        window = strtoul(optarg, NULL, 0);
+        window_arg = strdup(optarg);
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -45,27 +46,30 @@ int cmd_mousedown(context_t *context) {
 
   if (context->argc < 1) {
     fprintf(stderr, usage, cmd);
-    fprintf(stderr, "You specified the wrong number of args.\n");
-    return 1;
+    fprintf(stderr, "What button do you want me to send?\n");
+    return EXIT_FAILURE;
   }
 
   button = atoi(context->argv[0]);
 
-  if (clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(context->xdo);
-    xdo_clear_active_modifiers(context->xdo, window, active_mods);
-  }
+  window_each(context, window_arg, {
+    if (clear_modifiers) {
+      active_mods = xdo_get_active_modifiers(context->xdo);
+      xdo_clear_active_modifiers(context->xdo, window, active_mods);
+    }
 
-  ret = xdo_mousedown(context->xdo, window, button);
+    ret = xdo_mousedown(context->xdo, window, button);
 
-  if (clear_modifiers) {
-    xdo_set_active_modifiers(context->xdo, window, active_mods);
-    xdo_free_active_modifiers(active_mods);
-  }
+    if (clear_modifiers) {
+      xdo_set_active_modifiers(context->xdo, window, active_mods);
+      xdo_free_active_modifiers(active_mods);
+    }
 
-  if (ret) {
-    fprintf(stderr, "xdo_mousedown reported an error\n");
-  }
+    if (ret) {
+      fprintf(stderr, "xdo_mousedown reported an error on window %ld\n", window);
+      return ret;
+    }
+  }); /* window_each(...) */
 
   consume_args(context, 1);
 

@@ -30,9 +30,9 @@ char *PROGRAM;
 static int script_main(int argc, char **argv);
 static int args_main(int argc, char **argv);
 void consume_args(context_t *context, int argc);
-void window_list(context_t *context, char *window_arg,
+void window_list(context_t *context, const char *window_arg,
                  Window **windowlist_ret, int *nwindows_ret,
-                 int add_to_list);
+                 const int add_to_list);
 
 void consume_args(context_t *context, int argc) {
   if (argc > context->argc) {
@@ -46,12 +46,28 @@ void consume_args(context_t *context, int argc) {
 
   context->argv += argc;
   context->argc -= argc;
-}
+} /* void consume_args(context_t *, int) */
 
-void window_list(context_t *context, char *window_arg,
+void window_save(context_t *context, Window window) {
+  if (context->windows != NULL) {
+    free(context->windows);
+  }
+
+  context->windows = calloc(1, sizeof(Window));
+  context->nwindows = 1;
+  context->windows[0] = window;
+} /* void window_save(context_t *, Window) */
+
+void window_list(context_t *context, const char *window_arg,
                  Window **windowlist_ret, int *nwindows_ret,
-                 int add_to_list) {
-  if (window_arg != NULL && !strcmp(window_arg, "-")) {
+                 const int add_to_list) {
+  //printf("%s\n", window_arg);
+
+  /* If window_arg is NULL and we have windows in the list, use the list.
+   * If window_arg is "-" and we have windows in the list, use the list.
+   */
+  if ((window_arg != NULL && !strcmp(window_arg, "-"))
+      || (window_arg == NULL && context->nwindows > 0)) {
     if (context->windows == NULL) {
       fprintf(stderr, "There are no windows on the stack, Can't continue.\n");
       *nwindows_ret = 0;
@@ -66,7 +82,11 @@ void window_list(context_t *context, char *window_arg,
      * so we'll store the window in the context_t and return a pointer
      * to that.
      */
-    Window window = (Window)strtol(window_arg, NULL, 0);
+    Window window = CURRENTWINDOW;
+    if (window_arg != NULL) {
+      window = (Window)strtol(window_arg, NULL, 0);
+    }
+
     context->window_placeholder = window;
     *nwindows_ret = 1;
     *windowlist_ret = &(context->window_placeholder);

@@ -73,6 +73,7 @@ class XdotoolSimpleCommandTests < Test::Unit::TestCase
       # For example, get_desktop_for_window fails on many window managers
       # when the window is unmapped (it has no desktop at that point)
       xdotool "windowmap --sync #{@wid}"
+      xdotool "windowmap --sync #{@wid}"
       xdotool_ok "#{cmd} #{cmd}"
     end
   end # def test_multicommands_do_not_fail

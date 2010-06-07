@@ -23,7 +23,7 @@ int cmd_set_window(context_t *context) {
   };
   int option_index;
   static const char *usage = "Usage: %s [--name name] [--icon-name name] "
-            "[--role role] [--classname classname] [--class class] wid\n";
+            "[--role role] [--classname classname] [--class class] window\n";
 
   while ((c = getopt_long_only(context->argc, context->argv, "hn:i:r:C:N:",
                                longopts, &option_index)) != -1) {
@@ -61,17 +61,19 @@ int cmd_set_window(context_t *context) {
     return 1;
   }
 
-  Window wid  = (Window)strtol(context->argv[0], NULL, 0);
-  consume_args(context, 1);
+  /* TODO(sissel): error handling needed... */
+  window_each(context, context->argv[0], {
+    if (name)
+      xdo_window_setprop(context->xdo, window, "WM_NAME", name);
+    if (icon)
+      xdo_window_setprop(context->xdo, window, "WM_ICON_NAME", icon);
+    if (role)
+      xdo_window_setprop(context->xdo, window, "WM_WINDOW_ROLE", role);
+    if (classname || class)
+      xdo_window_setclass(context->xdo, window, classname, class);
+  }); /* window_each(...) */
 
-  if (name)
-    xdo_window_setprop(context->xdo, wid, "WM_NAME", name);
-  if (icon)
-    xdo_window_setprop(context->xdo, wid, "WM_ICON_NAME", icon);
-  if (role)
-    xdo_window_setprop(context->xdo, wid, "WM_WINDOW_ROLE", role);
-  if (classname || class)
-    xdo_window_setclass(context->xdo, wid, classname, class);
+  consume_args(context, 1);
 
   return 0;
 }
