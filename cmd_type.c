@@ -1,15 +1,16 @@
 #include "xdo_cmd.h"
+#include <string.h>
 
 int cmd_type(context_t *context) {
   int ret = 0;
   int i;
   int c;
   char *cmd = *context->argv;
+  char *window_arg = NULL;
   xdo_active_mods_t *active_mods = NULL;
 
   /* Options */
   int clear_modifiers = 0;
-  Window window = 0;
   useconds_t delay = 12000; /* 12ms between keystrokes default */
 
   struct option longopts[] = {
@@ -33,7 +34,7 @@ int cmd_type(context_t *context) {
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':
-        window = strtoul(optarg, NULL, 0);
+        window_arg = strdup(optarg);
         break;
       case 'd':
         /* --delay is in milliseconds, convert to microseconds */
@@ -61,24 +62,30 @@ int cmd_type(context_t *context) {
     return 1;
   }
 
-  if (clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(context->xdo);
-    xdo_clear_active_modifiers(context->xdo, window, active_mods);
-  }
-
-  for (i = 0; i < context->argc; i++) {
-    int tmp = xdo_type(context->xdo, window, context->argv[i], delay);
-
-    if (tmp) {
-      fprintf(stderr, "xdo_type reported an error\n");
+  window_each(context, window_arg, {
+    if (clear_modifiers) {
+      active_mods = xdo_get_active_modifiers(context->xdo);
+      xdo_clear_active_modifiers(context->xdo, window, active_mods);
     }
 
-    ret += tmp;
-  }
+    for (i = 0; i < context->argc; i++) {
+      int tmp = xdo_type(context->xdo, window, context->argv[i], delay);
 
-  if (clear_modifiers) {
-    xdo_set_active_modifiers(context->xdo, window, active_mods);
-    xdo_free_active_modifiers(active_mods);
+      if (tmp) {
+        fprintf(stderr, "xdo_type reported an error\n");
+      }
+
+      ret += tmp;
+    }
+
+    if (clear_modifiers) {
+      xdo_set_active_modifiers(context->xdo, window, active_mods);
+      xdo_free_active_modifiers(active_mods);
+    }
+  }); /* window_each(...) */
+
+  if (window_arg != NULL) {
+    free(window_arg);
   }
 
   consume_args(context, context->argc);

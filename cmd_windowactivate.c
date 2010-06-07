@@ -2,7 +2,6 @@
 
 int cmd_windowactivate(context_t *context) {
   int ret = 0;
-  Window wid;
   char *cmd = *context->argv;
   int opsync = 0;
 
@@ -45,17 +44,19 @@ int cmd_windowactivate(context_t *context) {
     return 1;
   }
 
-  wid = (Window)strtol(context->argv[0], NULL, 0);
-  consume_args(context, 1);
-  ret = xdo_window_activate(context->xdo, wid);
-
-  if (ret) {
-    fprintf(stderr, "xdo_window_activate reported an error\n");
-  } else {
-    if (opsync) {
-      xdo_window_wait_for_active(context->xdo, wid, 1);
+  window_each(context, context->argv[0], {
+    ret = xdo_window_activate(context->xdo, window);
+    if (ret) {
+      fprintf(stderr, "xdo_window_activate on window:%ld reported an error\n",
+              window);
+      return ret;
+    } else {
+      if (opsync) {
+        xdo_window_wait_for_active(context->xdo, window, 1);
+      }
     }
-  }
+  }); /* window_each(...) */
+  consume_args(context, 1);
 
   return ret;
 }

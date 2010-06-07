@@ -4,6 +4,21 @@
 /* TODO(sissel): use proper printf format depending on the storage
  * size of Window (could be 4 or 8 bytes depending on platform */
 #define window_print(window) (printf("%ld\n", window))
+#define window_each(context, window_arg, block) \
+{ \
+  Window *windows; \
+  int nwindows; \
+  window_list(context, window_arg, &windows, &nwindows, False); \
+  int w;\
+  for (w = 0; w < nwindows; w++) { \
+    Window window = windows[w]; \
+    {  \
+      block \
+    } \
+  } \
+} /* end define window_each */
+
+  
 
 typedef struct context {
   xdo_t *xdo;

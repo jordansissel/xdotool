@@ -3,7 +3,6 @@
 int cmd_windowsize(context_t *context) {
   int ret = 0;
   int width, height;
-  Window wid;
   int c;
 
   int use_hints = 0;
@@ -36,8 +35,9 @@ int cmd_windowsize(context_t *context) {
     }
   }
 
-  if (use_hints)
+  if (use_hints) {
     size_flags |= SIZE_USEHINTS;
+  }
 
   consume_args(context, optind);
 
@@ -48,25 +48,18 @@ int cmd_windowsize(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  wid = (Window)strtol(context->argv[0], NULL, 0);
   width = (int)strtol(context->argv[1], NULL, 0);
   height = (int)strtol(context->argv[2], NULL, 0);
 
-  Window *windows;
-  int nwindows;
-  window_list(context, 0, &windows, &nwindows, False);
-  consume_args(context, 3);
-
-  int i = 0;
-  for (i = 0; i < nwindows; i++) {
-    wid = windows[i];
-    //printf("window: %ld\n", wid);
-    ret = xdo_window_setsize(context->xdo, wid, width, height, size_flags);
+  window_each(context, context->argv[0], {
+    ret = xdo_window_setsize(context->xdo, window, width, height, size_flags);
     if (ret) {
-      fprintf(stderr, "xdo_window_setsize on window:%ld reported an error\n", wid);
+      fprintf(stderr, "xdo_window_setsize on window:%ld reported an error\n",
+              window);
       return ret;
     }
-  }
+  }); /* window_each(...) */
+  consume_args(context, 3);
 
   return ret;
 }
