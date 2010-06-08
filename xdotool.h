@@ -27,7 +27,7 @@ typedef struct context {
   Window *windows;
   int nwindows;
 
-  Window window_placeholder;
+  Window window_placeholder[1];
 } context_t;
 
 int cmd_click(context_t *context);

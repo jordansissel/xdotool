@@ -30,6 +30,7 @@ char *PROGRAM;
 static int script_main(int argc, char **argv);
 static int args_main(int argc, char **argv);
 void consume_args(context_t *context, int argc);
+void window_save(context_t *context, Window window);
 void window_list(context_t *context, const char *window_arg,
                  Window **windowlist_ret, int *nwindows_ret,
                  const int add_to_list);
@@ -66,17 +67,49 @@ void window_list(context_t *context, const char *window_arg,
   /* If window_arg is NULL and we have windows in the list, use the list.
    * If window_arg is "-" and we have windows in the list, use the list.
    */
-  if ((window_arg != NULL && !strcmp(window_arg, "-"))
-      || (window_arg == NULL && context->nwindows > 0)) {
-    if (context->windows == NULL) {
+
+  *nwindows_ret = 0;
+  *windowlist_ret = NULL;
+
+  if (window_arg == NULL && context->nwindows > 0) {
+    *windowlist_ret = context->windows;
+    *nwindows_ret = context->nwindows;
+  } else if (window_arg != NULL && window_arg[0] == '%') {
+    if (context->nwindows == 0) {
       fprintf(stderr, "There are no windows on the stack, Can't continue.\n");
-      *nwindows_ret = 0;
-      *windowlist_ret = NULL;
       return;
     }
 
-    *windowlist_ret = context->windows;
-    *nwindows_ret = context->nwindows;
+    if (strlen(window_arg) < 2) {
+      fprintf(stderr, "Invalid window selection '%s'\n", window_arg);
+      return;
+    }
+
+    /* options.
+     * %N selects the Nth window. %1, %2, %-1 (last), %-2, etc.
+     * %@ selects all
+     */
+    if (window_arg[1] == '@') {
+      *windowlist_ret = context->windows;
+      *nwindows_ret = context->nwindows;
+    } else {
+      int window_index = atoi(window_arg + 1);
+      if (window_index < 0) {
+        /* negative offset */
+        window_index = context->nwindows + window_index;
+      }
+
+      if (window_index > context->nwindows || window_index <= 0) {
+        fprintf(stderr, "%d is out of range (only %d windows in list)\n",
+                window_index, context->nwindows);
+        return;
+      }
+
+      /* Subtract 1 since %1 is the first window in the list */
+      context->window_placeholder[0] = context->windows[window_index - 1];
+      *windowlist_ret = context->window_placeholder;
+      *nwindows_ret = 1;
+    }
   } else {
     /* We can't return a pointer to a piece of the stack in this function,
      * so we'll store the window in the context_t and return a pointer
@@ -87,9 +120,9 @@ void window_list(context_t *context, const char *window_arg,
       window = (Window)strtol(window_arg, NULL, 0);
     }
 
-    context->window_placeholder = window;
+    context->window_placeholder[0] = window;
     *nwindows_ret = 1;
-    *windowlist_ret = &(context->window_placeholder);
+    *windowlist_ret = context->window_placeholder;
   }
 
   if (add_to_list) {
