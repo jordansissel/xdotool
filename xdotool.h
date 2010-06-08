@@ -26,7 +26,6 @@ typedef struct context {
   char **argv;
   Window *windows;
   int nwindows;
-
   Window window_placeholder[1];
 } context_t;
 
