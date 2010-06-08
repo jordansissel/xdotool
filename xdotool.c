@@ -72,8 +72,10 @@ void window_list(context_t *context, const char *window_arg,
   *windowlist_ret = NULL;
 
   if (window_arg == NULL && context->nwindows > 0) {
-    *windowlist_ret = context->windows;
-    *nwindows_ret = context->nwindows;
+    /* Default arg is to use the first window matched */
+    context->window_placeholder[0] = context->windows[0];
+    *windowlist_ret = context->window_placeholder;
+    *nwindows_ret = 1;
   } else if (window_arg != NULL && window_arg[0] == '%') {
     if (context->nwindows == 0) {
       fprintf(stderr, "There are no windows on the stack, Can't continue.\n");
