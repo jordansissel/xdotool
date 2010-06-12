@@ -29,11 +29,6 @@ int cmd_getactivewindow(context_t *context) {
 
   consume_args(context, optind);
 
-  //if (context->argc != 0) {
-    //fprintf(stderr, usage, cmd);
-    //return 1;
-  //}
-
   ret = xdo_window_get_active(context->xdo, &window);
 
   if (ret) {

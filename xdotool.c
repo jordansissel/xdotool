@@ -34,6 +34,10 @@ void window_save(context_t *context, Window window);
 void window_list(context_t *context, const char *window_arg,
                  Window **windowlist_ret, int *nwindows_ret,
                  const int add_to_list);
+int window_test(context_t *context, const char *window_arg);
+int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
+                   const char **window_arg);
+int window_is_valid(context_t *context, const char *window_arg);
 int is_command(char* cmd);
 
 void consume_args(context_t *context, int argc) {
@@ -60,13 +64,67 @@ void window_save(context_t *context, Window window) {
   context->windows[0] = window;
 } /* void window_save(context_t *, Window) */
 
+int window_is_valid(context_t *context, const char *window_arg) {
+  if (window_arg == NULL) {
+    return True;
+  }
+
+  if (window_arg[0] != '%') {
+    return True;
+  }
+
+  if (window_arg[1] == '\0') {
+    return False;
+  }
+
+  if (window_arg[1] == '@') {
+    return True;
+  }
+
+  int window_index = atoi(window_arg + 1) - 1;
+  if (abs(window_index) >= context->nwindows) {
+    return False;
+  }
+
+  return True;
+} /* int window_is_valid(context_t *, const char *) */
+
+int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
+                   const char **window_arg) {
+  int consume = min_arg;
+
+  if (context->argc < min_arg) {
+    fprintf(stderr, "Too few arguments (got %d, minimum is %d)\n",
+            context->argc, min_arg);
+    return False;
+  } else if (context->argc == min_arg) {
+    /* nothing, keep default */
+  } else if (context->argc > min_arg) {
+    if (is_command(context->argv[min_arg])) {
+      /* keep default */
+    } else {
+      /* got enough args, let's use the window you asked for */
+      *window_arg = context->argv[window_arg_pos];
+      consume++;
+    }
+  }
+
+  if (!window_is_valid(context, *window_arg)) {
+    fprintf(stderr, "Invalid window '%s'\n", *window_arg);
+    return False;
+  }
+
+  consume_args(context, consume);
+  return True;
+} /* int window_get_arg(context_t *, int, int, char **, int *) */
+
 void window_list(context_t *context, const char *window_arg,
                  Window **windowlist_ret, int *nwindows_ret,
                  const int add_to_list) {
-  //printf("%s\n", window_arg);
-
   /* If window_arg is NULL and we have windows in the list, use the list.
-   * If window_arg is "-" and we have windows in the list, use the list.
+   * If window_arg is "%@" and we have windows in the list, use the list.
+   * If window_arg is "%N" and we have windows in the list, use Nth window.
+   * Otheriwse, assume it's a window id.
    */
 
   *nwindows_ret = 0;

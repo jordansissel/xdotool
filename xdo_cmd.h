@@ -24,4 +24,8 @@ extern void window_list(context_t *context, const char *window_arg,
 extern void window_save(context_t *context, Window window);
 extern int is_command(char *cmd);
 
+extern int window_is_valid(context_t *context, const char *window_arg);
+extern int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
+                          const char **window_arg);
+
 #endif /* _XDO_CMD_H_ */

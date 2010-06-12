@@ -15,7 +15,8 @@ int cmd_windowactivate(context_t *context) {
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-    "Usage: %s [options] wid\n"
+    "Usage: %s [options] [window=%1]\n"
+    "If no window is given, %1 is used. See WINDOW STACK in xdotool(1).\n"
     "--sync    - only exit once the window is active (is visible + active)\n";
 
   int option_index;
@@ -39,12 +40,13 @@ int cmd_windowactivate(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc < 1) {
+  const char *window_arg = "%1";
+  if (!window_get_arg(context, 0, 0, &window_arg)) {
     fprintf(stderr, usage, cmd);
-    return 1;
+    return EXIT_FAILURE;
   }
 
-  window_each(context, context->argv[0], {
+  window_each(context, window_arg, {
     ret = xdo_window_activate(context->xdo, window);
     if (ret) {
       fprintf(stderr, "xdo_window_activate on window:%ld reported an error\n",
@@ -56,7 +58,6 @@ int cmd_windowactivate(context_t *context) {
       }
     }
   }); /* window_each(...) */
-  consume_args(context, 1);
 
   return ret;
 }

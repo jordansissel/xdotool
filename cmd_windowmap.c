@@ -4,7 +4,6 @@ int cmd_windowmap(context_t *context) {
   int ret = 0;
   char *cmd = *context->argv;
   const char *window_arg = "%1";
-  int consume = 0;
   int opsync = 0;
 
   int c;
@@ -17,7 +16,8 @@ int cmd_windowmap(context_t *context) {
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-    "Usage: %s [options] window\n"
+    "Usage: %s [options] [window=%1]\n"
+    "If no window is given, %1 is assumed. See WINDOW STACK in xdotool(1).\n"
     "--sync    - only exit once the window has been mapped (is visible)\n";
 
   int option_index;
@@ -41,9 +41,9 @@ int cmd_windowmap(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc >= 1 && !is_command(context->argv[0])) {
-    window_arg = context->argv[0];
-    consume = 1;
+  if (!window_get_arg(context, 0, 0, &window_arg)) {
+    fprintf(stderr, usage, cmd);
+    return EXIT_FAILURE;
   }
 
   window_each(context, window_arg, {
@@ -56,8 +56,6 @@ int cmd_windowmap(context_t *context) {
       }
     }
   }); /* window_each(...) */
-
-  consume_args(context, consume);
 
   return ret;
 }

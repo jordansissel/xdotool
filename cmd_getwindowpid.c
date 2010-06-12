@@ -28,12 +28,13 @@ int cmd_getwindowpid(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc < 1) {
+  const char *window_arg = "%1";
+  if (!window_get_arg(context, 0, 0, &window_arg)) {
     fprintf(stderr, usage, cmd);
-    return 1;
+    return EXIT_FAILURE;
   }
 
-  window_each(context, context->argv[0], {
+  window_each(context, window_arg, {
     pid = xdo_window_get_pid(context->xdo, window);
     if (pid == 0) {
       /* TODO(sissel): probably shouldn't exit failure when iterating over
@@ -44,8 +45,6 @@ int cmd_getwindowpid(context_t *context) {
       printf("%d\n", pid);
     }
   }); /* window_each(...) */
-
-  consume_args(context, 1);
   return EXIT_SUCCESS;
 }
 

@@ -10,7 +10,9 @@ int cmd_get_desktop_for_window(context_t *context) {
     { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = "Usage: %s <window>\n";
+  static const char *usage = 
+    "Usage: %s [window=%1]\n"
+    "If no window is given, %1 is assumed. See WINDOW STACK in xdotool(1).\n";
   int option_index;
 
   while ((c = getopt_long_only(context->argc, context->argv, "h",
@@ -29,16 +31,16 @@ int cmd_get_desktop_for_window(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc < 1) {
+  const char *window_arg = "%1";
+  if (!window_get_arg(context, 0, 0, &window_arg)) {
     fprintf(stderr, usage, cmd);
-    return 1;
+    return EXIT_FAILURE;
   }
 
-  window_each(context, context->argv[0], {
+  window_each(context, window_arg, {
     ret = xdo_get_desktop_for_window(context->xdo, window, &desktop);
     printf("%ld\n", desktop);
   }); /* window_each(...) */
-  consume_args(context, 1);
   return ret;
 }
 
