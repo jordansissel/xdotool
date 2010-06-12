@@ -3,6 +3,8 @@
 int cmd_windowunmap(context_t *context) {
   int ret = 0;
   char *cmd = *context->argv;
+  const char *window_arg = "%1";
+  int consume = 0;
   int opsync;
 
   int c;
@@ -15,7 +17,7 @@ int cmd_windowunmap(context_t *context) {
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-    "Usage: %s [--sync] window\n"
+    "Usage: %s [--sync] [window=%1]\n"
     "--sync    - only exit once the window has been unmapped (is hidden)\n";
 
   int option_index;
@@ -38,13 +40,13 @@ int cmd_windowunmap(context_t *context) {
   }
 
   consume_args(context, optind);
-
-  if (context->argc < 1) {
-    fprintf(stderr, usage, cmd);
-    return 1;
+  
+  if (context->argc >= 1 && !is_command(context->argv[0])) {
+    consume = 1;
+    window_arg = context->argv[0];
   }
 
-  window_each(context, context->argv[0], {
+  window_each(context, window_arg, {
     ret = xdo_window_unmap(context->xdo, window);
     if (ret) {
       fprintf(stderr, "xdo_window_unmap reported an error\n");
@@ -54,8 +56,9 @@ int cmd_windowunmap(context_t *context) {
       xdo_window_wait_for_map_state(context->xdo, window, IsUnmapped);
     }
   }); /* window_each(...) */
-  
-  consume_args(context, 1);
+
+  consume_args(context, consume);  
+
   return ret;
 }
 

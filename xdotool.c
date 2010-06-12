@@ -34,6 +34,7 @@ void window_save(context_t *context, Window window);
 void window_list(context_t *context, const char *window_arg,
                  Window **windowlist_ret, int *nwindows_ret,
                  const int add_to_list);
+int is_command(char* cmd);
 
 void consume_args(context_t *context, int argc) {
   if (argc > context->argc) {
@@ -176,6 +177,15 @@ struct dispatch {
   { "get_desktop_for_window", cmd_get_desktop_for_window, },
   { NULL, NULL, },
 };
+
+int is_command(char* cmd) {
+  for (int i = 0; dispatch[i].name != NULL; i++) {
+      if (!strcasecmp(dispatch[i].name, cmd)) {
+	return 1;
+      }
+    }
+  return 0;
+}
 
 int main(int argc, char **argv) {
   /* read stdin if stdin is not a tty or first argument is "-" */

@@ -3,6 +3,8 @@
 int cmd_windowmap(context_t *context) {
   int ret = 0;
   char *cmd = *context->argv;
+  const char *window_arg = "%1";
+  int consume = 0;
   int opsync = 0;
 
   int c;
@@ -39,12 +41,12 @@ int cmd_windowmap(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc < 1) {
-    fprintf(stderr, usage, cmd);
-    return EXIT_FAILURE;
+  if (context->argc >= 1 && !is_command(context->argv[0])) {
+    window_arg = context->argv[0];
+    consume = 1;
   }
 
-  window_each(context, context->argv[0], {
+  window_each(context, window_arg, {
     ret = xdo_window_map(context->xdo, window);
     if (ret) {
       fprintf(stderr, "xdo_window_map reported an error\n");
@@ -54,7 +56,8 @@ int cmd_windowmap(context_t *context) {
       }
     }
   }); /* window_each(...) */
-  consume_args(context, 1);
-  
+
+  consume_args(context, consume);
+
   return ret;
 }
