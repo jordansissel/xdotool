@@ -337,7 +337,7 @@ World"
 
 The default options are C<--name --class --classname>
 
-=item B<getwindowpid> I[window=%1]
+=item B<getwindowpid> I<[window=%1]>
 
 Output the PID owning a given window. This requires effort from the application
 owning a window and may not work for all windows. This uses _NET_WM_PID
@@ -392,7 +392,7 @@ necessary to the requested size.
 Example: To set a terminal to be 80x24 characters, you would use:
  xdotool windowsize --usehints I<some_windowid> 80 24
 
-=item B<windowmove> I<[options]> I[window=%1] I<x> I<y>
+=item B<windowmove> I<[options]> I<[window=%1]> I<x> I<y>
 
 Move the window to the given position. If no window is given, %1 is the
 default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
@@ -408,7 +408,7 @@ scripts that depend on actions being completed before moving on.
 =back
 
 
-=item B<windowfocus> I<[options]> I[window=%1]
+=item B<windowfocus> I<[options]> I<[window=%1]>
 
 Focus a window. If no window is given, %1 is the default. See L<WINDOW STACK>
 and L<COMMAND CHAINING> for more details.
@@ -426,7 +426,7 @@ before moving on.
 =back
 
 
-=item B<windowmap> I<[options]> I[window=%1]
+=item B<windowmap> I<[options]> I<[window=%1]>
 
 Map a window. In X11 terminology, mapping a window means making it visible on
 the screen. If no window is given, %1 is the default. See L<WINDOW STACK> and
