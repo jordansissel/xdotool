@@ -949,7 +949,7 @@ int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret) {
   return _is_success("XGetInputFocus", ret == 0);
 }
 
-int xdo_window_wait_for_focus(const xdo_t *xdo, Window wid, int want_focus) {
+int xdo_window_wait_for_focus(const xdo_t *xdo, Window window, int want_focus) {
   Window focuswin = 0;
   int ret;
   ret = xdo_window_get_focus(xdo, &focuswin);
@@ -957,7 +957,8 @@ int xdo_window_wait_for_focus(const xdo_t *xdo, Window wid, int want_focus) {
     return ret;
   }
 
-  while (want_focus ? focuswin != wid : focuswin == wid) {
+  while (want_focus ? focuswin != window : focuswin == window) {
+    //printf("Current win: %ld, want %ld\n", focuswin, window);
     usleep(30000); /* TODO(sissel): Use exponential backoff up to 1 second */
     ret = xdo_window_get_focus(xdo, &focuswin);
     if (ret != 0) {

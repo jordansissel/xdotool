@@ -57,9 +57,9 @@ int cmd_windowsize(context_t *context) {
   const char *window_arg = "%1";
 
   if (!window_get_arg(context, 2, 0, &window_arg)) {
-    fprintf(stderr, usage, cmd);
     fprintf(stderr, "Invalid argument count, got %d, expected %d\n", 
             3, context->argc);
+    fprintf(stderr, usage, cmd);
     return EXIT_FAILURE;
   }
 

@@ -1,3 +1,9 @@
+?.201006??.*:
+  - window chaining and stack stuff
+  - windowsize --sync
+  - Documented libxdo through xdo.h
+  ---
+
 2.20100602.*:
   - testing fix: Make mouse movement tests more tolerant of slight variations.
 

@@ -104,7 +104,7 @@ int cmd_key(context_t *context) {
 
     for (i = 0; i < context->argc; i++) {
       if (is_command(context->argv[i])) {
-        max_arg = i + 1;
+        max_arg = i;
         break;
       }
       int tmp = keyfunc(context->xdo, window, context->argv[i], delay);

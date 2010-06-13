@@ -263,8 +263,13 @@ This makes getmouselocation output shell data you can eval. Example:
 =item B<search> I<[options]> I<pattern>
 
 Search for windows with titles, names, or classes with a regular expression
-pattern. The output is line-delimited list of X window identifiers. The result
-is saved to the window stack. See L<WINDOW STACK> for details.
+pattern. The output is line-delimited list of X window identifiers. If you
+are using L<COMMAND CHAINING>, the L<search> command will only write window
+ids to stdout if it is the last (or only) command in the chain; otherwise, it
+is silent.
+
+The result is saved to the window stack for future chained commands. See
+L<WINDOW STACK> and L<COMMAND CHAINING> for details.
 
 The options available are:
 
@@ -332,12 +337,18 @@ World"
 
 The default options are C<--name --class --classname>
 
-=item B<getwindowpid> I<window>
+=item B<getwindowpid> I[window=%1]
 
 Output the PID owning a given window. This requires effort from the application
 owning a window and may not work for all windows. This uses _NET_WM_PID
 property of the window. See L<EXTENDED WINDOW MANAGER HINTS> below for more
 information.
+
+If no window is given, the default is '%1'. If no windows are on the stack, then
+this is an error. See L<WINDOW STACK> for more details.
+
+Example: Find the PID for all xterms:
+ xdotool search --class xterm getwindowpid %@
 
 =item B<getwindowfocus> [-f]
 
@@ -351,9 +362,10 @@ WM_CLASS set and return that window id.
 If you really want the window currently having focus and don't care if it has a
 WM_CLASS setting, then use 'getwindowfocus -f'
 
-=item B<windowsize> [options] windowid width height
+=item B<windowsize> [options] [window=%1] width height
 
-Set the window size of the given window
+Set the window size of the given window. If no window is given, %1 is the
+default.  See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
 
 The options available are:
 
@@ -365,14 +377,25 @@ Use window sizing hints (when available) to set width and height.  This is
 useful on terminals for setting the size based on row/column of text rather
 than pixels.
 
+=item B<--sync> 
+
+After sending the window size request, wait until the window is actually
+resized. If no change is necessary, we will not wait. This is useful for
+scripts that depend on actions being completed before moving on.
+
+Note: Because many window managers may ignore or alter the original resize
+request, we will wait until the size changes from its original size, not 
+necessary to the requested size.
+
 =back
 
 Example: To set a terminal to be 80x24 characters, you would use:
-C<xdotool windowsize --usehints windowid 80 24>
+ xdotool windowsize --usehints I<some_windowid> 80 24
 
-=item B<windowmove> I<[options]> I<windowid> I<x> I<y>
+=item B<windowmove> I<[options]> I[window=%1] I<x> I<y>
 
-Move the window to the given position.
+Move the window to the given position. If no window is given, %1 is the
+default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
 
 =over
 
@@ -385,9 +408,12 @@ scripts that depend on actions being completed before moving on.
 =back
 
 
-=item B<windowfocus> I<[options]> I<windowid>
+=item B<windowfocus> I<[options]> I[window=%1]
 
-Focus the window.
+Focus a window. If no window is given, %1 is the default. See L<WINDOW STACK>
+and L<COMMAND CHAINING> for more details.
+
+Uses L<XSetInputFocus> which may be ignored by some window managers or programs.
 
 =over
 
@@ -400,10 +426,12 @@ before moving on.
 =back
 
 
-=item B<windowmap> I<[options]> I<window_id>
+=item B<windowmap> I<[options]> I[window=%1]
 
 Map a window. In X11 terminology, mapping a window means making it visible on
-the screen.
+the screen. If no window is given, %1 is the default. See L<WINDOW STACK> and
+L<COMMAND CHAINING> for more details.
+
 
 =over
 

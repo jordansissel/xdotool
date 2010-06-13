@@ -2,7 +2,6 @@
 
 int cmd_windowfocus(context_t *context) {
   int ret = 0;
-  Window wid;
   char *cmd = *context->argv;
   int opsync = 0;
 
@@ -16,7 +15,7 @@ int cmd_windowfocus(context_t *context) {
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-    "Usage: %s wid\n"
+    "Usage: %s [window=%1]\n"
     "--sync    - only exit once the window has focus\n";
 
   int option_index;
@@ -40,22 +39,23 @@ int cmd_windowfocus(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc < 1) {
+  const char *window_arg = "%1";
+  if (!window_get_arg(context, 0, 0, &window_arg)) {
     fprintf(stderr, usage, cmd);
-    return 1;
+    return EXIT_FAILURE;
   }
 
-  wid = (Window)strtol(context->argv[0], NULL, 0);
-  consume_args(context, 1);
-
-  ret = xdo_window_focus(context->xdo, wid);
-  if (ret) {
-    fprintf(stderr, "xdo_window_focus reported an error\n");
-  } else {
-    if (opsync) {
-      xdo_window_wait_for_focus(context->xdo, wid, 1);
+  window_each(context, window_arg, {
+    ret = xdo_window_focus(context->xdo, window);
+    if (ret) {
+      fprintf(stderr, "xdo_window_focus reported an error\n");
+      return ret;
+    } else {
+      if (opsync) {
+        xdo_window_wait_for_focus(context->xdo, window, 1);
+      }
     }
-  }
+  }); /* window_each(...) */
 
   return ret;
 }

@@ -9,7 +9,9 @@ int cmd_getwindowpid(context_t *context) {
     { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = "Usage: %s <window id>\n";
+  static const char *usage = 
+    "Usage: %s [window=%1]\n"
+    HELP_SEE_WINDOW_STACK;
   int option_index;
 
   while ((c = getopt_long_only(context->argc, context->argv, "+h",

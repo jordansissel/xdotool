@@ -53,32 +53,22 @@ int cmd_windowmove(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc < 2) {
-    fprintf(stderr, usage, cmd);
-    return 1;
-  }
-
-  int consume = 0;
   const char *window_arg = "%1";
 
-  if(context->argc == 2 || is_command(context->argv[2])) {
-    // implicit "%1"
-    windowmove.x = (int)strtol(context->argv[0], NULL, 0);
-    windowmove.y = (int)strtol(context->argv[1], NULL, 0);
-    consume = 2;
-    
-  } else {
-    window_arg = context->argv[0];
-    windowmove.x = (int)strtol(context->argv[1], NULL, 0);
-    windowmove.y = (int)strtol(context->argv[2], NULL, 0);
-    consume = 3;
+  if (!window_get_arg(context, 2, 0, &window_arg)) {
+    fprintf(stderr, usage, cmd);
+    return EXIT_FAILURE;
   }
+
+  windowmove.x = (int)strtol(context->argv[0], NULL, 0);
+  windowmove.y = (int)strtol(context->argv[1], NULL, 0);
+
+  consume_args(context, 2);  
 
   window_each(context, window_arg, {
       windowmove.window = window;
       _windowmove(context, &windowmove);
     }); /* window_each(...) */
-  consume_args(context, consume);  
   return ret;
 }
 

@@ -4,7 +4,7 @@
 require "test/unit"
 require "xdo_test_helper"
 
-class XdotoolSimpleCommandTests < Test::Unit::TestCase
+class XdotoolChainingTests < Test::Unit::TestCase
   include XdoTestHelper
 
   def setup
@@ -63,11 +63,11 @@ class XdotoolSimpleCommandTests < Test::Unit::TestCase
     end
   end # def test_output_expectations
 
-  def test_multicommands_do_not_fail
+  def test_chaining_does_not_fail
     @cmds << "search ."
     [@cmds, @cmds_withoutput].flatten.each do |cmd|
-      # key and type commands consume all args. Do not try to multiply them.
-      next if cmd =~ /^key/ || cmd =~ /^type/
+      # type command consumes all args. Skip it.
+      next if cmd =~ /^type/
 
       # Sometimes, the window need to be mapped for a command to work.
       # For example, get_desktop_for_window fails on many window managers

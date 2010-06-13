@@ -72,7 +72,14 @@ int window_is_valid(context_t *context, const char *window_arg) {
     return True;
   }
 
+  /* Selected a window with %N or %@, but are there windows on the stack? */
+  if (context->nwindows == 0) {
+    fprintf(stderr, "There are no windows in the stack\n");
+    return False;
+  }
+
   if (window_arg[1] == '\0') {
+    fprintf(stderr, "Invalid window stack selection '%s'\n", window_arg);
     return False;
   }
 
@@ -80,8 +87,9 @@ int window_is_valid(context_t *context, const char *window_arg) {
     return True;
   }
 
-  int window_index = atoi(window_arg + 1) - 1;
-  if (abs(window_index) >= context->nwindows) {
+  int window_index = atoi(window_arg + 1);
+  if (abs(window_index - 1) >= context->nwindows || (window_index == 0)) {
+    fprintf(stderr, "Invalid window stack selection '%s' (out of range)\n", window_arg);
     return False;
   }
 
