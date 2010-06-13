@@ -9,9 +9,9 @@
   Window *windows; \
   int nwindows; \
   window_list(context, window_arg, &windows, &nwindows, False); \
-  int w;\
-  for (w = 0; w < nwindows; w++) { \
-    Window window = windows[w]; \
+  int w_index;\
+  for (w_index = 0; w_index < nwindows; w_index++) { \
+    Window window = windows[w_index]; \
     {  \
       block \
     } \

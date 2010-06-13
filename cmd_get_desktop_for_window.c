@@ -12,7 +12,7 @@ int cmd_get_desktop_for_window(context_t *context) {
   };
   static const char *usage = 
     "Usage: %s [window=%1]\n"
-    "If no window is given, %1 is assumed. See WINDOW STACK in xdotool(1).\n";
+    HELP_SEE_WINDOW_STACK;
   int option_index;
 
   while ((c = getopt_long_only(context->argc, context->argv, "h",

@@ -399,6 +399,12 @@ int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
  */
 int xdo_window_wait_for_map_state(const xdo_t *xdo, Window wid, int map_state);
 
+#define SIZE_TO 0
+#define SIZE_FROM 1
+int xdo_window_wait_for_size(const xdo_t *xdo, Window window, unsigned int width,
+                             unsigned int height, int flags, int to_or_from);
+
+
 /**
  * Move a window to a specific location.
  *
@@ -409,6 +415,22 @@ int xdo_window_wait_for_map_state(const xdo_t *xdo, Window wid, int map_state);
  * @param y the Y coordinate to move to.
  */
 int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y);
+
+/**
+ * Apply a window's sizing hints (if any) to a given width and height.
+ *
+ * This function wraps XGetWMNormalHints() and applies any 
+ * resize increment and base size to your given width and height values.
+ *
+ * @param window the window to use
+ * @param width the unit width you want to translate
+ * @param height the unit height you want to translate
+ * @param width_ret the return location of the translated width
+ * @param height_ret the return locatino of the translated height
+ */
+int xdo_window_translate_with_sizehint(const xdo_t *xdo, Window window,
+                                       int width, int height, int *width_ret,
+                                       int *height_ret);
 
 /**
  * Change the window size.

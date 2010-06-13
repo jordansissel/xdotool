@@ -209,39 +209,54 @@ int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y) {
   return _is_success("XConfigureWindow", ret == 0);
 }
 
-int xdo_window_setsize(const xdo_t *xdo, Window wid, int width, int height, int flags) {
+int xdo_window_translate_with_sizehint(const xdo_t *xdo, Window window,
+                                       int width, int height, int *width_ret,
+                                       int *height_ret) {
+  XSizeHints hints;
+  long supplied_return;
+  XGetWMNormalHints(xdo->xdpy, window, &hints, &supplied_return);
+  if (supplied_return & PResizeInc) {
+    width *= hints.width_inc;
+    height *= hints.height_inc;
+  } else {
+    fprintf(stderr, "No size hints found for window %ld\n", window);
+    *width_ret = width;
+    *height_ret = width;
+  }
+
+  if (supplied_return & PBaseSize) {
+    width += hints.base_width;
+    height += hints.base_height;
+  }
+
+  *width_ret = width;
+  *height_ret = height;
+
+  return XDO_SUCCESS;
+}
+
+int xdo_window_setsize(const xdo_t *xdo, Window window, int width, int height, int flags) {
   XWindowChanges wc;
   int ret = 0;
   int cw_flags = 0;
 
-  wc.width = width;
-  wc.height = height;
-
   if (flags & SIZE_USEHINTS) {
-    XSizeHints hints;
-    long supplied_return;
-    memset(&hints, 0, sizeof(hints));
-    XGetWMNormalHints(xdo->xdpy, wid, &hints, &supplied_return);
-    if (supplied_return & PResizeInc) {
-      wc.width *= hints.width_inc;
-      wc.height *= hints.height_inc;
-    } else {
-      fprintf(stderr, "No size hints found for this window\n");
-    }
-
-    if (supplied_return & PBaseSize) {
-      wc.width += hints.base_width;
-      wc.height += hints.base_height;
-    }
-
+    xdo_window_translate_with_sizehint(xdo, window, width, height,
+                                       &wc.width, &wc.height);
+  } else {
+    wc.width = width;
+    wc.height = height;
   }
 
-  if (width > 0)
+  if (width > 0) {
     cw_flags |= CWWidth;
-  if (height > 0)
-    cw_flags |= CWHeight;
+  }
 
-  ret = XConfigureWindow(xdo->xdpy, wid, cw_flags, &wc);
+  if (height > 0) {
+    cw_flags |= CWHeight;
+  }
+
+  ret = XConfigureWindow(xdo->xdpy, window, cw_flags, &wc);
   XFlush(xdo->xdpy);
   return _is_success("XConfigureWindow", ret == 0);
 }
@@ -289,6 +304,28 @@ int xdo_window_focus(const xdo_t *xdo, Window wid) {
   ret = XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
   XFlush(xdo->xdpy);
   return _is_success("XSetInputFocus", ret == 0);
+}
+
+int xdo_window_wait_for_size(const xdo_t *xdo, Window window, unsigned int width,
+                             unsigned int height, int flags, int to_or_from) {
+  unsigned int cur_width, cur_height;
+
+  if (flags & SIZE_USEHINTS) {
+    xdo_window_translate_with_sizehint(xdo, window, width, height,
+                                       &width, &height);
+  }
+
+  xdo_get_window_size(xdo, window, (unsigned int *)&cur_width,
+                      (unsigned int *)&cur_height);
+  while (to_or_from == SIZE_TO
+         ? (cur_width != width && cur_height != height)
+         : (cur_width == width && cur_height == height)) {
+    xdo_get_window_size(xdo, window, (unsigned int *)&cur_width,
+                        (unsigned int *)&cur_height);
+    usleep(30000);
+  }
+
+  return 0;
 }
 
 int xdo_window_wait_for_active(const xdo_t *xdo, Window window, int active) {
@@ -767,8 +804,8 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
 
     //_xdo_send_key(xdo, window, keycode, modstate, True, delay);
     //_xdo_send_key(xdo, window, keycode, modstate, False, delay);
-    xdo_keysequence_list_do(xdo, window, &key, 1, True, NULL, delay);
-    xdo_keysequence_list_do(xdo, window, &key, 1, False, NULL, delay);
+    xdo_keysequence_list_do(xdo, window, &key, 1, True, NULL, delay / 2);
+    xdo_keysequence_list_do(xdo, window, &key, 1, False, NULL, delay / 2);
 
     /* XXX: Flush here or at the end? or never? */
     //XFlush(xdo->xdpy);
@@ -888,8 +925,8 @@ int xdo_keysequence(const xdo_t *xdo, Window window, const char *keyseq,
                     useconds_t delay) {
   int ret = 0;
   int modifier = 0;
-  ret += _xdo_keysequence_do(xdo, window, keyseq, True, &modifier, delay);
-  ret += _xdo_keysequence_do(xdo, window, keyseq, False, &modifier, delay);
+  ret += _xdo_keysequence_do(xdo, window, keyseq, True, &modifier, delay / 2);
+  ret += _xdo_keysequence_do(xdo, window, keyseq, False, &modifier, delay / 2);
   return ret;
 }
 

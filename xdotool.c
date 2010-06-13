@@ -34,7 +34,6 @@ void window_save(context_t *context, Window window);
 void window_list(context_t *context, const char *window_arg,
                  Window **windowlist_ret, int *nwindows_ret,
                  const int add_to_list);
-int window_test(context_t *context, const char *window_arg);
 int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
                    const char **window_arg);
 int window_is_valid(context_t *context, const char *window_arg);
@@ -91,8 +90,6 @@ int window_is_valid(context_t *context, const char *window_arg) {
 
 int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
                    const char **window_arg) {
-  int consume = min_arg;
-
   if (context->argc < min_arg) {
     fprintf(stderr, "Too few arguments (got %d, minimum is %d)\n",
             context->argc, min_arg);
@@ -105,7 +102,7 @@ int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
     } else {
       /* got enough args, let's use the window you asked for */
       *window_arg = context->argv[window_arg_pos];
-      consume++;
+      consume_args(context, 1);
     }
   }
 
@@ -114,7 +111,6 @@ int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
     return False;
   }
 
-  consume_args(context, consume);
   return True;
 } /* int window_get_arg(context_t *, int, int, char **, int *) */
 
@@ -130,12 +126,14 @@ void window_list(context_t *context, const char *window_arg,
   *nwindows_ret = 0;
   *windowlist_ret = NULL;
 
-  if (window_arg == NULL && context->nwindows > 0) {
-    /* Default arg is to use the first window matched */
-    context->window_placeholder[0] = context->windows[0];
-    *windowlist_ret = context->window_placeholder;
-    *nwindows_ret = 1;
-  } else if (window_arg != NULL && window_arg[0] == '%') {
+  //if (window_arg == NULL && context->nwindows > 0) {
+    /* Default is to use the first window matched */
+    //context->window_placeholder[0] = context->windows[0];
+    //*windowlist_ret = context->window_placeholder;
+    //*nwindows_ret = 1;
+  //if (window_arg == NULL) {
+  //} else
+  if (window_arg != NULL && window_arg[0] == '%') {
     if (context->nwindows == 0) {
       fprintf(stderr, "There are no windows on the stack, Can't continue.\n");
       return;
@@ -172,6 +170,9 @@ void window_list(context_t *context, const char *window_arg,
       *nwindows_ret = 1;
     }
   } else {
+    /* Otherwise, window_arg is either invalid or null. Default to CURRENTWINDOW
+     */
+
     /* We can't return a pointer to a piece of the stack in this function,
      * so we'll store the window in the context_t and return a pointer
      * to that.
@@ -237,7 +238,8 @@ struct dispatch {
 };
 
 int is_command(char* cmd) {
-  for (int i = 0; dispatch[i].name != NULL; i++) {
+  int i;
+  for (i = 0; dispatch[i].name != NULL; i++) {
       if (!strcasecmp(dispatch[i].name, cmd)) {
 	return 1;
       }

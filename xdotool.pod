@@ -21,19 +21,23 @@ See the L</EXTENDED WINDOW MANAGER HINTS> section for more information.
 
 =over
 
-=item B<key> I<[options]> I<keystroke>
+=item B<key> I<[options]> I<keystroke> [I<keystroke> ...]
 
 Options:
 
 =over
 
-=item B<--window windowid> 
+=item B<--window window> 
 
-Send keystrokes to a specific window id. See SENDEVENT below.
+Send keystrokes to a specific window id. . You can use
+L<WINDOW STACK> references like "%1" and "%@" here. If there is a window stack,
+then "%1" is the default, otherwise the current window is used.
+
+See also: L<SENDEVENT NOTES> and L<WINDOW STACK>
 
 =item B<--clearmodifiers> 
 
-Clear modifiers before sending keystrokes. See CLEARMODIFIERS below.
+Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
 
 =item B<--delay milliseconds> 
 
@@ -51,12 +55,22 @@ and "meta" which all map to Foo_L, such as Alt_L and Control_L, etc.
 In cases where your keyboard doesn't actually have the key you want to type,
 xdotool will automatically find an unused keycode and use that to type the key.
 
+With respect to L<COMMAND CHAINING>, this command consumes the remainder of the
+arguments or until a new xdotool command is seen, because no xdotool commands
+are valid keystrokes.
+
 Example: Send the keystroke "F2"
  xdotool key F2
 
 Example: Send 'a' with an accent over it (not on english keyboards, but still
 works with xdotool)
  xdotool key Aacute
+
+Example: Send ctrl+l and then BackSpace as separate keystrokes:
+ xdotool key ctrl+l BackSpace
+
+Example: Send ctrl+c to all windows matching title 'gdb' (See L<COMMAND CHAINING>)
+ xdotool search --name gdb key ctrl+c
 
 =item B<keydown> I<[options]> I<keystroke>
 
@@ -74,7 +88,10 @@ Options:
 
 =item B<--window windowid> 
 
-Send keystrokes to a specific window id. See SENDEVENT below.
+Send keystrokes to a specific window id. See L<SENDEVENT NOTES> below. The
+default, if no window is given, depends on the window stack. If the window
+stack is empty the current window is typed at using XTEST. Otherwise, the
+default is "%1" (see L<WINDOW STACK>).
 
 =item B<--delay milliseconds> 
 
@@ -82,12 +99,15 @@ Delay between keystrokes. Default is 12ms.
 
 =item B<--clearmodifiers> 
 
-Clear modifiers before sending keystrokes. See CLEARMODIFIERS below.
+Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
 
 =back
 
 Types as if you had typed it. Supports newlines and tabs (ASCII newline and
 tab). Each keystroke is separated by a delay given by the delay option.
+
+With respect to L<COMMAND CHAINING>, this command consumes the remainder of the
+arguments and types them. That is, no commands can chain after 'type'.
 
 Example: to type 'Hello world!' you would do:
  xdotool type 'Hello world!'
@@ -100,7 +120,7 @@ Example: to type 'Hello world!' you would do:
 
 =item B<mousemove> I<[options]> I<x> I<y>
 
-Move the mouse to the specific X and Y coordinates on the screen
+Move the mouse to the specific X and Y coordinates on the screen.
 
 =over
 
@@ -109,12 +129,16 @@ Move the mouse to the specific X and Y coordinates on the screen
 Specify a window to move relative to. Coordinates 0,0
 are at the top left of the window you choose.
 
+L<WINDOW STACK> references are valid here, such as %1 and %@. Though, using %@
+probably doesn't make sense.
+
 =item B<--screen SCREEN>
 
 Move the mouse to the specified screen to move to. This is only useful if you
 have multiple screens and ARE NOT using Xinerama.
 
-The default is the current screen.
+The default is the current screen. If you specify --window, the --screen flag
+is ignored.
 
 =item B<--polar> 
 
@@ -129,7 +153,7 @@ then the origin is the center of that window.
 
 =item B<--clearmodifiers> 
 
-See CLEARMODIFIERS
+See L<CLEARMODIFIERS>
 
 =item B<--sync> 
 
@@ -171,7 +195,7 @@ better in the general case than waiting for a specific target.
 
 =item B<--clearmodifiers> 
 
-See CLEARMODIFIERS
+See L<CLEARMODIFIERS>
 
 =back
 
@@ -187,12 +211,16 @@ wheel up is 4, wheel down is 5.
 
 =item B<--clearmodifiers> 
 
-Clear modifiers before clicking. See CLEARMODIFIERS below.
+Clear modifiers before clicking. See L<CLEARMODIFIERS> below.
 
 =item B<--window> WINDOW 
 
-Specify a window to send a click to. See SENDEVENT below for caveats. Uses the
+Specify a window to send a click to. See L<SENDEVENT NOTES> below for caveats. Uses the
 current mouse position when generating the event.
+
+The default, if no window is given, depends on the window stack. If the window
+stack is empty the current window is typed at using XTEST. Otherwise, the
+default is "%1" (see L<WINDOW STACK>).
 
 =back
 
@@ -235,7 +263,8 @@ This makes getmouselocation output shell data you can eval. Example:
 =item B<search> I<[options]> I<pattern>
 
 Search for windows with titles, names, or classes with a regular expression
-pattern.  The output is line-delimited list of X window identifiers.
+pattern. The output is line-delimited list of X window identifiers. The result
+is saved to the window stack. See L<WINDOW STACK> for details.
 
 The options available are:
 
@@ -312,7 +341,8 @@ information.
 
 =item B<getwindowfocus> [-f]
 
-Prints the window id of the currently focused window. 
+Prints the window id of the currently focused window. Saves the result to the
+window stack. See L<WINDOW STACK> for more details.
 
 If the current window has no WM_CLASS property, we assume it is not a normal
 top-level window and traverse up the parents until we find a window with a
@@ -462,7 +492,8 @@ before moving on.
 =item B<getactivewindow>
 
 Output the current active window. This command is often more reliable than
-getwindowfocus.
+getwindowfocus. The result is saved to the window stack. See L<WINDOW STACK>
+for more details.
 
 =item B<set_num_desktops> I<number>
 
@@ -578,6 +609,9 @@ However, X11 servers will set a special flag on all events generated in this
 way (see XEvent.xany.send_event in X11's manual). Many programs observe this
 flag and reject these events.
 
+It is important to note that for key and mouse events, we only use
+L<XSendEvent> when a specific window is targeted. Otherwise, we use L<XTEST>.
+
 Some programs can be configured to accept events even if they are generated by
 xdotool. Seek the documentation of your application for help.
 
@@ -585,6 +619,67 @@ Specific application notes (from the author's testing):
 * Firefox 3 seems to ignore all input when it does not have focus.
 * xterm can be configured while running with ctrl+leftclick, 'Allow SendEvents'
 * gnome-terminal appears to accept generated input by default.
+
+=head1 WINDOW STACK
+
+Certain commands (search, getactivewindow, getwindowfocus) will find windows
+for you. These results generally printed to stdout, but they are also saved
+to memory for future use during the lifetime of the xdotool process. See
+L<COMMAND CHAINING> for more information.
+
+The only modifications support for the window stack are to replace it. That is,
+two of two sequential searches, only the last one's results will be the window
+stack.
+
+=head1 COMMAND CHAINING
+
+xdotool supports running multiple commands on a single invocation. Generally,
+you'll start with a search command (see L<WINDOW STACK>) and then perform a 
+set of actions on those results.
+
+To query the window stack, you can use special notation "%N" where N is a
+number or the '@' symbol. If %N is given, the Nth window will be selected from
+the window stack. Generally you will only want the first one as the order of
+the windows in the stack is unreliable (See L<XQueryTree> for ordering details).
+If you specify '%@' then all windows in the stack will be used.
+
+The notation described above is used as the "window" argument for any given
+command.
+
+For example, to resize all xterms to 80x24:
+
+ xdotool search --class xterm -- windowsize --usehints 80 24
+
+Resize move the current window:
+
+ xdotool getactivewindow windowmove 0 0
+
+In all cases, the default window argument, if omitted, will default to "%1". It is
+obviously an error if you omit the window argument and the window stack is empty. If you
+try to use the window stack and it is empty, it is also an error.
+
+To activate the first firefox window found:
+
+ xdotool search --class firefox windowactivate
+
+These would error:
+
+ xdotool windowactivate
+ xdotool windowactivate %1
+ xdotool windowactivate %@
+
+When xdotool exits, the current window stack is lost.
+
+Additinally, commands that modify the L<WINDOW STACK> will not print the
+results if they are not the last command. For example:
+
+ # Output the active window:
+ % xdotool getactivewindow 
+ 20971533
+
+ # Output the pid of the active window, but not the active window id:
+ % xdotool getactivewindow getwindowpid
+ 4686
 
 =head1 EXTENDED WINDOW MANAGER HINTS
 

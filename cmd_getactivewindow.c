@@ -34,7 +34,10 @@ int cmd_getactivewindow(context_t *context) {
   if (ret) {
     fprintf(stderr, "xdo_get_active_window reported an error\n");
   } else {
-    window_print(window);
+    /* only print if we're the last command */
+    if (context->argc == 0) {
+      window_print(window);
+    }
     window_save(context, window);
   }
 

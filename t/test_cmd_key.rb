@@ -32,5 +32,16 @@ class XdotoolCommandKeyTests < Test::Unit::TestCase
       xdotool_ok "#{command} --delay 10 --clearmodifiers Return Return shift+Return"
     end # %w{ ... }.each
   end # def test_flags
+
+  def test_another_command_ends_command
+    %w{key keyup keydown}.each do |command|
+      xdotool_ok "#{command} a b c getmouselocation"
+    end
+  end
+
+  def test_chaining
+    xdotool_ok "windowfocus --sync #{@wid}"
+    xdotool_ok "getwindowfocus key a b c d e"
+  end
 end # def 
 

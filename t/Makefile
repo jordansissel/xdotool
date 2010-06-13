@@ -1,3 +1,7 @@
+DEBUG?=0
+ifneq ($(DEBUG), 0)
+RUBYFLAGS=-d
+endif
 
 all-headless: test-xvfb test-xvfb-openbox test-xvfb-gnome
 all-xephyr: test-xephyr test-xephyr-openbox test-xephyr-gnome
@@ -22,7 +26,7 @@ do-test:
 	make -C ../; \
 	sh check-for-tools.sh || exit 0; \
 	for i in test_*.rb ; do \
-	  sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh -- ruby $$i; \
+	  sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh -- ruby $(RUBYFLAGS) $$i $(TESTFLAGS); \
 	done 
 
 #sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh -- ruby alltests.rb

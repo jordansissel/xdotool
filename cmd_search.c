@@ -144,20 +144,22 @@ int cmd_search(context_t *context) {
     }
   }
 
+  consume_args(context, 1);
   xdo_window_search(context->xdo, &search, &list, &nwindows);
-  for (i = 0; i < nwindows; i++) {
-    window_print(list[i]);
+
+  if (context->argc == 0) {
+    /* only print if we're the last command */
+    for (i = 0; i < nwindows; i++) {
+      window_print(list[i]);
+    }
   }
 
-  /* Free list as it's malloc'd by xdo_window_search */
-  //free(list);
+  /* Free old list as it's malloc'd by xdo_window_search */
   if (context->windows != NULL) {
     free(context->windows);
   }
   context->windows = list;
   context->nwindows = nwindows;
-
-  consume_args(context, 1);
 
   /* error if number of windows found is zero (behave like grep) */
   return (nwindows ? EXIT_SUCCESS : EXIT_FAILURE);

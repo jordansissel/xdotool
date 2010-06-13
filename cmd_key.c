@@ -14,7 +14,8 @@ int cmd_key(context_t *context) {
   char *cmd = *context->argv;
   xdo_active_mods_t *active_mods = NULL;
   useconds_t delay = 12000;
-  char *window_arg = NULL;
+  const char *window_arg = NULL;
+  int free_arg = 0;
 
   /* Options */
   int clear_modifiers = 0;
@@ -33,8 +34,14 @@ int cmd_key(context_t *context) {
      "--delay DELAY        - Use DELAY milliseconds between keystrokes\n"
      "--window WINDOW      - send keystrokes to a specific window\n"
      "Each keysequence can be any number of modifiers and keys, separated by plus (+)\n"
-     "For example: alt+r\n"
-     "Any letter or key symbol such as Shift_L, Return, Dollar, a, space are valid.\n";
+     "  For example: alt+r\n"
+     "\n"
+     "Any letter or key symbol such as Shift_L, Return, Dollar, a, space are valid,\n"
+     "including those not currently available on your keyboard.\n"
+     "\n"
+     "If no window is given, and there are windows in the stack, %1 is used. Otherwise\n"
+     "the currently-focused window is used\n"
+     HELP_CHAINING_ENDS;
   int option_index;
 
   while ((c = getopt_long_only(context->argc, context->argv, "d:hcw:",
@@ -42,6 +49,7 @@ int cmd_key(context_t *context) {
     switch (c) {
       case 'w':
         window_arg = strdup(optarg);
+        free_arg = 1;
         break;
       case 'c':
         clear_modifiers = 1;
@@ -64,9 +72,14 @@ int cmd_key(context_t *context) {
   consume_args(context, optind);
 
   if (context->argc == 0) {
-    fprintf(stderr, usage, cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
+    fprintf(stderr, usage, cmd);
     return 1;
+  }
+
+  /* use %1 if there is a window stack */
+  if (window_arg == NULL && context->nwindows > 0) {
+    window_arg = "%1";
   }
 
   int (*keyfunc)(const xdo_t *, Window, const char *, useconds_t) = NULL;
@@ -82,6 +95,7 @@ int cmd_key(context_t *context) {
     return 1;
   }
 
+  int max_arg = context->argc;
   window_each(context, window_arg, {
     if (clear_modifiers) {
       active_mods = xdo_get_active_modifiers(context->xdo);
@@ -89,9 +103,16 @@ int cmd_key(context_t *context) {
     }
 
     for (i = 0; i < context->argc; i++) {
+      if (is_command(context->argv[i])) {
+        max_arg = i + 1;
+        break;
+      }
       int tmp = keyfunc(context->xdo, window, context->argv[i], delay);
-      if (tmp != 0)
-        fprintf(stderr, "xdo_keysequence reported an error for string '%s'\n", context->argv[i]);
+      if (tmp != 0) {
+        fprintf(stderr,
+                "xdo_keysequence reported an error for string '%s'\n",
+                context->argv[i]);
+      }
       ret += tmp;
     }
 
@@ -101,12 +122,11 @@ int cmd_key(context_t *context) {
     }
   }); /* window_each(...) */
 
-  if (window_arg != NULL) {
-    free(window_arg);
+  if (free_arg) {
+    free((char *)window_arg);
   }
 
-  /* Consume all arguments */
-  consume_args(context, context->argc);
+  consume_args(context, max_arg);
 
   return ret;
 }

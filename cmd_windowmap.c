@@ -17,7 +17,7 @@ int cmd_windowmap(context_t *context) {
   };
   static const char *usage = 
     "Usage: %s [options] [window=%1]\n"
-    "If no window is given, %1 is assumed. See WINDOW STACK in xdotool(1).\n"
+    HELP_SEE_WINDOW_STACK
     "--sync    - only exit once the window has been mapped (is visible)\n";
 
   int option_index;

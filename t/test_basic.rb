@@ -35,8 +35,7 @@ class XdotoolBasicTests < Test::Unit::TestCase
   def test_windowsize_by_pixel_works
     w = 500
     h = 400
-    status, lines = xdotool "windowsize #{@wid} #{w} #{h}"
-    assert_status_ok(status)
+    status, lines = xdotool_ok "windowsize --sync #{@wid} #{w} #{h}"
     assert_equal(0, lines.length, "No output expected from windowsize")
 
     status, xwininfo_output = runcmd "xwininfo -id #{@wid}"
@@ -46,8 +45,8 @@ class XdotoolBasicTests < Test::Unit::TestCase
 
     # Some windowmanagers don't strictly obey window size changes to the pixel.
     # So, let's give a tolerance of 10 pixels for these values
-    assert_in_delta(w, reported_width, 10, "Expected width was not correct");
-    assert_in_delta(h, reported_height, 10, "Expected height was not correct");
+    assert_in_delta(w, reported_width, 20, "Expected width was not correct");
+    assert_in_delta(h, reported_height, 20, "Expected height was not correct");
   end
 
   def test_windowsize_by_size_hints
@@ -138,6 +137,9 @@ class XdotoolBasicTests < Test::Unit::TestCase
     #"type \"hello\"",
     cmds_withoutput = []
 
+    # Try to focus our window in case it's not already. This works around
+    # a bug in Xvfb that says window '1' is focused when it is not (at first).
+    xdotool_ok "windowfocus --sync #{@wid}"
     if (wm_supports?("_NET_ACTIVE_WINDOW"))
       cmds << "windowactivate #{@wid}"
       cmds_withoutput << "getwindowfocus"

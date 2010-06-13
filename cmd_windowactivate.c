@@ -16,7 +16,7 @@ int cmd_windowactivate(context_t *context) {
   };
   static const char *usage = 
     "Usage: %s [options] [window=%1]\n"
-    "If no window is given, %1 is used. See WINDOW STACK in xdotool(1).\n"
+    HELP_SEE_WINDOW_STACK
     "--sync    - only exit once the window is active (is visible + active)\n";
 
   int option_index;
