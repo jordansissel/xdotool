@@ -33,7 +33,7 @@ int cmd_windowmove(context_t *context) {
     "--sync    - only exit once the window has moved\n";
 
   int option_index;
-  while ((c = getopt_long_only(context->argc, context->argv, "h",
+  while ((c = getopt_long_only(context->argc, context->argv, "+h",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':

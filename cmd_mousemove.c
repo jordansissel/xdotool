@@ -57,7 +57,7 @@ int cmd_mousemove(context_t *context) {
       "-w, --window <windowid>   - specify a window to move relative to.\n";
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "chw:pd:",
+  while ((c = getopt_long_only(context->argc, context->argv, "+chw:pd:",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'c':

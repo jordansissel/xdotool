@@ -57,7 +57,7 @@ int cmd_search(context_t *context) {
   char *cmd = *context->argv;
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "h",
+  while ((c = getopt_long_only(context->argc, context->argv, "+h",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 0:

@@ -25,7 +25,7 @@ int cmd_set_window(context_t *context) {
   static const char *usage = "Usage: %s [--name name] [--icon-name name] "
             "[--role role] [--classname classname] [--class class] window\n";
 
-  while ((c = getopt_long_only(context->argc, context->argv, "hn:i:r:C:N:",
+  while ((c = getopt_long_only(context->argc, context->argv, "+hn:i:r:C:N:",
                                longopts, &option_index)) != -1) {
     switch(c) {
       case 'n': 

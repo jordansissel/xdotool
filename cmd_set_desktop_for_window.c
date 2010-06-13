@@ -13,7 +13,7 @@ int cmd_set_desktop_for_window(context_t *context) {
   static const char *usage = "Usage: %s <window> <desktop>\n";
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "h",
+  while ((c = getopt_long_only(context->argc, context->argv, "+h",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':

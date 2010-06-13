@@ -44,7 +44,7 @@ int cmd_key(context_t *context) {
      HELP_CHAINING_ENDS;
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "d:hcw:",
+  while ((c = getopt_long_only(context->argc, context->argv, "+d:hcw:",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':

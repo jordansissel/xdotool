@@ -22,7 +22,7 @@ int cmd_mousedown(context_t *context) {
             "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n";
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "chw:",
+  while ((c = getopt_long_only(context->argc, context->argv, "+chw:",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'c':

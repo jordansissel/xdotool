@@ -25,7 +25,7 @@ int cmd_click(context_t *context) {
             "right = 3, wheel up = 4, wheel down = 5\n";
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "cw:h",
+  while ((c = getopt_long_only(context->argc, context->argv, "+cw:h",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':

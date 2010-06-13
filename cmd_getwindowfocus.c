@@ -20,7 +20,7 @@ int cmd_getwindowfocus(context_t *context) {
     "         that has focus.\n";
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "fh",
+  while ((c = getopt_long_only(context->argc, context->argv, "+fh",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':

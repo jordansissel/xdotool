@@ -30,7 +30,7 @@ int cmd_type(context_t *context) {
             "-h, --help             - show this help output\n";
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "w:d:ch",
+  while ((c = getopt_long_only(context->argc, context->argv, "+w:d:ch",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':

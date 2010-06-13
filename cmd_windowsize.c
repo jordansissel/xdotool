@@ -27,7 +27,7 @@ int cmd_windowsize(context_t *context) {
             "--sync      - only exit once the window has resized\n";
 
 
-  while ((c = getopt_long_only(context->argc, context->argv, "uh",
+  while ((c = getopt_long_only(context->argc, context->argv, "+uh",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':

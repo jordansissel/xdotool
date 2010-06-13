@@ -38,7 +38,7 @@ int cmd_mousemove_relative(context_t *context) {
       "   %s 100 140\n";
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "cph",
+  while ((c = getopt_long_only(context->argc, context->argv, "+cph",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':

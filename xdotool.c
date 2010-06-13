@@ -332,7 +332,7 @@ int args_main(int argc, char **argv) {
     exit(1);
   }
 
-  while ((opt = getopt_long_only(argc, argv, "+hv", long_options, &option_index)) != -1) {
+  while ((opt = getopt_long_only(argc, argv, "++hv", long_options, &option_index)) != -1) {
     switch (opt) {
       case 'h':
         cmd_help(NULL);
