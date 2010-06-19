@@ -443,17 +443,21 @@ before moving on.
 
 =back
 
-=item B<windowraise> I<window_id>
+=item B<windowraise> I<[window_id=%1]>
 
-Raise the window to the top of the stack. This may not work on all window managers.
+Raise the window to the top of the stack. This may not work on all window
+managers. If no window is given, %1 is the default. See L<WINDOW STACK> and
+L<COMMAND CHAINING> for more details.
 
-=item B<windowunmap> I<window_id>
+=item B<windowunmap> I<[options]> I<[window_id=%1]>
 
-Unmap a window, making it no longer appear on your screen.
+Unmap a window, making it no longer appear on your screen. If no window is
+given, %1 is the default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more
+details.
 
 =over
 
-=item B<--sync> 
+=item B<--sync>
 
 After requesting the window unmap, wait until the window is actually unmapped
 (hidden). This is useful for scripts that depend on actions being completed
@@ -461,9 +465,10 @@ before moving on.
 
 =back
 
-=item B<set_window> I<[options]> I<windowid>
+=item B<set_window> I<[options]> I<[windowid=%1]>
 
-Set properties about a window.
+Set properties about a window. If no window is given, %1 is the default. See
+L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
 
 Options:
 
@@ -500,12 +505,15 @@ MANAGER HINTS> for more information.
 
 =over 
 
-=item B<windowactivate> I<[options]> I<windowid>
+=item B<windowactivate> I<[options]> I<[window=%1]>
 
 Activate the window. This command is different from windowfocus:
 if the window is on another desktop, we will switch to that desktop. It also
 uses a different method for bringing the window up. I recommend trying this
 command before using windowfocus, as it will work on more window managers.
+
+If no window is given, %1 is the default. See L<WINDOW STACK> and
+L<COMMAND CHAINING> for more details.
 
 =over
 
@@ -539,20 +547,27 @@ Change the current view to the specified desktop.
 
 Output the current desktop in view.
 
-=item B<set_desktop_for_window> I<window_id> I<desktop_number>
+=item B<set_desktop_for_window> I<[window=%1]> I<desktop_number>
 
-Move a window to a different desktop.
+Move a window to a different desktop. If no window is given, %1 is the
+default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
 
-=item B<get_desktop_for_window> I<window_id>
+=item B<get_desktop_for_window> I<[window=%1]>
 
-Output the desktop currently containing the given window.
+Output the desktop currently containing the given window. Move a window to a
+different desktop. If no window is given, %1 is the default. See L<WINDOW
+STACK> and L<COMMAND CHAINING> for more details.
 
 =back
 
 =head1 SCRIPTS
 
 xdotool can read a list of commands via stdin or a file if you want. A script
-will fail when any command fails.
+will fail when any command fails. 
+
+Truthfully, 'script' mode isn't very well fleshed out and may fall below your
+expectations. If you have suggestions, please email the list or file a bug (See
+L<CONTACT>)
 
 =over
 

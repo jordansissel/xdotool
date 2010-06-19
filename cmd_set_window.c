@@ -11,6 +11,7 @@ int cmd_set_window(context_t *context) {
   char *cmd = *context->argv;
   int c;
   char *role = NULL, *icon = NULL, *name = NULL, *class = NULL, *classname = NULL;
+  const char *window_arg = "%1";
 
   struct option longopts[] = {
     { "name", required_argument, NULL, 'n' },
@@ -23,7 +24,7 @@ int cmd_set_window(context_t *context) {
   };
   int option_index;
   static const char *usage = "Usage: %s [--name name] [--icon-name name] "
-            "[--role role] [--classname classname] [--class class] window\n";
+            "[--role role] [--classname classname] [--class class] [window=%1]\n";
 
   while ((c = getopt_long_only(context->argc, context->argv, "+hn:i:r:C:N:",
                                longopts, &option_index)) != -1) {
@@ -56,13 +57,13 @@ int cmd_set_window(context_t *context) {
   /* adjust context->argc, argv */
   consume_args(context, optind);
 
-  if (context->argc != 1) {
+  if (!window_get_arg(context, 0, 0, &window_arg)) {
     fprintf(stderr, usage, cmd);
-    return 1;
+    return EXIT_FAILURE;
   }
 
   /* TODO(sissel): error handling needed... */
-  window_each(context, context->argv[0], {
+  window_each(context, window_arg, {
     if (name)
       xdo_window_setprop(context->xdo, window, "WM_NAME", name);
     if (icon)
@@ -72,8 +73,6 @@ int cmd_set_window(context_t *context) {
     if (classname || class)
       xdo_window_setclass(context->xdo, window, classname, class);
   }); /* window_each(...) */
-
-  consume_args(context, 1);
 
   return 0;
 }

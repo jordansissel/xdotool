@@ -3,13 +3,16 @@
 int cmd_windowraise(context_t *context) {
   int ret = 0;
   char *cmd = *context->argv;
+  const char *window_arg = "%1";
 
   int c;
   static struct option longopts[] = {
     { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = "Usage: %s window\n";
+  static const char *usage = 
+    "Usage: %s [window=%1]\n"
+    HELP_SEE_WINDOW_STACK;
   int option_index;
 
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
@@ -28,12 +31,12 @@ int cmd_windowraise(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc < 1) {
+  if (!window_get_arg(context, 0, 0, &window_arg)) {
     fprintf(stderr, usage, cmd);
-    return 1;
-   }
+    return EXIT_FAILURE;
+  }
 
-  window_each(context, context->argv[0], {
+  window_each(context, window_arg, {
     ret = xdo_window_raise(context->xdo, window);
     if (ret) {
       fprintf(stderr, "xdo_window_raise reported an error on window %ld\n",
@@ -41,7 +44,6 @@ int cmd_windowraise(context_t *context) {
     }
   }); /* window_each(...) */
 
-  consume_args(context, 1);
   return ret;
-}
+} /* int cmd_windowraise(context_t *) */
 

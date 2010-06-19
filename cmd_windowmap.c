@@ -17,8 +17,8 @@ int cmd_windowmap(context_t *context) {
   };
   static const char *usage = 
     "Usage: %s [options] [window=%1]\n"
-    HELP_SEE_WINDOW_STACK
-    "--sync    - only exit once the window has been mapped (is visible)\n";
+    "--sync    - only exit once the window has been mapped (is visible)\n"
+    HELP_SEE_WINDOW_STACK;
 
   int option_index;
   while ((c = getopt_long_only(context->argc, context->argv, "+h",

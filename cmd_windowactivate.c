@@ -3,6 +3,7 @@
 int cmd_windowactivate(context_t *context) {
   int ret = 0;
   char *cmd = *context->argv;
+  const char *window_arg = "%1";
   int opsync = 0;
 
   int c;
@@ -16,8 +17,8 @@ int cmd_windowactivate(context_t *context) {
   };
   static const char *usage = 
     "Usage: %s [options] [window=%1]\n"
-    HELP_SEE_WINDOW_STACK
-    "--sync    - only exit once the window is active (is visible + active)\n";
+    "--sync    - only exit once the window is active (is visible + active)\n"
+    HELP_SEE_WINDOW_STACK;
 
   int option_index;
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
@@ -40,7 +41,6 @@ int cmd_windowactivate(context_t *context) {
 
   consume_args(context, optind);
 
-  const char *window_arg = "%1";
   if (!window_get_arg(context, 0, 0, &window_arg)) {
     fprintf(stderr, usage, cmd);
     return EXIT_FAILURE;
