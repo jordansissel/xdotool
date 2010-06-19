@@ -37,7 +37,9 @@ int cmd_set_desktop_for_window(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  desktop = strtol(context->argv[1], NULL, 0);
+  desktop = strtol(context->argv[0], NULL, 0);
+  consume_args(context, 1);
+
   window_each(context, window_arg, {
     ret = xdo_set_desktop_for_window(context->xdo, window, desktop);
     if (ret != XDO_SUCCESS) {
