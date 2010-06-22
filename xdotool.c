@@ -397,16 +397,20 @@ int args_main(int argc, char **argv) {
   return ret;
 } /* int args_main(int, char **) */
 
-int cmd_help(context_t *unused_context) {
+int cmd_help(context_t *context) {
   int i;
   printf("Available commands:\n");
   for (i = 0; dispatch[i].name != NULL; i++)
     printf("  %s\n", dispatch[i].name);
 
+  consume_args(context, 1);
+
   return 0;
 }
 
-int cmd_version(context_t *unused_context) {
+int cmd_version(context_t *context) {
   printf("xdotool version %s\n", xdo_version());
+  consume_args(context, 1);
+
   return 0;
 }
