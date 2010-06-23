@@ -682,16 +682,18 @@ set of actions on those results.
 
 To query the window stack, you can use special notation "%N" where N is a
 number or the '@' symbol. If %N is given, the Nth window will be selected from
-the window stack. Generally you will only want the first one as the order of
-the windows in the stack is unreliable (See L<XQueryTree> for ordering details).
-If you specify '%@' then all windows in the stack will be used.
+the window stack. Generally you will only want the first window or all windows.
+Note that the order of windows in the window stack corresponds to the window
+stacking order, i.e. the bottom-most window will be reported first (see
+XQueryTree(3)). Thus the order of the windows in the window stack may not be
+consistent across invocations.
 
 The notation described above is used as the "window" argument for any given
 command.
 
 For example, to resize all xterms to 80x24:
 
- xdotool search --class xterm -- windowsize --usehints 80 24
+ xdotool search --class xterm -- windowsize --usehints %@ 80 24
 
 Resize move the current window:
 
