@@ -1378,7 +1378,7 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
             case Mod3Mask: maskname = "mod3"; break;
           }
           modkey = _xdo_cached_modifier_to_keycode(xdo, masks[i]);
-          //printf("Sending modkey for mod %d, %s, (keycode %d) %s\n",
+          //fprintf(stderr, "Sending modkey for mod %d, %s, (keycode %d) %s\n",
                  //masks[i], maskname, modkey, is_press ? "down" : "up");
           XTestFakeKeyEvent(xdo->xdpy, modkey, is_press, CurrentTime);
           XSync(xdo->xdpy, False);
@@ -1480,7 +1480,14 @@ int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
   for (keycode = xdo->keycode_low; keycode <= xdo->keycode_high; keycode++) {
     if ((keymap[(keycode / 8)] & (1 << (keycode % 8))) \
         && _xdo_cached_keycode_to_modifier(xdo, keycode)) {
-      /* This keycode is active and is a modifier */
+      /* This keycode is active and is a modifier, record it. */
+
+      /* Zero the charcodemap_t entry before using it.
+       * Fixes a bug reported by Hong-Leong Ong - where 
+       * 'xdotool key --clearmodifiers ...' sometimes failed trying
+       * to clear modifiers that didn't exist since charcodemap_t's modmask was
+       * uninitialized */
+      memset(*keys + *nkeys, 0, sizeof(charcodemap_t));
 
       (*keys)[*nkeys].code = keycode;
       (*nkeys)++;
@@ -1552,7 +1559,8 @@ int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, xdo_active_mods_
   return ret;
 }
 
-int xdo_set_active_modifiers(const xdo_t *xdo, Window window, const xdo_active_mods_t *active_mods) {
+int xdo_set_active_modifiers(const xdo_t *xdo, Window window, const
+                             xdo_active_mods_t *active_mods) {
   int ret = 0;
   xdo_keysequence_list_do(xdo, window, active_mods->keymods,
                           active_mods->nkeymods, True, NULL, DEFAULT_DELAY);
