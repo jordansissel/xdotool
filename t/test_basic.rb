@@ -7,6 +7,11 @@ require "xdo_test_helper"
 class XdotoolBasicTests < Test::Unit::TestCase
   include XdoTestHelper
 
+  def test_noargs_exit_1
+    status, lines = xdotool ""
+    assert_equal(1, status, "Exit status for xdotool with no args must be 1")
+  end # def test_noargs_exit_1
+
   def test_getwindowfocus_gets_a_valid_window
     name = rand.to_s
 

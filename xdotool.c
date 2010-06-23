@@ -403,14 +403,20 @@ int cmd_help(context_t *context) {
   for (i = 0; dispatch[i].name != NULL; i++)
     printf("  %s\n", dispatch[i].name);
 
-  consume_args(context, 1);
+  /* "help" can be invoked on errors, like when xdotool is given no arguments,
+   * so let's make sure we only consume if we have a context */
+  if (context != NULL) {
+    consume_args(context, 1);
+  }
 
   return 0;
 }
 
 int cmd_version(context_t *context) {
   printf("xdotool version %s\n", xdo_version());
-  consume_args(context, 1);
+  if (context != NULL) {
+    consume_args(context, 1);
+  }
 
   return 0;
 }

@@ -77,7 +77,7 @@ module XdoTestHelper
 
   def xdotool(args)
     if $DEBUG
-      puts "Running: #{@xdotool} #{args}"
+      puts "Running: '#{@xdotool} #{args}'"
     end
 
     return runcmd("#{@xdotool} #{args}")
