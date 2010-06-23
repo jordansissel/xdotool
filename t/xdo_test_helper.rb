@@ -7,7 +7,6 @@ module XdoTestHelper
     setup_launch_xterm
   end # def setup
 
-
   def setup_vars
     @xdotool = "../xdotool"
     @title = "#{self.class.name}_#{rand}"
@@ -113,13 +112,18 @@ module XdoTestHelper
 
   def detect_window_manager
     status, lines = runcmd("xprop -root")
+    #puts lines.join("\n")
     
     # ion
     if lines.grep(/^_ION_WORKSPACE/).length > 0
       return :ion
     end
 
-    return :unknown
+    if lines.grep(/WM_NAME|NET_/).length > 0
+      return :present
+    end
+
+    return :none
   end # def detect_window_manager
 
   def wm_supports?(feature)

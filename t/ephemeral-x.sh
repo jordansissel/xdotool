@@ -40,7 +40,7 @@ cleanup() {
 }
 
 
-eval "set -- $( (getopt -- x:w:qh "$@" || echo " "FAIL) | tr -d '\n')"
+eval "set -- $( (POSIXLY_CORRECT=1 getopt +x:w:qh "$@" || echo " "FAIL) | tr -d '\n' )"
 
 while [ "0$#" -gt 0 ] ; do
   case $1 in
@@ -113,7 +113,7 @@ done
 export DISPLAY=:$num
 quiet || echo "Using display: $DISPLAY"
 
-if [ ! -z "$WINMGR" ] ; then
+if [ ! -z "$WINMGR" -a "$WINMGR" != "none" ] ; then
   if ! which $WINMGR > /dev/null 2>&1 ; then
     echo "Cannot find $WINMGR. Aborting."
     cleanup

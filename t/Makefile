@@ -3,8 +3,8 @@ ifneq ($(DEBUG), 0)
 RUBYFLAGS=-d
 endif
 
-all-headless: test-xvfb test-xvfb-openbox test-xvfb-gnome
-all-xephyr: test-xephyr test-xephyr-openbox test-xephyr-gnome
+all-headless: test-xvfb-nowm test-xvfb-openbox test-xvfb-gnome
+all-xephyr: test-xephyr-nowm test-xephyr-openbox test-xephyr-gnome
 all: all-headless all-xephyr 
 
 test: all
@@ -26,7 +26,7 @@ do-test:
 	make -C ../; \
 	sh check-for-tools.sh || exit 0; \
 	for i in test_*.rb ; do \
-	  sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh -- ruby $(RUBYFLAGS) $$i $(TESTFLAGS); \
+	  sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh ruby $(RUBYFLAGS) $$i $(TESTFLAGS); \
 	done 
 
 #sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh -- ruby alltests.rb
@@ -39,6 +39,12 @@ test-xvfb:
 
 test-xvnc:
 	QUIET=0 XSERVER="Xvnc" $(MAKE) do-test
+
+test-xvfb-nowm:
+	WM=none $(MAKE) test-xvfb
+
+test-xephyr-nowm:
+	WM=none $(MAKE) test-xephyr
 
 test-xvfb-openbox:
 	WM=openbox-session $(MAKE) test-xvfb

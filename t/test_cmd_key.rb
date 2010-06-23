@@ -42,6 +42,8 @@ class XdotoolCommandKeyTests < Test::Unit::TestCase
   def test_chaining
     xdotool_ok "windowfocus --sync #{@wid}"
     xdotool_ok "getwindowfocus key a b c d e"
+    xdotool_ok "getwindowfocus key --window %1 a b c d e"
+    xdotool_ok "getwindowfocus key --window %@ a b c d e"
   end
-end # def 
+end # class XdotoolCommandKeyTests 
 

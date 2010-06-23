@@ -24,4 +24,3 @@ class XdotoolCommandGetWindowPidTests < Test::Unit::TestCase
     xdotool_ok "getwindowfocus getwindowpid %@"
   end # def test_chaining
 end # class XdotoolCommandGetWindowPidTests
-
