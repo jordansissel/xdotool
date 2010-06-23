@@ -612,9 +612,16 @@ int xdo_window_raise(const xdo_t *xdo, Window wid) {
 
 int xdo_mousemove(const xdo_t *xdo, int x, int y, int screen)  {
   int ret = 0;
-  ret = XTestFakeMotionEvent(xdo->xdpy, screen, x, y, CurrentTime);
+
+  /* There is a bug (feature?) in XTestFakeMotionEvent that causes
+   * the screen number in the request to be ignored. The internets
+   * seem to recommend XWarpPointer instead, ie;
+   * https://bugzilla.redhat.com/show_bug.cgi?id=518803
+   */
+  Window screen_root = RootWindow(xdo->xdpy, screen);
+  ret = XWarpPointer(xdo->xdpy, None, screen_root, 0, 0, 0, 0, x, y);
   XFlush(xdo->xdpy);
-  return _is_success("XTestFakeMotionEvent", ret == 0);
+  return _is_success("XWarpPointer", ret == 0);
 }
 
 int xdo_mousemove_relative_to_window(const xdo_t *xdo, Window window, int x, int y) {
