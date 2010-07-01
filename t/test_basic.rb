@@ -147,7 +147,9 @@ class XdotoolBasicTests < Test::Unit::TestCase
     xdotool_ok "windowfocus --sync #{@wid}"
     if (wm_supports?("_NET_ACTIVE_WINDOW"))
       cmds << "windowactivate #{@wid}"
-      cmds_withoutput << "getwindowfocus"
+      if (detect_window_manager != :none)
+        cmds_withoutput << "getwindowfocus"
+      end
     else
       puts "Skipping _NET_ACTIVE_WINDOW features (current wm does not support it)"
     end

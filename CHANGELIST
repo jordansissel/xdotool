@@ -1,3 +1,10 @@
+2.10100701.*:
+  - No functional changes.
+  - Add missing file 'Doxyfile' to the release package so the xdo docs can be
+    built from a release tarball. (Reported by Daniel Kahn Gillmor)
+  - Skip 'getwindowfocus' misc test if we don't have a windowmanager due to
+    a bug/feature in Xvfb and Xephyr if there is only one client and no wm.
+
 2.20100623.*:
   - Added 'window stack' and 'command chaining' support. Basically lets you
     include multiple commands on a single xdotool invocation and saves the last
