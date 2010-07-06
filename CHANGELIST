@@ -1,4 +1,11 @@
-2.10100701.*:
+2.2010????.*:
+  - Add get_desktop_viewport and set_desktop_viewport. Some window managers
+    don't actually do 'multiple desktops' but instead show workspaces as
+    vies on a large desktop. For example, Compiz Fusion does this, which is
+    why you may see 4 or more desktops, but 'xdotool get_num_desktops' reports
+    only one.
+
+2.20100701.*:
   - No functional changes.
   - Add missing file 'Doxyfile' to the release package so the xdo docs can be
     built from a release tarball. (Reported by Daniel Kahn Gillmor)
