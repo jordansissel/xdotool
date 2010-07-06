@@ -539,6 +539,20 @@ Changes the number of desktops or workspaces.
 
 Output the current number of desktops.
 
+=item B<set_desktop_viewport> I<[--shell]>
+
+Report the current viewport's position. If --shell is given, the output is
+friendly to shell eval.
+
+=item B<set_desktop_viewport> I<x> I<y>
+
+Move the viewport to the given position. Not all requests will be obeyed - some
+windowmangers only obey requests that align to workspace boundaries, such as
+the screen size. 
+
+For example, if your screen is 1280x800, you can move to the 2nd workspace by doing:
+ xdotool set_desktop_viewport 1280 0
+
 =item B<set_desktop> I<desktop_number>
 
 Change the current view to the specified desktop.
