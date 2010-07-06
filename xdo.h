@@ -719,4 +719,19 @@ int xdo_set_active_modifiers(const xdo_t *xdo, Window window,
  */
 void xdo_free_active_modifiers(xdo_active_mods_t *active_mods);
 
+/**
+ * Get the position of the current viewport.
+ *
+ * This is only relevant if your window manager supports
+ * _NET_DESKTOP_VIEWPORT 
+ */
+int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret);
+
+/**
+ * Set the position of the current viewport.
+ *
+ * This is only relevant if your window manager supports
+ * _NET_DESKTOP_VIEWPORT
+ */
+int xdo_set_desktop_viewport(const xdo_t *xdo, int x, int y);
 #endif /* ifndef _XDO_H_ */

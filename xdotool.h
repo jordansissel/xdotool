@@ -59,5 +59,7 @@ int cmd_set_desktop(context_t *context);
 int cmd_get_desktop(context_t *context);
 int cmd_set_desktop_for_window(context_t *context);
 int cmd_get_desktop_for_window(context_t *context);
+int cmd_set_desktop_viewport(context_t *context);
+int cmd_get_desktop_viewport(context_t *context);
 
 #endif /* _XDOTOOL_H_ */

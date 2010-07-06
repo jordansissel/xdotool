@@ -242,6 +242,9 @@ struct dispatch {
   { "get_desktop", cmd_get_desktop, },
   { "set_desktop_for_window", cmd_set_desktop_for_window, },
   { "get_desktop_for_window", cmd_get_desktop_for_window, },
+  { "get_desktop_viewport", cmd_get_desktop_viewport, },
+  { "set_desktop_viewport", cmd_set_desktop_viewport, },
+
   { NULL, NULL, },
 };
 

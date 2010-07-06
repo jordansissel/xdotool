@@ -312,7 +312,7 @@ int xdo_window_wait_for_size(const xdo_t *xdo, Window window, unsigned int width
 
   if (flags & SIZE_USEHINTS) {
     xdo_window_translate_with_sizehint(xdo, window, width, height,
-                                       &width, &height);
+                                       (int *)&width, (int *)&height);
   }
 
   xdo_get_window_size(xdo, window, (unsigned int *)&cur_width,
@@ -1638,4 +1638,65 @@ int xdo_mouse_wait_for_move_to(const xdo_t *xdo, int dest_x, int dest_y) {
   }
 
   return ret;
+}
+
+int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret) {
+  if (_xdo_ewmh_is_supported(xdo, "_NET_DESKTOP_VIEWPORT") == False) {
+    fprintf(stderr,
+            "Your windowmanager claims not to support _NET_DESKTOP_VIEWPORT, "
+            "so I cannot tell you the viewport position.\n");
+    return XDO_ERROR;
+  }
+
+  Atom type;
+  int size;
+  long nitems;
+  unsigned char *data;
+  Atom request = XInternAtom(xdo->xdpy, "_NET_DESKTOP_VIEWPORT", False);
+  Window root = RootWindow(xdo->xdpy, 0);
+  data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+
+  if (type != XA_CARDINAL) {
+    fprintf(stderr, 
+            "Got unexpected type returned from _NET_DESKTOP_VIEWPORT."
+            " Expected CARDINAL, got %s\n",
+            XGetAtomName(xdo->xdpy, type));
+    return XDO_ERROR;
+  }
+
+  if (nitems != 2) {
+    fprintf(stderr, "Expected 2 items for _NET_DESKTOP_VIEWPORT, got %ld\n",
+            nitems);
+    return XDO_ERROR;
+  }
+
+  int *viewport_data = (int *)data;
+  *x_ret = viewport_data[0];
+  *y_ret = viewport_data[1];
+
+  return XDO_SUCCESS;
+}
+
+
+int xdo_set_desktop_viewport(const xdo_t *xdo, int x, int y) {
+  XEvent xev;
+  int ret;
+  Window root = RootWindow(xdo->xdpy, 0);
+
+  memset(&xev, 0, sizeof(xev));
+  xev.type = ClientMessage;
+  xev.xclient.display = xdo->xdpy;
+  xev.xclient.window = root;
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_DESKTOP_VIEWPORT",
+                                         False);
+  xev.xclient.format = 32;
+  xev.xclient.data.l[0] = x;
+  xev.xclient.data.l[1] = y;
+
+  ret = XSendEvent(xdo->xdpy, root, False,
+                   SubstructureNotifyMask | SubstructureRedirectMask, &xev);
+
+  /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
+   * Manpage says it will only generate BadWindow or BadValue errors */
+  return _is_success("XSendEvent[EWMH:_NET_DESKTOP_VIEWPORT]", ret == 0);
 }
