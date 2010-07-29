@@ -539,7 +539,7 @@ Changes the number of desktops or workspaces.
 
 Output the current number of desktops.
 
-=item B<set_desktop_viewport> I<[--shell]>
+=item B<get_desktop_viewport> I<[--shell]>
 
 Report the current viewport's position. If --shell is given, the output is
 friendly to shell eval.
