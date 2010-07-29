@@ -5,8 +5,8 @@
     why you may see 4 or more desktops, but 'xdotool get_num_desktops' reports
     only one.
   - When typing, if we can't find a character in the existing keymap, try looking
-    up in keysym_charmap (xdo_util.h) and binding a key if we find one.
-    Reported by Victor Baulac on the mailing list.
+    up in keysym_charmap (xdo_util.h) and binding a key if we find one that
+    matches. Reported by Victor Baulac on the mailing list.
 
 2.20100701.*:
   - No functional changes.
