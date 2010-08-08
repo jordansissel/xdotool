@@ -4,9 +4,12 @@
     views on a large desktop. For example, Compiz Fusion does this, which is
     why you may see 4 or more desktops, but 'xdotool get_num_desktops' reports
     only one.
-  - When typing, if we can't find a character in the existing keymap, try looking
-    up in keysym_charmap (xdo_util.h) and binding a key if we find one that
-    matches. Reported by Victor Baulac on the mailing list.
+  - When typing, if we can't find a character in the existing keymap, try
+    looking up in keysym_charmap (xdo_util.h) and binding a key if we find one
+    that matches. Reported by Victor Baulac on the mailing list. This allows
+    us to type '@', for example, even if the current keymap does not have
+    this key.
+  - New command: 'windowreparent' with original patch by Markus Opitz.
 
 2.20100701.*:
   - No functional changes.
