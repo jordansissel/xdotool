@@ -233,6 +233,7 @@ struct dispatch {
   { "windowraise", cmd_windowraise, },
   { "windowsize", cmd_windowsize, },
   { "windowunmap", cmd_windowunmap, },
+  { "windowreparent", cmd_windowreparent, },
 
   { "set_window", cmd_set_window, },
 

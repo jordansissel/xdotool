@@ -555,6 +555,14 @@ int xdo_window_map(const xdo_t *xdo, Window wid);
  */
 int xdo_window_unmap(const xdo_t *xdo, Window wid);
 
+/** 
+ * Reparents a window
+ *
+ * @param wid_source the window to reparent
+ * @param wid_target the new parent window
+ */
+int xdo_window_reparent(const xdo_t *xdo, Window wid_source, Window wid_target);
+
 /**
  * Get a window's location.
  *

@@ -154,6 +154,13 @@ int xdo_window_unmap(const xdo_t *xdo, Window wid) {
   return _is_success("XUnmapWindow", ret == 0);
 }
 
+int xdo_window_reparent(const xdo_t *xdo, Window wid_source, Window wid_target) {
+  int ret = 0;
+  ret = XReparentWindow(xdo->xdpy, wid_source, wid_target, 0, 0);
+  XFlush(xdo->xdpy);
+  return _is_success("XReparentWindow", ret == 0);
+}
+
 int xdo_get_window_location(const xdo_t *xdo, Window wid,
                             int *x_ret, int *y_ret, Screen **screen_ret) {
   int ret;

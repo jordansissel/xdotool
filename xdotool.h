@@ -49,6 +49,7 @@ int cmd_windowmove(context_t *context);
 int cmd_windowraise(context_t *context);
 int cmd_windowsize(context_t *context);
 int cmd_windowunmap(context_t *context);
+int cmd_windowreparent(context_t *context);
 int cmd_set_window(context_t *context);
 int cmd_version(context_t *context);
   
