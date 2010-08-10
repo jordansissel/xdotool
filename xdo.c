@@ -268,7 +268,19 @@ int xdo_window_setsize(const xdo_t *xdo, Window window, int width, int height, i
   return _is_success("XConfigureWindow", ret == 0);
 }
 
-int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name, const char *class) {
+int xdo_window_set_override_redirect(const xdo_t *xdo, Window wid,
+                                     int override_redirect) {
+  int ret;
+  XSetWindowAttributes wattr;
+  long mask = CWOverrideRedirect;
+  wattr.override_redirect = override_redirect;
+  ret = XChangeWindowAttributes(xdo->xdpy, wid, mask, &wattr);
+
+  return _is_success("XChangeWindowAttributes", ret == 0);
+}
+
+int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name,
+                         const char *class) {
   int ret = 0;
   XClassHint *hint = XAllocClassHint();
   XGetClassHint(xdo->xdpy, wid, hint);
@@ -1684,7 +1696,6 @@ int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret) {
   return XDO_SUCCESS;
 }
 
-
 int xdo_set_desktop_viewport(const xdo_t *xdo, int x, int y) {
   XEvent xev;
   int ret;
@@ -1706,4 +1717,10 @@ int xdo_set_desktop_viewport(const xdo_t *xdo, int x, int y) {
   /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
    * Manpage says it will only generate BadWindow or BadValue errors */
   return _is_success("XSendEvent[EWMH:_NET_DESKTOP_VIEWPORT]", ret == 0);
+}
+
+int xdo_window_kill(const xdo_t *xdo, Window window) {
+  int ret;
+  ret = XKillClient(xdo->xdpy, window);
+  return _is_success("XKillClient", ret == 0);
 }
