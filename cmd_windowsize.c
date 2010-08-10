@@ -1,8 +1,10 @@
 #include "xdo_cmd.h"
+#include <string.h>
 
 int cmd_windowsize(context_t *context) {
   int ret = 0;
   unsigned int width, height;
+  int is_width_percent = 0, is_height_percent = 0;
   int c;
   int opsync = 0;
 
@@ -63,12 +65,39 @@ int cmd_windowsize(context_t *context) {
     return EXIT_FAILURE;
   }
 
+  /* Use percentage if given a percent. */
+  if (strchr(context->argv[0], '%')) {
+    is_width_percent = 1;
+  }
+
+  if (strchr(context->argv[1], '%')) {
+    is_height_percent = 1;
+  }
+
   width = (unsigned int)strtoul(context->argv[0], NULL, 0);
   height = (unsigned int)strtoul(context->argv[1], NULL, 0);
   consume_args(context, 2);
 
+  XWindowAttributes wattr;
   unsigned int original_w, original_h;
+  unsigned int root_w, root_h; /* for percent */
+
   window_each(context, window_arg, {
+    if (is_width_percent || is_height_percent) {
+      Window root = 0;
+      XGetWindowAttributes(context->xdo->xdpy, window, &wattr);
+      root = wattr.root;
+      xdo_get_window_size(context->xdo, root, &root_w, &root_h);
+
+      if (is_width_percent) {
+        width = (root_w * width / 100);
+      }
+
+      if (is_height_percent) {
+        height = (root_h * height / 100);
+      }
+    }
+
     if (opsync) {
       unsigned int w = width;
       unsigned int h = height;
@@ -81,6 +110,7 @@ int cmd_windowsize(context_t *context) {
         break;
       }
     }
+
     ret = xdo_window_setsize(context->xdo, window, width, height, size_flags);
     if (ret) {
       fprintf(stderr, "xdo_window_setsize on window:%ld reported an error\n",
