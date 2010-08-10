@@ -8,6 +8,10 @@ xdotool - command-line X11 automation tool
 
 B<xdotool> I<cmd> I<args...>
 
+Notation: Some documentation uses I<[window=%1]> to denote an optional
+argument. This case means that the argument, if not present, will default to
+%1.
+
 =head1 DESCRIPTION
 
 B<xdotool> lets you programatically (or manually) simulate keyboard input and
@@ -29,7 +33,7 @@ Options:
 
 =item B<--window window> 
 
-Send keystrokes to a specific window id. . You can use
+Send keystrokes to a specific window id. You can use
 L<WINDOW STACK> references like "%1" and "%@" here. If there is a window stack,
 then "%1" is the default, otherwise the current window is used.
 
@@ -74,11 +78,11 @@ Example: Send ctrl+c to all windows matching title 'gdb' (See L<COMMAND CHAINING
 
 =item B<keydown> I<[options]> I<keystroke>
 
-Same as above, except only keydown events are sent.
+Same as above, except only keydown (press) events are sent.
 
 =item B<keyup> I<keystroke>
 
-Same as above, except only keyup events are sent.
+Same as above, except only keyup (release) events are sent.
 
 =item B<type> I<[options]> I<something to type>
 
@@ -104,7 +108,7 @@ Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
 =back
 
 Types as if you had typed it. Supports newlines and tabs (ASCII newline and
-tab). Each keystroke is separated by a delay given by the delay option.
+tab). Each keystroke is separated by a delay given by the B<--delay> option.
 
 With respect to L<COMMAND CHAINING>, this command consumes the remainder of the
 arguments and types them. That is, no commands can chain after 'type'.
@@ -449,6 +453,20 @@ Raise the window to the top of the stack. This may not work on all window
 managers. If no window is given, %1 is the default. See L<WINDOW STACK> and
 L<COMMAND CHAINING> for more details.
 
+=item B<windowreparent> I<[source_window=%1]> I<destination_window>
+
+Reparent a window. This moves the I<source_window> to be a child window of
+I<destination_window>. If no source is given, %1 is the default. 
+L<WINDOW STACK> window references (like %1) are valid for both I<source_window>
+and I<destination_window> See L<WINDOW STACK> and L<COMMAND CHAINING> for more
+details.
+
+=item B<windowkill> I<[window=%1]>
+
+Kill a window. This action will destroy the window and kill the client
+controlling it. If no window is given, %1 is the default. See L<WINDOW
+STACK> and L<COMMAND CHAINING> for more details.
+
 =item B<windowunmap> I<[options]> I<[window_id=%1]>
 
 Unmap a window, making it no longer appear on your screen. If no window is
@@ -493,6 +511,17 @@ Set window class name (not to be confused with window class)
 =item B<--class newclass>
 
 Set window class (not to be confused with window class name)
+
+=item B<--overrideredirect value>
+
+Set window's override_redirect value. This value is a hint to the window
+manager for whether or not it should be managed. If the redirect value is 0,
+then the window manager will draw borders and treat this window normally. If
+the value is 1, the window manager will ignore this window.
+
+If you change this value, your window manager may not notice the change until
+the window is mapped again, so you may want to issue 'windowunmap' and
+'windowmap' to make the window manager take note.
 
 =back
 

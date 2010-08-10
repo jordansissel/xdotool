@@ -26,9 +26,9 @@
 #include "xdo.h"
 #include "xdotool.h"
 
-char *PROGRAM;
 static int script_main(int argc, char **argv);
 static int args_main(int argc, char **argv);
+int context_execute(context_t *context);
 void consume_args(context_t *context, int argc);
 void window_save(context_t *context, Window window);
 void window_list(context_t *context, const char *window_arg,
@@ -103,12 +103,15 @@ int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
             context->argc, min_arg);
     return False;
   } else if (context->argc == min_arg) {
+    //fprintf(stderr, "Using default arg\n");
     /* nothing, keep default */
   } else if (context->argc > min_arg) {
     if (is_command(context->argv[min_arg])) {
+      //fprintf(stderr, "arg is command, using default\n");
       /* keep default */
     } else {
       /* got enough args, let's use the window you asked for */
+      //fprintf(stderr, "got enough args\n");
       *window_arg = context->argv[window_arg_pos];
       consume_args(context, 1);
     }
@@ -128,19 +131,19 @@ void window_list(context_t *context, const char *window_arg,
   /* If window_arg is NULL and we have windows in the list, use the list.
    * If window_arg is "%@" and we have windows in the list, use the list.
    * If window_arg is "%N" and we have windows in the list, use Nth window.
-   * Otheriwse, assume it's a window id.
+   *   'N' above must be a positive number.
+   * Otherwise, assume it's a window id.
+   *
+   * TODO(sissel): Not implemented yet:
+   * If window_arg is "%r" it means the root window of the current screen.
+   * If window_arg is "%q" it means we will wait for you to select a window
+   *   by clicking on it.
+   * If window_arg is "%c" it means the currently-active window.
    */
 
   *nwindows_ret = 0;
   *windowlist_ret = NULL;
 
-  //if (window_arg == NULL && context->nwindows > 0) {
-    /* Default is to use the first window matched */
-    //context->window_placeholder[0] = context->windows[0];
-    //*windowlist_ret = context->window_placeholder;
-    //*nwindows_ret = 1;
-  //if (window_arg == NULL) {
-  //} else
   if (window_arg != NULL && window_arg[0] == '%') {
     if (context->nwindows == 0) {
       fprintf(stderr, "There are no windows on the stack, Can't continue.\n");
@@ -159,7 +162,12 @@ void window_list(context_t *context, const char *window_arg,
     if (window_arg[1] == '@') {
       *windowlist_ret = context->windows;
       *nwindows_ret = context->nwindows;
+    } else if (window_arg[1] == 'q') {
+      /* TODO(sissel): Wait for you to click on the window. */
+    } else if (window_arg[1] == 'r') {
+      
     } else {
+      /* Otherwise assume %N */
       int window_index = atoi(window_arg + 1);
       if (window_index < 0) {
         /* negative offset */
@@ -234,8 +242,9 @@ struct dispatch {
   { "windowsize", cmd_windowsize, },
   { "windowunmap", cmd_windowunmap, },
   { "windowreparent", cmd_windowreparent, },
-
+  { "windowkill", cmd_windowkill, },
   { "set_window", cmd_set_window, },
+  { "behave", cmd_behave, },
 
   { "set_num_desktops", cmd_set_num_desktops, },
   { "get_num_desktops", cmd_get_num_desktops, },
@@ -260,6 +269,10 @@ int is_command(char* cmd) {
 }
 
 int main(int argc, char **argv) {
+  return xdotool_main(argc, argv);
+}
+
+int xdotool_main(int argc, char **argv) {
   /* read stdin if stdin is not a tty or first argument is "-" */
 
   int want_script;
@@ -325,10 +338,7 @@ int script_main(int argc, char **argv) {
 }
 
 int args_main(int argc, char **argv) {
-  char *cmd;
   int ret = 0;
-  int cmd_found = 0;
-  int i;
   int opt;
   int option_index;
   const char *usage = "Usage: %s <cmd> <args>\n";
@@ -358,11 +368,10 @@ int args_main(int argc, char **argv) {
     }
   }
 
-  PROGRAM = *argv;
-  argv++; argc--;
-
   context_t context;
   context.xdo = xdo_new(NULL);
+  context.prog = *argv;
+  argv++; argc--;
   context.argc = argc;
   context.argv = argv;
   context.windows = NULL;
@@ -373,31 +382,40 @@ int args_main(int argc, char **argv) {
     return 1;
   }
 
+  ret = context_execute(&context);
+
+  xdo_free(context.xdo);
+  if (context.windows != NULL) {
+    free(context.windows);
+  }
+
+  return ret;
+} /* int args_main(int, char **) */
+
+int context_execute(context_t *context) {
+  int cmd_found = 0;
+  int i = 0;
+  char *cmd = NULL;
+  int ret = XDO_SUCCESS;
+
   /* Loop until all argv is consumed. */
-  while (context.argc > 0 && ret == XDO_SUCCESS) {
-    cmd = context.argv[0];
+  while (context->argc > 0 && ret == XDO_SUCCESS) {
+    cmd = context->argv[0];
     cmd_found = 0;
     for (i = 0; dispatch[i].name != NULL && !cmd_found; i++) {
       if (!strcasecmp(dispatch[i].name, cmd)) {
         cmd_found = 1;
         optind = 0;
-        ret = dispatch[i].func(&context);
+        ret = dispatch[i].func(context);
       }
     }
 
     if (!cmd_found) {
-      fprintf(stderr, "%s: Unknown command: %s\n", PROGRAM, cmd);
-      fprintf(stderr, "Run '%s help' if you want a command list\n", PROGRAM);
+      fprintf(stderr, "%s: Unknown command: %s\n", context->prog, cmd);
+      fprintf(stderr, "Run '%s help' if you want a command list\n", context->prog);
       ret = 1;
     }
   } /* while ... */
-
-  xdo_free(context.xdo);
-
-  if (context.windows != NULL) {
-    free(context.windows);
-  }
-
   return ret;
 } /* int args_main(int, char **) */
 

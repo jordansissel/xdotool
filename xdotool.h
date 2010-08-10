@@ -22,6 +22,7 @@
 
 typedef struct context {
   xdo_t *xdo;
+  const char *prog;
   int argc;
   char **argv;
   Window *windows;
@@ -29,6 +30,7 @@ typedef struct context {
   Window window_placeholder[1];
 } context_t;
 
+int xdotool_main(int argc, char **argv);
 int cmd_click(context_t *context);
 int cmd_getwindowfocus(context_t *context);
 int cmd_getwindowpid(context_t *context);
@@ -52,7 +54,9 @@ int cmd_windowunmap(context_t *context);
 int cmd_windowreparent(context_t *context);
 int cmd_set_window(context_t *context);
 int cmd_version(context_t *context);
-  
+int cmd_windowkill(context_t *context);
+int cmd_behave(context_t *context);
+
 /* pager-like commands */
 int cmd_set_num_desktops(context_t *context);
 int cmd_get_num_desktops(context_t *context);

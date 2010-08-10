@@ -1,4 +1,7 @@
-xdo: Fake input from the mouse and keyboard very easily
+xdotool: Fake input from the mouse and keyboard very easily.
+  Also supports window manager actions such as moving, activating, and other
+  actions on windows.
+libxdo: C library for doing the same.
 
 See the website for more up-to-date documentation
   http://www.semicomplete.com/projects/xdotool/
@@ -15,7 +18,6 @@ For packagers, there's also support for DESTDIR for staged install.
 
 Also, see the manpage, which you can generate by running:
   make showman
-
-Note, that the manpage will be installed during 'make install'
+Note: the manpage will be installed during 'make install'
 
 

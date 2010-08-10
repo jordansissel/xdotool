@@ -42,7 +42,8 @@ CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
          cmd_windowmap.o cmd_windowunmap.o cmd_windowreparent.o cmd_set_num_desktops.o \
          cmd_get_num_desktops.o cmd_set_desktop.o cmd_get_desktop.o \
          cmd_set_desktop_for_window.o cmd_get_desktop_for_window.o \
-         cmd_get_desktop_viewport.o cmd_set_desktop_viewport.o
+         cmd_get_desktop_viewport.o cmd_set_desktop_viewport.o \
+         cmd_windowkill.o cmd_behave.o
 
 .PHONY: all
 all: xdotool.1 libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) xdotool
