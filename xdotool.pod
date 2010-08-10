@@ -341,6 +341,14 @@ World"
 
 The default options are C<--name --class --classname>
 
+=item B<selectwindow>
+
+Get the window id (for a client) by clicking on it. Useful for having scripts
+query you humans for what window to act on. For example, killing a window by
+clicking on it:
+
+ xdotool selectwindow windowkill
+
 =item B<getwindowpid> I<[window=%1]>
 
 Output the PID owning a given window. This requires effort from the application
