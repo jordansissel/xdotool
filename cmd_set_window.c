@@ -10,7 +10,9 @@
 int cmd_set_window(context_t *context) {
   char *cmd = *context->argv;
   int c;
-  char *role = NULL, *icon = NULL, *name = NULL, *class = NULL, *classname = NULL;
+  char *role = NULL, *icon = NULL, *name = NULL, *class = NULL,
+       *classname = NULL;
+  int override_redirect = -1;
   const char *window_arg = "%1";
 
   struct option longopts[] = {
@@ -19,12 +21,20 @@ int cmd_set_window(context_t *context) {
     { "role", required_argument, NULL, 'r' },
     { "class", required_argument, NULL, 'C' },
     { "classname", required_argument, NULL, 'N' },
+    { "overrideredirect", required_argument, NULL, 'O' },
     { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
   int option_index;
-  static const char *usage = "Usage: %s [--name name] [--icon-name name] "
-            "[--role role] [--classname classname] [--class class] [window=%1]\n";
+  static const char *usage = 
+      "Usage: %s [options] [window=%1]\n"
+      "--name NAME  - set the window name (aka title)\n"
+      "--icon-name NAME - set the window name while minimized/iconified\n"
+      "--role ROLE - set the window's role string\n"
+      "--class CLASS - set the window's class\n"
+      "--classname CLASSNAME - set the window's classname\n"
+      "--overrideredirect OVERRIDE - set override_redirect.\n"
+      "  1 means the window manager will not manage this window.\n";
 
   while ((c = getopt_long_only(context->argc, context->argv, "+hn:i:r:C:N:",
                                longopts, &option_index)) != -1) {
@@ -43,6 +53,9 @@ int cmd_set_window(context_t *context) {
         break;
       case 'N':
         classname = strdup(optarg);
+        break;
+      case 'O':
+        override_redirect = (atoi(optarg) > 0);
         break;
       case 'h':
         printf(usage, cmd);
@@ -72,6 +85,10 @@ int cmd_set_window(context_t *context) {
       xdo_window_setprop(context->xdo, window, "WM_WINDOW_ROLE", role);
     if (classname || class)
       xdo_window_setclass(context->xdo, window, classname, class);
+    if (override_redirect != -1) {
+      xdo_window_set_override_redirect(context->xdo, window,
+                                       override_redirect);
+    }
   }); /* window_each(...) */
 
   return 0;
