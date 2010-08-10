@@ -96,11 +96,6 @@ int cmd_behave(context_t *context) {
     }
   }); /* window_each(...) */
 
-  /* Make a new char **argv... */
-  //const char **argv = calloc(context->argc + 1, sizeof(char *));
-  //argv[0] = context->prog;
-  //memcpy(argv + 1, context->argv, context->argc * sizeof(char *));
-
   while (True) {
     XEvent e;
     XNextEvent(context->xdo->xdpy, &e);
@@ -113,12 +108,6 @@ int cmd_behave(context_t *context) {
       case LeaveNotify:
         tmpcontext->windows = &(e.xcrossing.window);
         tmpcontext->nwindows = 1;
-        printf("Window: %ld\n", tmpcontext->windows[0]);
-        printf("Exec: %s %s %s %s\n",
-               tmpcontext->argv[0],
-               tmpcontext->argv[1],
-               tmpcontext->argv[2],
-               tmpcontext->argv[3]);
         ret = context_execute(tmpcontext);
         break;
       default:

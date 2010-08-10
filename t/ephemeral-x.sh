@@ -30,6 +30,38 @@ quiet() {
   [ "0$QUIET" -eq 1 ]
 }
 
+test_x_available() {
+  xsocket=$1
+  ! test -S $xsocket
+}
+
+test_x_healthy() {
+  xpid=$1
+  xsocket=$2
+  displaynum=$3
+
+  # Try xterm to see if X is up.
+  if which xterm > /dev/null 2>&1 ; then
+    DISPLAY=:$displaynum xterm -e 'true'
+    return $?
+  fi
+
+  # Try xdotool if available, if xterm is not.
+  if which xdotool > /dev/null 2>&1 ; then
+    DISPLAY=:$displaynum xdotool getmouselocation > /dev/null 2>&1
+    return $?
+  fi
+
+  # Try lsof if no X clients (above) are available
+  if which lsof > /dev/null 2>&1 ; then
+    lsof -p $xpid | grep -qF $xsocket
+    return $?
+  fi
+
+  echo "Unable to determine if X is healthy (no tools available)"
+  return false
+}
+
 cleanup() {
   if [ ! -z "$winmgrpid" ] ; then
     kill -TERM "$winmgrpid" || true
@@ -66,17 +98,11 @@ if ! which "$XSERVERNAME" > /dev/null 2>&1 ; then
   exit 1
 fi
 
-if ! which lsof > /dev/null 2>&1 ; then
-  echo "Unable to find lsof. This is a required tool."
-  cleanup
-  exit 1
-fi
-
 while true; do 
   num=$(expr $num + 1)
   xsocket=/tmp/.X11-unix/X$num
   quiet || echo "Trying :$num"
-  lsof $xsocket > /dev/null 2>&1 && continue
+  test_x_available $xsocket || continue
   (
     if quiet ; then
       exec > /dev/null
@@ -97,7 +123,8 @@ while true; do
 
     # See if the xserver got a hold of the display socket.
     # If so, the server is up and healthy.
-    if lsof -p $xpid | grep -qF $xsocket ; then
+    sleep 1
+    if test_x_healthy $xpid $xsocket $num ; then
       quiet || echo "$XSERVERNAME looks healthy. Moving on."
       healthy=1
       break

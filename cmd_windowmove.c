@@ -80,8 +80,8 @@ static int _windowmove(context_t *context, struct windowmove *windowmove) {
   if (windowmove->opsync) {
     xdo_get_window_location(context->xdo, windowmove->window,
                             &orig_win_x, &orig_win_y, NULL);
-    fprintf(stderr, "%d,%d vs orig:%d,%d\n", windowmove->x, windowmove->y,
-            orig_win_x, orig_win_y);
+    //fprintf(stderr, "%d,%d vs orig:%d,%d\n", windowmove->x, windowmove->y,
+            //orig_win_x, orig_win_y);
     if (orig_win_x == windowmove->x && orig_win_y == windowmove->y) {
       /* Break early if we don't need to move the window */
       return 0;

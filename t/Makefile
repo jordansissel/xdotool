@@ -26,7 +26,7 @@ do-test:
 	make -C ../; \
 	sh check-for-tools.sh || exit 0; \
 	for i in test_*.rb ; do \
-	  sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh ruby $(RUBYFLAGS) $$i $(TESTFLAGS); \
+	  sh -x ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh ruby $(RUBYFLAGS) $$i $(TESTFLAGS); \
 	done 
 
 #sh ephemeral-x.sh -q -x "$$XSERVER" -w "$$WM" ./run.sh -- ruby alltests.rb

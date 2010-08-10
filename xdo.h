@@ -613,6 +613,14 @@ int xdo_get_window_size(const xdo_t *xdo, Window wid, unsigned int *width_ret,
 int xdo_window_get_active(const xdo_t *xdo, Window *window_ret);
 
 /**
+ * Get a window ID by clicking on it. This function blocks until a selection
+ * is made.
+ *
+ * @param window_ret Pointer to Window where the selected window is stored.
+ */
+int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret);
+
+/**
  * Set the number of desktops.
  * Uses _NET_NUMBER_OF_DESKTOPS of the EWMH spec.
  *
@@ -762,4 +770,22 @@ int xdo_set_desktop_viewport(const xdo_t *xdo, int x, int y);
  *
  */
 int xdo_window_kill(const xdo_t *xdo, Window window);
+
+/**
+ * Find a client window that is a parent of the window given
+ */
+#define XDO_FIND_PARENTS (0)
+
+/**
+ * Find a client window that is a child of the window given
+ */
+#define XDO_FIND_CHILDREN (1)
+
+/**
+ * Find a client window (child) in a given window. Useful if you get the
+ * window manager's decorator window rather than the client window.
+ */
+int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
+                           int direction);
+
 #endif /* ifndef _XDO_H_ */

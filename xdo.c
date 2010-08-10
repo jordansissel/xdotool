@@ -327,15 +327,28 @@ int xdo_window_focus(const xdo_t *xdo, Window wid) {
 
 int xdo_window_wait_for_size(const xdo_t *xdo, Window window, unsigned int width,
                              unsigned int height, int flags, int to_or_from) {
-  unsigned int cur_width, cur_height;
+  unsigned int cur_width = 0, cur_height = 0;
+  unsigned int alt_width = 0, alt_height = 0;
 
+  //printf("Want: %udx%ud\n", width, height);
   if (flags & SIZE_USEHINTS) {
     xdo_window_translate_with_sizehint(xdo, window, width, height,
                                        (int *)&width, (int *)&height);
+  } else {
+    unsigned int hint_width, hint_height;
+    xdo_window_translate_with_sizehint(xdo, window, 1, 1,
+                                       &hint_width, &hint_height);
+    //printf("Hint: %dx%d\n", hint_width, hint_height);
+    /* Find the nearest multiple (rounded down) of the hint height. */
+    alt_width = (width - (width % hint_width));
+    alt_height = (height - (height % hint_height));
+    //printf("Alt: %udx%ud\n", alt_width, alt_height);
   }
 
   xdo_get_window_size(xdo, window, (unsigned int *)&cur_width,
                       (unsigned int *)&cur_height);
+  //printf("Want: %udx%ud\n", width, height);
+  //printf("Alt: %udx%ud\n", alt_width, alt_height);
   while (to_or_from == SIZE_TO
          ? (cur_width != width && cur_height != height)
          : (cur_width == width && cur_height == height)) {
@@ -619,6 +632,29 @@ int xdo_window_get_active(const xdo_t *xdo, Window *window_ret) {
 
   return _is_success("XGetWindowProperty[_NET_ACTIVE_WINDOW]",
                      *window_ret == 0);
+}
+
+int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
+  int screen_num;
+  Screen *screen;
+  xdo_mouselocation(xdo, NULL, NULL, &screen_num);
+
+  screen = ScreenOfDisplay(xdo->xdpy, screen_num);
+
+  /* Grab sync mode so we can ensure nothing changes while we figure
+   * out what the client window is.
+   * Also, everyone else who does 'select window' does it this way.
+   */
+  XGrabPointer(xdo->xdpy, screen->root, False, ButtonReleaseMask,
+               GrabModeSync, GrabModeAsync, screen->root, None, CurrentTime);
+  
+  XEvent e;
+  XAllowEvents(xdo->xdpy, SyncPointer, CurrentTime);
+  XWindowEvent(xdo->xdpy, screen->root, ButtonReleaseMask, &e);
+  *window_ret = e.xbutton.subwindow;
+  XUngrabPointer(xdo->xdpy, CurrentTime);
+  xdo_window_find_client(xdo, *window_ret, window_ret, XDO_FIND_CHILDREN);
+  return XDO_SUCCESS;
 }
 
 /* XRaiseWindow is ignored in ion3 and Gnome2. Is it even useful? */
@@ -999,42 +1035,61 @@ int xdo_window_wait_for_focus(const xdo_t *xdo, Window window, int want_focus) {
  * top-level-ish window having focus rather than something you may
  * not expect to be the window having focused. */
 int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret) {
-  int done = 0;
-  Window w;
-  XClassHint classhint;
+  xdo_window_get_focus(xdo, window_ret);
+  xdo_window_find_client(xdo, *window_ret, window_ret, XDO_FIND_PARENTS);
+  return _is_success("xdo_window_sane_get_focus", *window_ret == 0);
+}
 
+int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
+                           int direction) {
+  //printf("call findclient: %ld\n", window);
   /* for XQueryTree */
   Window dummy, parent, *children = NULL;
   unsigned int nchildren;
+  Atom atom_wmstate = XInternAtom(xdo->xdpy, "WM_STATE", False);
 
-  xdo_window_get_focus(xdo, &w);
-
+  int done = False;
   while (!done) {
-    Status s;
-    s = XGetClassHint(xdo->xdpy, w, &classhint);
-    //fprintf(stderr, "%d\n", s);
+    long items;
+    xdo_getwinprop(xdo, window, atom_wmstate, &items, NULL, NULL);
 
-    if (s == 0) {
-      /* Error. This window doesn't have a class hint */
-      //fprintf(stderr, "no class on: %d\n", w);
-      XQueryTree(xdo->xdpy, w, &dummy, &parent, &children, &nchildren);
+    if (items == 0) {
+      /* This window doesn't have WM_STATE property, keep searching. */
+      XQueryTree(xdo->xdpy, window, &dummy, &parent, &children, &nchildren);
 
-      /* Don't care about the children, but we still need to free them */
-      if (children != NULL)
-        XFree(children);
-      //fprintf(stderr, "parent: %d\n", parent);
-      w = parent;
+      if (direction == XDO_FIND_PARENTS) {
+        /* Don't care about the children, but we still need to free them */
+        if (children != NULL)
+          XFree(children);
+        window = parent;
+      } else if (direction == XDO_FIND_CHILDREN) {
+        unsigned int i = 0;
+        int ret;
+        for (i = 0; i < nchildren && !done; i++) {
+          ret = xdo_window_find_client(xdo, children[i], &window, direction);
+          //printf("findclient: %ld\n", window);
+          if (ret == XDO_SUCCESS) {
+            *window_ret = window;
+            done = True; /* recursion should end us */
+            break;
+          }
+        }
+        if (children != NULL)
+          XFree(children);
+        return XDO_ERROR;
+      } else {
+        fprintf(stderr, "Invalid find_client direction (%d)\n", direction);
+        *window_ret = 0;
+        if (children != NULL)
+          XFree(children);
+        return XDO_ERROR;
+      }
     } else {
-      /* Must XFree the class and name items. */
-      XFree(classhint.res_class);
-      XFree(classhint.res_name);
-
-      done = 1;
+      *window_ret = window;
+      done = True;
     }
   }
-
-  *window_ret = w;
-  return _is_success("xdo_window_sane_get_focus", w == 0);
+  return XDO_SUCCESS;
 }
 
 /* Helper functions */
@@ -1335,9 +1390,17 @@ unsigned char *xdo_getwinprop(const xdo_t *xdo, Window window, Atom atom,
   else if (actual_format == 0)
     nbytes = 0;
 
-  *nitems = _nitems;
-  *type = actual_type;
-  *size = actual_format;
+  if (nitems != NULL) {
+    *nitems = _nitems;
+  }
+
+  if (type != NULL) {
+    *type = actual_type;
+  }
+
+  if (size != NULL) {
+    *size = actual_format;
+  }
   return prop;
 }
 

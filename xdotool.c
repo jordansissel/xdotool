@@ -218,6 +218,7 @@ struct dispatch {
   { "getwindowfocus", cmd_getwindowfocus, },
   { "getwindowpid", cmd_getwindowpid, },
   { "search", cmd_search, },
+  { "selectwindow", cmd_window_select, },
 
   /* Help me! */
   { "help", cmd_help, },
