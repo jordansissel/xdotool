@@ -20,7 +20,10 @@
  * perform various window managment tasks such as desktop changes, window
  * movement, etc.
  *
+ * For examples on libxdo usage, the xdotool source code is a good reference.
+ *
  * @see xdo.h
+ * @see xdo_new
  */
 
 /**
@@ -37,8 +40,8 @@
  * keyboard) functions like xdo_keysequence that indicate we should target the
  * current window, not a specific window.
  *
- * Generally, this means we will use XTEST instead of XSendEvent when
- * sending events.
+ * Generally, this means we will use XTEST instead of XSendEvent when sending
+ * events.
  */
 #define CURRENTWINDOW (0)
 
@@ -75,7 +78,7 @@ typedef struct xdo {
   /** The Display for Xlib */
   Display *xdpy;
 
-  /** The display name */
+  /** The display name, if any. NULL if not specified. */
   char *display_name;
 
   /** @internal Array of known keys/characters */
@@ -195,7 +198,7 @@ typedef struct xdo_search {
  * Create a new xdo_t instance.
  *
  * @param display the string display name, such as ":0". If null, uses the
- * environment variable DISPLAY.
+ * environment variable DISPLAY just like XOpenDisplay(NULL).
  *
  * @return Pointer to a new xdo_t or NULL on failure
  */
@@ -223,7 +226,6 @@ const char *xdo_version(void);
  * If close_display_when_freed is set, then we will also close the Display.
  */
 void xdo_free(xdo_t *xdo);
-
 
 /**
  * Move the mouse to a specific location.
@@ -311,7 +313,7 @@ int xdo_click(const xdo_t *xdo, Window window, int button);
  * Type a string to the specified window.
  *
  * If you want to send a specific key or key sequence, such as "alt+l", you
- * want instead xdo_keysequence.
+ * want instead xdo_keysequence(...).
  *
  * @param window The window you want to send keystrokes to or CURRENTWINDOW
  * @param string The string to type, like "Hello world!"
@@ -459,10 +461,22 @@ int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property,
  * Change the window's classname and or class.
  *
  * @param name The new class name. If NULL, no change.
- * @paramclass The new class. If NULL, no change.
+ * @param class The new class. If NULL, no change.
  */
 int xdo_window_setclass(const xdo_t *xdo, Window wid, const char *name,
                         const char *class);
+
+/**
+ * Set the override_redirect value for a window. This generally means
+ * whether or not a window manager will manage this window.
+ *
+ * If you set it to 1, the window manager will usually not draw borders on the
+ * window, etc. If you set it to 0, the window manager will see it like a
+ * normal application window.
+ *
+ */
+int xdo_window_set_override_redirect(const xdo_t *xdo, Window wid,
+                                     int override_redirect);
 
 /**
  * Focus a window.
@@ -742,4 +756,10 @@ int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret);
  * _NET_DESKTOP_VIEWPORT
  */
 int xdo_set_desktop_viewport(const xdo_t *xdo, int x, int y);
+
+/**
+ * Kill a window and the client owning it.
+ *
+ */
+int xdo_window_kill(const xdo_t *xdo, Window window);
 #endif /* ifndef _XDO_H_ */
