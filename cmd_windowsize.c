@@ -50,10 +50,6 @@ int cmd_windowsize(context_t *context) {
     }
   }
 
-  if (use_hints) {
-    size_flags |= SIZE_USEHINTS;
-  }
-
   consume_args(context, optind);
 
   const char *window_arg = "%1";
@@ -72,6 +68,15 @@ int cmd_windowsize(context_t *context) {
 
   if (strchr(context->argv[1], '%')) {
     is_height_percent = 1;
+  }
+
+  if (use_hints) {
+    if (!is_height_percent) {
+      size_flags |= SIZE_USEHINTS_Y;
+    }
+    if (!is_width_percent) {
+      size_flags |= SIZE_USEHINTS_X;
+    }
   }
 
   width = (unsigned int)strtoul(context->argv[0], NULL, 0);
@@ -102,9 +107,13 @@ int cmd_windowsize(context_t *context) {
       unsigned int w = width;
       unsigned int h = height;
       xdo_get_window_size(context->xdo, window, &original_w, &original_h);
-      if (size_flags & SIZE_USEHINTS) { 
-        xdo_window_translate_with_sizehint(context->xdo, window, w, h, &w, &h);
+      if (size_flags & SIZE_USEHINTS_X) {
+        xdo_window_translate_with_sizehint(context->xdo, window, w, h, &w, NULL);
       }
+      if (size_flags & SIZE_USEHINTS_Y) {
+        xdo_window_translate_with_sizehint(context->xdo, window, w, h, NULL, &h);
+      }
+
       if (original_w == w && original_h == h) {
         /* Skip, this window doesn't need to move. */
         break;

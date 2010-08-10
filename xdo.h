@@ -34,6 +34,8 @@
  * instead of pixels.
  */
 #define SIZE_USEHINTS (1L << 0)
+#define SIZE_USEHINTS_X (2L << 0)
+#define SIZE_USEHINTS_Y (3L << 0)
 
 /**
  * CURRENTWINDOW is a special identify for xdo input faking (mouse and

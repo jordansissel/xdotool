@@ -236,8 +236,13 @@ int xdo_window_translate_with_sizehint(const xdo_t *xdo, Window window,
     height += hints.base_height;
   }
 
-  *width_ret = width;
-  *height_ret = height;
+  if (width_ret != NULL) {
+    *width_ret = width;
+  }
+
+  if (height_ret != NULL) {
+    *height_ret = height;
+  }
 
   return XDO_SUCCESS;
 }
@@ -250,6 +255,15 @@ int xdo_window_setsize(const xdo_t *xdo, Window window, int width, int height, i
   if (flags & SIZE_USEHINTS) {
     xdo_window_translate_with_sizehint(xdo, window, width, height,
                                        &wc.width, &wc.height);
+  } else if (flags > 0) {
+    if (flags & SIZE_USEHINTS_X) {
+      xdo_window_translate_with_sizehint(xdo, window, width, height,
+                                         &wc.width, NULL);
+    }
+    if (flags & SIZE_USEHINTS_Y) {
+      xdo_window_translate_with_sizehint(xdo, window, width, height,
+                                         NULL, &wc.height);
+    }
   } else {
     wc.width = width;
     wc.height = height;
