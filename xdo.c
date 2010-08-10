@@ -253,20 +253,20 @@ int xdo_window_setsize(const xdo_t *xdo, Window window, int width, int height, i
   int cw_flags = 0;
 
   if (flags & SIZE_USEHINTS) {
-    xdo_window_translate_with_sizehint(xdo, window, width, height,
-                                       &wc.width, &wc.height);
-  } else if (flags > 0) {
-    if (flags & SIZE_USEHINTS_X) {
-      xdo_window_translate_with_sizehint(xdo, window, width, height,
-                                         &wc.width, NULL);
-    }
-    if (flags & SIZE_USEHINTS_Y) {
-      xdo_window_translate_with_sizehint(xdo, window, width, height,
-                                         NULL, &wc.height);
-    }
-  } else {
-    wc.width = width;
-    wc.height = height;
+    flags |= SIZE_USEHINTS_X | SIZE_USEHINTS_Y;
+  }
+
+  wc.width = width;
+  wc.height = height;
+
+  if (flags & SIZE_USEHINTS_X) {
+    xdo_window_translate_with_sizehint(xdo, window, width, height, &wc.width,
+                                       NULL);
+  }
+
+  if (flags & SIZE_USEHINTS_Y) {
+    xdo_window_translate_with_sizehint(xdo, window, width, height, NULL,
+                                       &wc.height);
   }
 
   if (width > 0) {
