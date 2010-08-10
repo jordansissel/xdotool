@@ -7,6 +7,8 @@ struct events {
 } events[] = {
   { "mouse-enter", EnterWindowMask },
   { "mouse-leave", LeaveWindowMask },
+  { "focus", FocusChangeMask },
+  { "blur", FocusChangeMask },
   { NULL, 0 },
 };
 
@@ -56,29 +58,17 @@ int cmd_behave(context_t *context) {
   const char *event = context->argv[0];
   consume_args(context, 1);
 
-  //printf("Window: %s\n", window_arg);
-  //printf("Event: %s\n", event);
   int i = 0;
-  //printf("remaining %d: ", context->argc);
   for (i = 0; i < context->argc; i++) {
     printf("%s ", context->argv[i]);
   }
   printf("\n");
 
   /* The remainder of args are supposed to be what to run on the action */
-  
-  /* Actions:
-   * - mouse-enter
-   * - mouse-leave
-   * - focus
-   * - unfocus
-   * - 
-   * ...
-   */
 
   long selectmask = 0;
   for (i = 0; events[i].name != NULL; i++) {
-    printf("Checking: %s vs %s\n", events[i].name, event);
+    printf("%s vs %s\n", events[i].name, event);
     if (!strcmp(events[i].name, event)) {
       selectmask |= events[i].mask;
     }
@@ -92,7 +82,7 @@ int cmd_behave(context_t *context) {
   window_each(context, window_arg, {
     ret = XSelectInput(context->xdo->xdpy, window, selectmask);
     if (ret != True) {
-      fprintf(stderr, "XSelectInput  reported an error\n");
+      fprintf(stderr, "XSelectInput reported an error\n");
     }
   }); /* window_each(...) */
 
@@ -107,6 +97,12 @@ int cmd_behave(context_t *context) {
       case EnterNotify:
       case LeaveNotify:
         tmpcontext->windows = &(e.xcrossing.window);
+        tmpcontext->nwindows = 1;
+        ret = context_execute(tmpcontext);
+        break;
+      case FocusIn:
+      case FocusOut:
+        tmpcontext->windows = &(e.xfocus.window);
         tmpcontext->nwindows = 1;
         ret = context_execute(tmpcontext);
         break;
