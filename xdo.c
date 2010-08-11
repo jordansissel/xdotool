@@ -837,9 +837,19 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
     key.modmask = 0;
     key.needs_binding = 0;
     if (key.code == 0 && key.symbol == NoSymbol) {
-      fprintf(stderr, "I don't what key produces '%c', skipping.\n",
-              key.key);
-      continue;
+      /* Try the charmap */
+      int kci = 0;
+      for (kci = 0; keysym_charmap[kci].keysym; kci++) {
+        if (key.key == keysym_charmap[kci].key) {
+          key.symbol = XStringToKeysym(keysym_charmap[kci].keysym);
+        }
+      }
+
+      if (key.symbol == NoSymbol) {
+        fprintf(stderr, "I don't what key produces '%c', skipping.\n",
+                key.key);
+        continue;
+      }
     }
 
     if (key.code > 0) {
@@ -854,7 +864,6 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
      * around this by binding a new key to the key and using that. */
     if (key.index >= 4) {
       key.needs_binding = 1;
-      //key.index = 0;
     }
 
     if (key.needs_binding == 0) {
@@ -872,7 +881,6 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
       } 
     }
 
-
     //printf(stderr,
             //"Key '%c' maps to code %d / sym %lu with index %d / mods %d (%s)\n",
             //key.key, key.code, key.symbol, key.index, key.modmask, 
@@ -881,6 +889,7 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
     //_xdo_send_key(xdo, window, keycode, modstate, True, delay);
     //_xdo_send_key(xdo, window, keycode, modstate, False, delay);
     xdo_keysequence_list_do(xdo, window, &key, 1, True, NULL, delay / 2);
+    key.needs_binding = 0;
     xdo_keysequence_list_do(xdo, window, &key, 1, False, NULL, delay / 2);
 
     /* XXX: Flush here or at the end? or never? */
@@ -951,8 +960,9 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
   for (i = 0; i < nkeys; i++) {
     if (keys[i].needs_binding == 1) {
       KeySym keysym_list[] = { keys[i].symbol };
-      //fprintf(stderr, "Mapping sym %lu to %d\n", keys[i].symbol, scratch_keycode);
+      fprintf(stderr, "Mapping sym %lu to %d\n", keys[i].symbol, scratch_keycode);
       XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
+      XSync(xdo->xdpy, False);
       /* override the code in our current key to use the scratch_keycode */
       keys[i].code = scratch_keycode;
       keymapchanged = 1;
