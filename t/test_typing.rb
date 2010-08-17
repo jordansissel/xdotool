@@ -31,7 +31,7 @@ class XdotoolTypingTests < Test::Unit::TestCase
     ready = false
     while !ready
       xdotool "windowfocus #{@wid}"
-      status, lines = xdotool "getwindowfocus"
+      status, lines = xdotool "getwindowfocus -f"
       if status == 0 and lines.first.to_i == @wid
         ready = true
       end

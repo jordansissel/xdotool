@@ -21,10 +21,14 @@ class XdotoolCommandWindowSizeTests < Test::Unit::TestCase
   end # def test_fails_without_a_window
 
   def test_chaining
+    #if detect_window_manager == :none
+      #print "Skipping windowfocus tests. No WM present."
+      #return
+    #end
     xdotool_ok "windowfocus --sync #{@wid}"
-    xdotool_ok "getwindowfocus windowsize 20 20"
-    xdotool_ok "getwindowfocus windowsize %1 20 20"
-    xdotool_ok "getwindowfocus windowsize %@ 20 20"
+    xdotool_ok "getwindowfocus -f windowsize 20 20"
+    xdotool_ok "getwindowfocus -f windowsize %1 20 20"
+    xdotool_ok "getwindowfocus -f windowsize %@ 20 20"
   end # def test_chaining
 end # class XdotoolCommandWindowsizeTests
 

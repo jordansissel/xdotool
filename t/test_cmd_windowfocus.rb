@@ -9,6 +9,10 @@ class XdotoolCommandWindowFocusTests < Test::Unit::TestCase
   include XdoTestHelper
 
   def test_succeeds_with_valid_window
+    if detect_window_manager == :none
+      print "Skipping windowfocus tests. No WM present."
+      return
+    end
     xdotool_ok "windowfocus #{@wid}"
   end # def test_succeeds_with_valid_window
 
@@ -21,9 +25,9 @@ class XdotoolCommandWindowFocusTests < Test::Unit::TestCase
 
   def test_chaining
     xdotool_ok "windowfocus --sync #{@wid}"
-    xdotool_ok "getwindowfocus windowfocus "
-    xdotool_ok "getwindowfocus windowfocus %1"
-    xdotool_ok "getwindowfocus windowfocus %@"
+    xdotool_ok "getwindowfocus -f windowfocus "
+    xdotool_ok "getwindowfocus -f windowfocus %1"
+    xdotool_ok "getwindowfocus -f windowfocus %@"
   end # def test_chaining
 end # class XdotoolCommandWindowFocusTests
 

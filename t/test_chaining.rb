@@ -12,11 +12,13 @@ class XdotoolChainingTests < Test::Unit::TestCase
     setup_ensure_x_is_healthy
     setup_launch_xterm
 
-    @cmds = ["mousedown 1", "mouseup 1", "mousemove 0 0", "mousemove 50 50", "click 1",
-             "key \"ctrl+w\"", "mousemove_relative 30 30", "windowfocus #{@wid}",
-             "windowmap #{@wid}", "windowmove #{@wid} 1 1", "windowraise #{@wid}",
+    @cmds = ["mousedown 1", "mouseup 1", "mousemove 0 0", "mousemove 50 50",
+             "click 1", "key \"ctrl+w\"", "mousemove_relative 30 30",
+             "windowfocus #{@wid}", "windowmap #{@wid}",
+             "windowmove #{@wid} 1 1", "windowraise #{@wid}",
              "windowunmap #{@wid}", "windowsize #{@wid} 500 500" ]
     @cmds_withoutput = ["getmouselocation"]
+    @cmds_withoutput << "getwindowfocus -f"
 
     if (wm_supports?("_NET_ACTIVE_WINDOW"))
       @cmds << "windowactivate #{@wid}"

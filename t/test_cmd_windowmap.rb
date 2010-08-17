@@ -21,8 +21,8 @@ class XdotoolCommandWindowMapTests < Test::Unit::TestCase
 
   def test_chaining
     xdotool_ok "windowfocus --sync #{@wid}"
-    xdotool_ok "getwindowfocus windowmap "
-    xdotool_ok "getwindowfocus windowmap %1"
-    xdotool_ok "getwindowfocus windowmap %@"
+    xdotool_ok "getwindowfocus -f windowmap "
+    xdotool_ok "getwindowfocus -f windowmap %1"
+    xdotool_ok "getwindowfocus -f windowmap %@"
   end # def test_chaining
 end # class XdotoolCommandWindowMapTests

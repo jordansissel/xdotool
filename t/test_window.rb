@@ -78,7 +78,7 @@ end
 class XdotoolWindowChainDefaultTests < XdotoolWindowChainTests
   def xdotool(args)
     args.gsub!(@wid.to_s, "");
-    args = "getwindowfocus #{args}"
+    args = "getwindowfocus -f #{args}"
     if $DEBUG
       puts "Running: #{@xdotool} #{args}"
     end
@@ -89,7 +89,7 @@ end # class XdotoolWindowChainTests
 class XdotoolWindowChain1Tests < XdotoolWindowChainTests
   def xdotool(args)
     args.gsub!(@wid.to_s, "%1");
-    args = "getwindowfocus #{args}"
+    args = "getwindowfocus -f #{args}"
     if $DEBUG
       puts "Running: #{@xdotool} #{args}"
     end
@@ -100,7 +100,7 @@ end # class XdotoolWindowChain1Tests
 class XdotoolWindowChainAllTests < XdotoolWindowChainTests
   def xdotool(args)
     args.gsub!(@wid.to_s, "%@");
-    args = "getwindowfocus #{args}"
+    args = "getwindowfocus -f #{args}"
     if $DEBUG
       puts "Running: #{@xdotool} #{args}"
     end

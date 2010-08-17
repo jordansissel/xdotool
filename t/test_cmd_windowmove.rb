@@ -22,9 +22,9 @@ class XdotoolCommandWindowMoveTests < Test::Unit::TestCase
 
   def test_chaining
     xdotool_ok "windowfocus --sync #{@wid}"
-    xdotool_ok "getwindowfocus windowmove 20 20"
-    xdotool_ok "getwindowfocus windowmove %1 20 20"
-    xdotool_ok "getwindowfocus windowmove %@ 20 20"
+    xdotool_ok "getwindowfocus -f windowmove 20 20"
+    xdotool_ok "getwindowfocus -f windowmove %1 20 20"
+    xdotool_ok "getwindowfocus -f windowmove %@ 20 20"
   end # def test_chaining
 end # class XdotoolCommandWindowMoveTests
 

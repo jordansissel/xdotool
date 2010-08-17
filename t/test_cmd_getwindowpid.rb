@@ -19,8 +19,8 @@ class XdotoolCommandGetWindowPidTests < Test::Unit::TestCase
 
   def test_chaining
     xdotool_ok "windowfocus --sync #{@wid}"
-    xdotool_ok "getwindowfocus getwindowpid"
-    xdotool_ok "getwindowfocus getwindowpid %1"
-    xdotool_ok "getwindowfocus getwindowpid %@"
+    xdotool_ok "getwindowfocus -f getwindowpid"
+    xdotool_ok "getwindowfocus -f getwindowpid %1"
+    xdotool_ok "getwindowfocus -f getwindowpid %@"
   end # def test_chaining
 end # class XdotoolCommandGetWindowPidTests

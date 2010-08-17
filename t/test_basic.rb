@@ -13,14 +13,12 @@ class XdotoolBasicTests < Test::Unit::TestCase
   end # def test_noargs_exit_1
 
   def test_getwindowfocus_gets_a_valid_window
-    name = rand.to_s
-
     # There's a bug in Xvfb, Xephyr, and possibly other X servers that if you
     # just run the X server, no WM, and launch an xterm (or nothing),
     # XGetInputFocus yields '1' as the window with focus. This is a bug we
     # work-around by telling the X server to focus our window.
-    xdotool "windowfocus #{@wid}"
-    status, lines = xdotool "getwindowfocus"
+    xdotool "windowfocus --sync #{@wid}"
+    status, lines = xdotool "getwindowfocus -f"
     assert_status_ok(status)
     assert_equal(1, lines.length, "Only one line of output expected from getwindowfocus")
     assert_equal(@wid, lines[0].to_i)
