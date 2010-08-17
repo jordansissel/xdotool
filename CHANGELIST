@@ -1,4 +1,6 @@
 2.2010????.*:
+TODO(sissel): Document all new commands and api methods.
+
   - New commands: 'get_desktop_viewport' and 'set_desktop_viewport'. Some
     window managers don't actually do 'multiple desktops' but instead show
     workspaces as views on a large desktop. For example, Compiz Fusion does
