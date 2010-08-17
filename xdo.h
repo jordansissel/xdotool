@@ -790,4 +790,12 @@ int xdo_window_kill(const xdo_t *xdo, Window window);
 int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
                            int direction);
 
+/**
+ * Get a window's name, if any.
+ *
+ * TODO(sissel): Document
+ */
+int xdo_get_window_name(const xdo_t *xdo, Window window, 
+                        unsigned char **name_ret, int *name_len_ret,
+                        int *name_type);
 #endif /* ifndef _XDO_H_ */

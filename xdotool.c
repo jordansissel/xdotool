@@ -216,6 +216,7 @@ struct dispatch {
   /* Query functions */
   { "getactivewindow", cmd_getactivewindow, },
   { "getwindowfocus", cmd_getwindowfocus, },
+  { "getwindowname", cmd_getwindowname, },
   { "getwindowpid", cmd_getwindowpid, },
   { "search", cmd_search, },
   { "selectwindow", cmd_window_select, },

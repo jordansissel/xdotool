@@ -33,6 +33,7 @@ typedef struct context {
 int xdotool_main(int argc, char **argv);
 int cmd_click(context_t *context);
 int cmd_getwindowfocus(context_t *context);
+int cmd_getwindowname(context_t *context);
 int cmd_getwindowpid(context_t *context);
 int cmd_getactivewindow(context_t *context);
 int cmd_help(context_t *context);

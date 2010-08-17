@@ -68,7 +68,11 @@ static int _is_success(const char *funcname, int code);
 static char _keysym_to_char(const char *keysym);
 
 /* Default to -1, initialize it when we need it */
-static Atom _NET_WM_PID = -1;
+static Atom atom_NET_WM_PID = -1;
+static Atom atom_NET_WM_NAME = -1;
+static Atom atom_WM_NAME = -1;
+static Atom atom_STRING = -1;
+static Atom atom_UTF8_STRING = -1;
 
 xdo_t* xdo_new(char *display_name) {
   Display *xdpy;
@@ -350,6 +354,8 @@ int xdo_window_wait_for_size(const xdo_t *xdo, Window window, unsigned int width
                                        (int *)&width, (int *)&height);
   } else {
     unsigned int hint_width, hint_height;
+    /* TODO(sissel): fix compiler warning here, but it will require
+     * an ABI breakage by changing types... */
     xdo_window_translate_with_sizehint(xdo, window, 1, 1,
                                        &hint_width, &hint_height);
     //printf("Hint: %dx%d\n", hint_width, hint_height);
@@ -1705,11 +1711,11 @@ int xdo_window_get_pid(const xdo_t *xdo, Window window) {
   unsigned char *data;
   int window_pid = 0;
 
-  if (_NET_WM_PID == (Atom)-1) {
-    _NET_WM_PID = XInternAtom(xdo->xdpy, "_NET_WM_PID", False);
+  if (atom_NET_WM_PID == (Atom)-1) {
+    atom_NET_WM_PID = XInternAtom(xdo->xdpy, "_NET_WM_PID", False);
   }
 
-  data = xdo_getwinprop(xdo, window, _NET_WM_PID, &nitems, &type, &size);
+  data = xdo_getwinprop(xdo, window, atom_NET_WM_PID, &nitems, &type, &size);
 
   if (nitems > 0) {
     /* The data itself is unsigned long, but everyone uses int as pid values */
@@ -1810,4 +1816,42 @@ int xdo_window_kill(const xdo_t *xdo, Window window) {
   int ret;
   ret = XKillClient(xdo->xdpy, window);
   return _is_success("XKillClient", ret == 0);
+}
+
+int xdo_get_window_name(const xdo_t *xdo, Window window, 
+                        unsigned char **name_ret, int *name_len_ret,
+                        int *name_type) {
+  if (atom_NET_WM_NAME == (Atom)-1) {
+    atom_NET_WM_NAME = XInternAtom(xdo->xdpy, "_NET_WM_NAME", False);
+  } 
+  if (atom_WM_NAME == (Atom)-1) {
+    atom_WM_NAME = XInternAtom(xdo->xdpy, "WM_NAME", False);
+  }
+  if (atom_STRING == (Atom)-1) {
+    atom_STRING = XInternAtom(xdo->xdpy, "STRING", False);
+  }
+  if (atom_UTF8_STRING == (Atom)-1) {
+    atom_UTF8_STRING = XInternAtom(xdo->xdpy, "UTF8_STRING", False);
+  }
+
+  Atom type;
+  int size;
+  long nitems;
+
+  /**
+   * http://standards.freedesktop.org/wm-spec/1.3/ar01s05.html
+   * Prefer _NET_WM_NAME if available, otherwise use WM_NAME
+   * If no WM_NAME, set name_ret to NULL and set len to 0
+   */
+
+  *name_ret = xdo_getwinprop(xdo, window, atom_NET_WM_NAME, &nitems,
+                             &type, &size);
+  if (nitems == 0) {
+    *name_ret = xdo_getwinprop(xdo, window, atom_WM_NAME, &nitems,
+                               &type, &size);
+  }
+  *name_len_ret = nitems;
+  *name_type = type;
+
+  return 0;
 }

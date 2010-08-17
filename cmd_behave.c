@@ -9,6 +9,7 @@ struct events {
   { "mouse-leave", LeaveWindowMask },
   { "focus", FocusChangeMask },
   { "blur", FocusChangeMask },
+  { "mouse-click", ButtonReleaseMask },
   { NULL, 0 },
 };
 
@@ -68,7 +69,7 @@ int cmd_behave(context_t *context) {
 
   long selectmask = 0;
   for (i = 0; events[i].name != NULL; i++) {
-    printf("%s vs %s\n", events[i].name, event);
+    //printf("%s vs %s\n", events[i].name, event);
     if (!strcmp(events[i].name, event)) {
       selectmask |= events[i].mask;
     }
@@ -93,17 +94,21 @@ int cmd_behave(context_t *context) {
     context_t *tmpcontext = calloc(1, sizeof(context_t));
     memcpy(tmpcontext, context, sizeof(context_t));
 
+    tmpcontext->nwindows = 1;
     switch (e.type) {
       case EnterNotify:
       case LeaveNotify:
+        printf("Got event\n");
         tmpcontext->windows = &(e.xcrossing.window);
-        tmpcontext->nwindows = 1;
         ret = context_execute(tmpcontext);
         break;
       case FocusIn:
       case FocusOut:
         tmpcontext->windows = &(e.xfocus.window);
-        tmpcontext->nwindows = 1;
+        ret = context_execute(tmpcontext);
+        break;
+      case ButtonRelease:
+        tmpcontext->windows = &(e.xbutton.window);
         ret = context_execute(tmpcontext);
         break;
       default:
