@@ -1,5 +1,6 @@
 2.2010????.*:
 TODO(sissel): Document all new commands and api methods.
+TODO(sissel): Add tests for new methods.
 
   - New commands: 'get_desktop_viewport' and 'set_desktop_viewport'. Some
     window managers don't actually do 'multiple desktops' but instead show
