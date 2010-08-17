@@ -40,6 +40,12 @@
 
 #define DEFAULT_DELAY 12
 
+/**
+ * The number of tries to check for a wait condition before aborting.
+ * TODO(sissel): Make this tunable at runtime?
+ */
+#define MAX_TRIES 500
+
 static void _xdo_populate_charcode_map(xdo_t *xdo);
 static int _xdo_has_xtest(const xdo_t *xdo);
 
@@ -135,11 +141,13 @@ const char *xdo_version(void) {
 }
 
 int xdo_window_wait_for_map_state(const xdo_t *xdo, Window wid, int map_state) {
+  int tries = MAX_TRIES;
   XWindowAttributes attr;
   attr.map_state = IsUnmapped;
-  while (attr.map_state != map_state) {
+  while (tries > 0 && attr.map_state != map_state) {
     XGetWindowAttributes(xdo->xdpy, wid, &attr);
     usleep(30000); /* TODO(sissel): Use exponential backoff up to 1 second */
+    tries--;
   }
   return 0;
 }
@@ -371,12 +379,13 @@ int xdo_window_wait_for_size(const xdo_t *xdo, Window window,
                       (unsigned int *)&cur_height);
   //printf("Want: %udx%ud\n", width, height);
   //printf("Alt: %udx%ud\n", alt_width, alt_height);
-  while (to_or_from == SIZE_TO
+  while (tries > 0 && (to_or_from == SIZE_TO
          ? (cur_width != width && cur_height != height)
-         : (cur_width == width && cur_height == height)) {
+         : (cur_width == width && cur_height == height))) {
     xdo_get_window_size(xdo, window, (unsigned int *)&cur_width,
                         (unsigned int *)&cur_height);
     usleep(30000);
+    tries--;
   }
 
   return 0;
@@ -385,15 +394,18 @@ int xdo_window_wait_for_size(const xdo_t *xdo, Window window,
 int xdo_window_wait_for_active(const xdo_t *xdo, Window window, int active) {
   Window activewin = 0;
   int ret = 0;
+  int tries = MAX_TRIES;
 
   /* If active is true, wait until activewin is our window
    * otherwise, wait until activewin is not our window */
-  while (active ? activewin != window : activewin == window) {
+  while (tries > 0 && 
+         (active ? activewin != window : activewin == window)) {
     ret = xdo_window_get_active(xdo, &activewin);
     if (ret == XDO_ERROR) {
       return ret;
     }
     usleep(30000);
+    tries--;
   }
 
   return 0;
@@ -1046,18 +1058,20 @@ int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret) {
 int xdo_window_wait_for_focus(const xdo_t *xdo, Window window, int want_focus) {
   Window focuswin = 0;
   int ret;
+  int tries = MAX_TRIES;
   ret = xdo_window_get_focus(xdo, &focuswin);
   if (ret != 0) {
     return ret;
   }
 
-  while (want_focus ? focuswin != window : focuswin == window) {
-    //printf("Current win: %ld, want %ld\n", focuswin, window);
+  while (tries > 0 && 
+         (want_focus ? focuswin != window : focuswin == window)) {
     usleep(30000); /* TODO(sissel): Use exponential backoff up to 1 second */
     ret = xdo_window_get_focus(xdo, &focuswin);
     if (ret != 0) {
       return ret;
     }
+    tries--;
   }
   return 0;
 }
@@ -1731,11 +1745,14 @@ int xdo_window_get_pid(const xdo_t *xdo, Window window) {
 int xdo_mouse_wait_for_move_from(const xdo_t *xdo, int origin_x, int origin_y) {
   int x, y;
   int ret = 0;
+  int tries = MAX_TRIES;
 
   ret = xdo_mouselocation(xdo, &x, &y, NULL);
-  while (x == origin_x && y == origin_y) {
+  while (tries > 0 && 
+         (x == origin_x && y == origin_y)) {
     usleep(30000);
     ret = xdo_mouselocation(xdo, &x, &y, NULL);
+    tries--;
   }
 
   return ret;
@@ -1744,11 +1761,13 @@ int xdo_mouse_wait_for_move_from(const xdo_t *xdo, int origin_x, int origin_y) {
 int xdo_mouse_wait_for_move_to(const xdo_t *xdo, int dest_x, int dest_y) {
   int x, y;
   int ret = 0;
+  int tries = MAX_TRIES;
 
   ret = xdo_mouselocation(xdo, &x, &y, NULL);
-  while (x != dest_x && y != dest_y) {
+  while (tries > 0 && (x != dest_x && y != dest_y)) {
     usleep(30000);
     ret = xdo_mouselocation(xdo, &x, &y, NULL);
+    tries--;
   }
 
   return ret;
