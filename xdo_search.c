@@ -140,7 +140,6 @@ static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re) 
     Xutf8TextPropertyToTextList(xdo->xdpy, &tp, &list, &count);
     for (i = 0; i < count; i++) {
       if (regexec(re, list[i], 0, NULL, 0) == 0) {
-        printf("Name: %s\n", list[i]);
         XFreeStringList(list);
         XFree(tp.value);
         return True;

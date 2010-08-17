@@ -127,8 +127,10 @@ int cmd_windowsize(context_t *context) {
       return ret;
     }
     if (opsync) {
-      xdo_window_wait_for_size(context->xdo, window, width, height, 0,
-                               SIZE_TO);
+      //xdo_window_wait_for_size(context->xdo, window, width, height, 0,
+                               //SIZE_TO);
+      xdo_window_wait_for_size(context->xdo, window, original_w, original_h, 0,
+                               SIZE_FROM);
     }
   }); /* window_each(...) */
 

@@ -343,8 +343,9 @@ int xdo_window_focus(const xdo_t *xdo, Window wid) {
   return _is_success("XSetInputFocus", ret == 0);
 }
 
-int xdo_window_wait_for_size(const xdo_t *xdo, Window window, unsigned int width,
-                             unsigned int height, int flags, int to_or_from) {
+int xdo_window_wait_for_size(const xdo_t *xdo, Window window,
+                             unsigned int width, unsigned int height,
+                             int flags, int to_or_from) {
   unsigned int cur_width = 0, cur_height = 0;
   unsigned int alt_width = 0, alt_height = 0;
 
@@ -365,6 +366,7 @@ int xdo_window_wait_for_size(const xdo_t *xdo, Window window, unsigned int width
     //printf("Alt: %udx%ud\n", alt_width, alt_height);
   }
 
+  int tries = MAX_TRIES;
   xdo_get_window_size(xdo, window, (unsigned int *)&cur_width,
                       (unsigned int *)&cur_height);
   //printf("Want: %udx%ud\n", width, height);

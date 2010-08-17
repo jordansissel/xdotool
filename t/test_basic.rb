@@ -15,10 +15,10 @@ class XdotoolBasicTests < Test::Unit::TestCase
   def test_getwindowfocus_gets_a_valid_window
     name = rand.to_s
 
-    # There's a bug in Xvfb, Xephyr, and possibly other X servers that if you just run
-    # the X server, no WM, and launch an xterm (or nothing), XGetInputFocus yields '1'
-    # as the window with focus. This is a bug we work-around by telling the X server
-    # to focus our window.
+    # There's a bug in Xvfb, Xephyr, and possibly other X servers that if you
+    # just run the X server, no WM, and launch an xterm (or nothing),
+    # XGetInputFocus yields '1' as the window with focus. This is a bug we
+    # work-around by telling the X server to focus our window.
     xdotool "windowfocus #{@wid}"
     status, lines = xdotool "getwindowfocus"
     assert_status_ok(status)
@@ -137,8 +137,8 @@ class XdotoolBasicTests < Test::Unit::TestCase
   end
 
   def test_misc
-    cmds = ["mousedown 1", "mouseup 1", "mousemove 0 0", "mousemove 50 50", "click 1",
-            "key \"ctrl+w\""]
+    cmds = ["mousedown 1", "mouseup 1", "mousemove 0 0", "mousemove 50 50",
+            "click 1", "key \"ctrl+w\""]
     #"type \"hello\"",
     cmds_withoutput = []
 
@@ -161,15 +161,16 @@ class XdotoolBasicTests < Test::Unit::TestCase
       puts "Skipping _NET_NUMBER_OF_DESKTOPS features (current wm does not support it)"
     end
 
+    desktop = 3
     if (wm_supports?("_NET_WM_DESKTOP"))
-      cmds << "set_desktop_for_window #{@wid} 3"
+      cmds << "set_desktop_for_window #{@wid} #{desktop}"
       cmds_withoutput << "get_desktop"
     else
       puts "Skipping _NET_WM_DESKTOP features (current wm does not support it)"
     end
 
     if (wm_supports?("_NET_CURRENT_DESKTOP"))
-      cmds << "set_desktop 1"
+      cmds << "set_desktop #{desktop}"
       cmds_withoutput << "get_desktop_for_window #{@wid}"
     else
       puts "Skipping _NET_CURRENT_DESKTOP features (current wm does not support it)"

@@ -1,16 +1,20 @@
 2.2010????.*:
+  - New commands: 'get_desktop_viewport' and 'set_desktop_viewport'. Some
+    window managers don't actually do 'multiple desktops' but instead show
+    workspaces as views on a large desktop. For example, Compiz Fusion does
+    this, which is why you may see 4 or more desktops, but 'xdotool
+    get_num_desktops' reports only one.
+  - New command: 'selectwindow' command which picks a window by clicking on it.
+  - New command: 'windowreparent' with original patch by Markus Opitz.
+  - New command: 'windowkill' will kill a window and the client that owns it
+    (via XKillClient)
+  - New command: 'getwindowname' for printing the name (title) of a window.
+    Requested by Dominik Reichl for KeePass.
   - New command: 'behave'. This allows you to run xdotool commands on window
     events. For example, you can achieve 'mouse-follows-focus' with this:
       xdotool search --class xterm behave %@ mouse-enter windowfocus
     This will find all xterms and, upon mouse entering, will focus that window.
-  - New commands: 'get_desktop_viewport' and 'set_desktop_viewport'. Some
-    window managers don't actually do 'multiple desktops' but instead show
-    workspaces as views on a large desktop. For example, Compiz Fusion does this,
-    which is why you may see 4 or more desktops, but 'xdotool get_num_desktops'
-    reports only one.
-  - New command: 'windowreparent' with original patch by Markus Opitz.
-  - New command: 'windowkill' will kill a window and the client that owns it
-    (via XKillClient)
+    Not really sure what I wanted with this feature, but it can grow as needed.
   - Support percentages in 'windowsize'. Percentages are relative to the size
     of the screen the window is on. 'windowsize 12345 100% 50%' will make the 
     window the full width and half height of the screen.
