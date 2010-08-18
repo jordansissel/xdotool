@@ -349,6 +349,53 @@ clicking on it:
 
  xdotool selectwindow windowkill
 
+=item B<behave> I<window> I<action> I<command ...>
+
+Bind an action to an event on a window. This lets you run additional xdotool
+commands whenever a matched event occurs.
+
+The command run as a result of the behavior is run with %1 being the window
+that was acted upon. Examples follow after the event list.
+
+The following are valid events:
+
+=over
+
+=item B<mouse-enter>
+
+Fires when the mouse enters a window. This is similar to 'mouse over' events in
+javascript, if that helps.
+
+=item B<mouse-leave>
+
+Fires when the mouse leaves a window. This is the opposite of 'mouse-enter'
+
+=item B<mouse-click>
+
+Fires when the mouse is clicked. Specifically, when the mouse button is released.
+
+=item B<focus>
+
+Fires when the window gets input focus.
+
+=item B<blur>
+
+Fires when the window loses focus.
+
+=back
+
+Examples:
+
+ # Print the cursor location whenever the mouse enters a currently-visible
+ # window:
+ xdotool search --onlyvisible . behave %@ mouse-enter getmouselocation
+
+ # Print the window title and pid whenever an xterm gets focus
+ xdotool search --class xterm behave %@ focus getwindowname getwindowpid
+
+ # Emulate focus-follows-mouse
+ xdotool search . behave %@ mouse-enter windowfocus
+
 =item B<getwindowpid> I<[window=%1]>
 
 Output the PID owning a given window. This requires effort from the application
@@ -361,6 +408,14 @@ this is an error. See L<WINDOW STACK> for more details.
 
 Example: Find the PID for all xterms:
  xdotool search --class xterm getwindowpid %@
+
+=item B<getwindowname> I<[window=%1]>
+
+Output the name of a given window, also known as the title. This is the text
+displayed in the window's titlebar by your window manager.
+
+If no window is given, the default is '%1'. If no windows are on the stack, then
+this is an error. See L<WINDOW STACK> for more details.
 
 =item B<getwindowfocus> [-f]
 
@@ -378,6 +433,15 @@ WM_CLASS setting, then use 'getwindowfocus -f'
 
 Set the window size of the given window. If no window is given, %1 is the
 default.  See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
+
+Percentages are valid for width and height. They are relative to the geometry
+of the screen the window is on. For example, to make a window the full width of
+the screen, but half height:
+
+ xdotool windowsize I<window> 100% 50%
+
+Percentages are valid with --usehints and still mean pixel-width relative to
+the screen size.
 
 The options available are:
 
@@ -580,6 +644,9 @@ Output the current number of desktops.
 
 Report the current viewport's position. If --shell is given, the output is
 friendly to shell eval.
+
+Viewports are sometimes used instead of 'virtual desktops' on some window
+managers. A viewport is simply a view on a very large desktop area.
 
 =item B<set_desktop_viewport> I<x> I<y>
 
