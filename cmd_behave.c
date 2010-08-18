@@ -29,9 +29,16 @@ int cmd_behave(context_t *context) {
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-    "Usage: %s [window=%1] event action [args...]\n"
+    "Usage: %s window event action [args...]\n"
     "The event is a window event, such as mouse-enter, resize, etc.\n"
-    "The action is any valid xdotool command (chains OK here)\n";
+    "The action is any valid xdotool command (chains OK here)\n"
+    "\n"
+    "Events: \n"
+    "  mouse-enter      - When the mouse moves into the window\n"
+    "  mouse-leave      - When the mouse leaves a window\n"
+    "  mouse-click      - Fired when the mouse button is released\n"
+    "  focus            - When the window gets focus\n"
+    "  blur             - When the window loses focus\n";
 
   int option_index;
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
@@ -51,6 +58,12 @@ int cmd_behave(context_t *context) {
 
   consume_args(context, optind);
 
+  if (context->argc < 3) {
+    fprintf(stderr, "Invalid number of arguments (minimum is 3)\n");
+    fprintf(stderr, usage, cmd);
+    return EXIT_FAILURE;
+  }
+
   /* Can't use consume_args since 'behave' eats the rest of the line. */
   /* TODO(sissel): make it work. */
   const char *window_arg = context->argv[0];
@@ -59,15 +72,10 @@ int cmd_behave(context_t *context) {
   const char *event = context->argv[0];
   consume_args(context, 1);
 
-  int i = 0;
-  for (i = 0; i < context->argc; i++) {
-    printf("%s ", context->argv[i]);
-  }
-  printf("\n");
-
   /* The remainder of args are supposed to be what to run on the action */
 
   long selectmask = 0;
+  int i;
   for (i = 0; events[i].name != NULL; i++) {
     //printf("%s vs %s\n", events[i].name, event);
     if (!strcmp(events[i].name, event)) {
@@ -76,7 +84,7 @@ int cmd_behave(context_t *context) {
   }
 
   if (selectmask == 0) {
-    fprintf(stderr, "No events selected. Aborting.\n");
+    fprintf(stderr, "Unknown event '%s'\n", event);
     return EXIT_FAILURE;
   }
 
@@ -98,7 +106,6 @@ int cmd_behave(context_t *context) {
     switch (e.type) {
       case EnterNotify:
       case LeaveNotify:
-        printf("Got event\n");
         tmpcontext->windows = &(e.xcrossing.window);
         ret = context_execute(tmpcontext);
         break;
