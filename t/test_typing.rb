@@ -74,6 +74,26 @@ class XdotoolTypingTests < Test::Unit::TestCase
     _test_typing("!@\#$%^&*()")
   end
 
+  def test_us_se_simple_typing
+    system("setxkbmap -option grp:switch,grp:shifts_toggle us,se")
+    _test_typing("Hello world")
+  end
+
+  def test_us_se_symbol_typing
+    system("setxkbmap -option grp:switch,grp:shifts_toggle us,se")
+    _test_typing("!@\#$%^&*()")
+  end
+
+  def test_se_us_simple_typing
+    system("setxkbmap -option grp:switch,grp:shifts_toggle se,us")
+    _test_typing("Hello world")
+  end
+
+  def test_se_us_symbol_typing
+    system("setxkbmap -option grp:switch,grp:shifts_toggle se,us")
+    _test_typing("!@\#$%^&*()")
+  end
+
   def test_us_dvorak_simple_typing
     system("setxkbmap us dvorak")
     _test_typing("Hello world")
