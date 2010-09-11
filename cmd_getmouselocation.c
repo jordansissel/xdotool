@@ -2,6 +2,7 @@
 
 int cmd_getmouselocation(context_t *context) {
   int x, y, screen_num;
+  Window window;
   int ret;
   char *cmd = context->argv[0];
 
@@ -36,19 +37,15 @@ int cmd_getmouselocation(context_t *context) {
 
   consume_args(context, optind);
 
-  //if (context->argc != 0) {
-    //fprintf(stderr, usage, cmd);
-    //return 1;
-  //}
-
-  ret = xdo_mouselocation(context->xdo, &x, &y, &screen_num);
+  ret = xdo_mouselocation(context->xdo, &x, &y, &screen_num, &window);
 
   if (output_shell) {
     printf("X=%d\n", x);
     printf("Y=%d\n", y);
     printf("SCREEN=%d\n", screen_num);
+    printf("WINDOW=%d\n", window);
   } else {
-    printf("x:%d y:%d screen:%d\n", x, y, screen_num);
+    printf("x:%d y:%d screen:%d window:%ld\n", x, y, screen_num, window);
   }
   return ret;
 }

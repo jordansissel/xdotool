@@ -163,7 +163,7 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
   }
 
   int mx, my, mscreen;
-  xdo_mouselocation(context->xdo, &mx, &my, &mscreen);
+  xdo_mouselocation(context->xdo, &mx, &my, &mscreen, NULL);
 
   /* Break early if we don't need to move */
   if (mx == x && my == y && mscreen == screen) {

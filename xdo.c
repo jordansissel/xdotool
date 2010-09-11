@@ -671,7 +671,7 @@ int xdo_window_get_active(const xdo_t *xdo, Window *window_ret) {
 int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
   int screen_num;
   Screen *screen;
-  xdo_mouselocation(xdo, NULL, NULL, &screen_num);
+  xdo_mouselocation(xdo, NULL, NULL, &screen_num, NULL);
 
   screen = ScreenOfDisplay(xdo->xdpy, screen_num);
 
@@ -679,15 +679,30 @@ int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
    * out what the client window is.
    * Also, everyone else who does 'select window' does it this way.
    */
-  XGrabPointer(xdo->xdpy, screen->root, False, ButtonReleaseMask,
+  int grab_ret = 0;
+  grab_ret = XGrabPointer(xdo->xdpy, screen->root, False, ButtonReleaseMask,
                GrabModeSync, GrabModeAsync, screen->root, None, CurrentTime);
+  if (grab_ret == AlreadyGrabbed) {
+    fprintf(stderr, "Attempt to grab the mouse failed. Something already has"
+            " the mouse grabbed. This can happen if you are dragging something"
+            " or if there is a popup currently shown\n");
+    return XDO_ERROR;
+  }
   
   XEvent e;
   XAllowEvents(xdo->xdpy, SyncPointer, CurrentTime);
   XWindowEvent(xdo->xdpy, screen->root, ButtonReleaseMask, &e);
-  *window_ret = e.xbutton.subwindow;
   XUngrabPointer(xdo->xdpy, CurrentTime);
-  xdo_window_find_client(xdo, *window_ret, window_ret, XDO_FIND_CHILDREN);
+
+  /* If there is no subwindow, then we clicked on the root window */
+  if (e.xbutton.subwindow == 0) {
+    *window_ret = e.xbutton.root;
+  } else {
+     /* Random testing showed that that 'root' always is the same as 'window'
+      * while 'subwindow' is the actual window we clicked on. Confusing... */
+     *window_ret = e.xbutton.subwindow;
+    xdo_window_find_client(xdo, *window_ret, window_ret, XDO_FIND_CHILDREN);
+  }
   return XDO_SUCCESS;
 }
 
@@ -744,7 +759,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     XButtonEvent xbpe;
     xdo_active_mods_t *active_mods;
 
-    xdo_mouselocation(xdo, &xbpe.x_root, &xbpe.y_root, &screen);
+    xdo_mouselocation(xdo, &xbpe.x_root, &xbpe.y_root, &screen, NULL);
     active_mods = xdo_get_active_modifiers(xdo);
 
     xbpe.window = window;
@@ -765,8 +780,8 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
                           xbpe.x_root, xbpe.y_root, &xbpe.x, &xbpe.y, &xbpe.subwindow);
 
     /* Normal behavior of 'mouse up' is that the modifier mask includes
-     * 'ButtonNMotionMask' where N is the button being released. This works the same
-     * way with keys, too. */
+     * 'ButtonNMotionMask' where N is the button being released. This works the
+     * same way with keys, too. */
     if (!is_press) { /* is mouse up */
       switch(button) {
         case 1: xbpe.state |= Button1MotionMask; break;
@@ -791,11 +806,18 @@ int xdo_mousedown(const xdo_t *xdo, Window window, int button) {
   return _xdo_mousebutton(xdo, window, button, True);
 }
 
-int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret, int *screen_num_ret) {
+//int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret,
+                      //int *screen_num_ret) {
+  //return xdo_mouselocation2(xdo, x_ret, y_ret, screen_num_ret, NULL);
+//}
+
+int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret,
+                      int *screen_num_ret, Window *window_ret) {
   int ret = False;
   int x = 0, y = 0, screen_num = 0;
   int i = 0;
-  Window dummy_win = 0;
+  Window window = 0;
+  Window root = 0;
   int dummy_int = 0;
   unsigned int dummy_uint = 0;
   int screencount = ScreenCount(xdo->xdpy);
@@ -803,7 +825,7 @@ int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret, int *screen_num_
   for (i = 0; i < screencount; i++) {
     Screen *screen = ScreenOfDisplay(xdo->xdpy, i);
     ret = XQueryPointer(xdo->xdpy, RootWindowOfScreen(screen),
-                        &dummy_win, &dummy_win,
+                        &root, &window,
                         &x, &y, &dummy_int, &dummy_int, &dummy_uint);
     if (ret == True) {
       screen_num = i;
@@ -811,10 +833,18 @@ int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret, int *screen_num_
     }
   }
 
+  /* Find the client window if we are not root. */
+  //if (window != root) {
+    //xdo_window_find_client(xdo, &window, window, XDO_FIND_PARENTS);
+  //}
+  //printf("mouseloc root: %ld\n", root);
+  //printf("mouseloc window: %ld\n", window);
+
   if (ret == True) {
     if (x_ret != NULL) *x_ret = x;
     if (y_ret != NULL) *y_ret = y;
     if (screen_num_ret != NULL) *screen_num_ret = screen_num;
+    if (window_ret != NULL) *window_ret = window;
   }
 
   return _is_success("XQueryPointer", ret == False);
@@ -1747,11 +1777,11 @@ int xdo_mouse_wait_for_move_from(const xdo_t *xdo, int origin_x, int origin_y) {
   int ret = 0;
   int tries = MAX_TRIES;
 
-  ret = xdo_mouselocation(xdo, &x, &y, NULL);
+  ret = xdo_mouselocation(xdo, &x, &y, NULL, NULL);
   while (tries > 0 && 
          (x == origin_x && y == origin_y)) {
     usleep(30000);
-    ret = xdo_mouselocation(xdo, &x, &y, NULL);
+    ret = xdo_mouselocation(xdo, &x, &y, NULL, NULL);
     tries--;
   }
 
@@ -1763,10 +1793,10 @@ int xdo_mouse_wait_for_move_to(const xdo_t *xdo, int dest_x, int dest_y) {
   int ret = 0;
   int tries = MAX_TRIES;
 
-  ret = xdo_mouselocation(xdo, &x, &y, NULL);
+  ret = xdo_mouselocation(xdo, &x, &y, NULL, NULL);
   while (tries > 0 && (x != dest_x && y != dest_y)) {
     usleep(30000);
-    ret = xdo_mouselocation(xdo, &x, &y, NULL);
+    ret = xdo_mouselocation(xdo, &x, &y, NULL, NULL);
     tries--;
   }
 

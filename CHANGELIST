@@ -1,3 +1,11 @@
+3.??????????
+  - Changed xdo_mouselocation to also return the window
+    TODO(sissel): Make it xdo_mousewindow instead and then do NOT bump the version major
+  - Added behave_screen_edge to attach commands to edge and corner activities
+    TODO(sissel): Document it
+  - Catch pointer grab failures in selectwindow (xdo_window_select) and abort
+    if we can't grab it and report an error message.
+
 2.20100818.*
   - New commands: 'get_desktop_viewport' and 'set_desktop_viewport'. Some
     window managers don't actually do 'multiple desktops' but instead show

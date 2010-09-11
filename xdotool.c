@@ -247,6 +247,7 @@ struct dispatch {
   { "windowkill", cmd_windowkill, },
   { "set_window", cmd_set_window, },
   { "behave", cmd_behave, },
+  { "behave_screen_edge", cmd_behave_screen_edge, },
 
   { "set_num_desktops", cmd_set_num_desktops, },
   { "get_num_desktops", cmd_get_num_desktops, },

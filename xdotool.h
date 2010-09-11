@@ -57,6 +57,7 @@ int cmd_set_window(context_t *context);
 int cmd_version(context_t *context);
 int cmd_windowkill(context_t *context);
 int cmd_behave(context_t *context);
+int cmd_behave_screen_edge(context_t *context);
 int cmd_window_select(context_t *context);
 
 /* pager-like commands */

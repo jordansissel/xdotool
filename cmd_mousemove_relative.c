@@ -100,7 +100,7 @@ int cmd_mousemove_relative(context_t *context) {
   }
 
   if (opsync) {
-    xdo_mouselocation(context->xdo, &origin_x, &origin_y, NULL);
+    xdo_mouselocation(context->xdo, &origin_x, &origin_y, NULL, NULL);
   }
 
   ret = xdo_mousemove_relative(context->xdo, x, y);

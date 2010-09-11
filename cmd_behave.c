@@ -103,9 +103,28 @@ int cmd_behave(context_t *context) {
     memcpy(tmpcontext, context, sizeof(context_t));
 
     tmpcontext->nwindows = 1;
+    Window hover; /* for LeaveNotify */
     switch (e.type) {
-      case EnterNotify:
       case LeaveNotify:
+        /* LeaveNotify is confusing.
+         * It is sometimes fired when you are actually entering the window
+         * especially at the screen edges. not sure why or what causes it.
+         * Work around: Query the window the mouse is over. If it is not
+         * us, then we can fire leave.  */
+
+        /* allow some time to pass to let the mouse really leave if we are on our way out */
+        /* TODO(sissel): allow this delay to be tunable */
+        usleep(100000); /* 100ms */
+        xdo_mouselocation(context->xdo, NULL, NULL, NULL, &hover);
+        if (hover == e.xcrossing.window) {
+          //printf("Ignoring Leave, we're still in the window\n");
+          break;
+        }
+        //printf("Window: %ld\n", e.xcrossing.window);
+        //printf("Hover: %ld\n", hover);
+
+        /* fall through */
+      case EnterNotify:
         tmpcontext->windows = &(e.xcrossing.window);
         ret = context_execute(tmpcontext);
         break;
