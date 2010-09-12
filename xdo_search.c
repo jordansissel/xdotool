@@ -145,6 +145,13 @@ static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re) 
         return True;
       }
     }
+  } else {
+    /* Treat windows with no names as empty strings */
+    if (regexec(re, "", 0, NULL, 0) == 0) {
+      XFreeStringList(list);
+      XFree(tp.value);
+      return True;
+    }
   }
   XFreeStringList(list);
   XFree(tp.value);
@@ -165,6 +172,11 @@ static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re)
     }
     XFree(classhint.res_name);
     XFree(classhint.res_class);
+  } else {
+    /* Treat windows with no class as empty strings */
+    if (regexec(re, "", 0, NULL, 0) == 0) {
+      return True;
+    }
   }
   return False;
 }
@@ -182,6 +194,11 @@ static int _xdo_window_match_classname(const xdo_t *xdo, Window window, regex_t 
     }
     XFree(classhint.res_name);
     XFree(classhint.res_class);
+  } else {
+    /* Treat windows with no class name as empty strings */
+    if (regexec(re, "", 0, NULL, 0) == 0) {
+      return True;
+    }
   }
   return False;
 }
@@ -221,7 +238,8 @@ static int _xdo_is_window_visible(const xdo_t *xdo, Window wid) {
   return True;
 }
 
-static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *search) {
+static int check_window_match(const xdo_t *xdo, Window wid,
+                              const xdo_search_t *search) {
   regex_t title_re;
   regex_t class_re;
   regex_t classname_re;
