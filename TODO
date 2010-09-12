@@ -1,0 +1,15 @@
+Features
+  * Screen edge detection / actions 
+    - delay until acting (default = no delay) 
+    - after acting, disable for some period (default = 100ms)
+    - XSelectInput on all windows
+      - Also select StructureNotify to capture new child windows.
+
+Document advanced behaviors
+  # Give a window the classname 'consoleme' then run this:
+  xdotool search --classname consoleme set_window --overrideredirect 1 windowunmap behave_screen_edge left windowmap windowmove 0 0 windowsize --usehints 100% 24 windowfocus windowraise
+  xdotool search --classname consoleme behave %@ mouse-leave windowunmap
+
+  Move the mouse to the top edge of the screen to have your window show up.
+  Move the mouse outside the window to have it hide again.
+
