@@ -134,4 +134,18 @@ class XdotoolSearchTests < Test::Unit::TestCase
              "Searched results should include our expected window")
     end
   end
+  
+  def test_search_can_find_all_windows
+    name = "searchall#{rand}"
+    windowcount = %{xwininfo -tree -root}.split("\n").grep(/^ *0x/).size
+    ["name", "class", "classname"].each do |query|
+      status, lines = xdotool "search --#{query} '^'"
+      assert_equal(0, status, 
+                   "Search for window with --#{query} '^' should exit" \
+                   + " with status zero.")
+      assert_not_equal(0, lines.length, 
+                       "Search for window with --#{query} '^' should have" \
+                       + " at least one result.")
+    end # ["name" ... ].each 
+  end # def test_search_can_find_all_windows
 end # XdotoolSearchTests
