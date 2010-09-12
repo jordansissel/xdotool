@@ -48,8 +48,8 @@ int cmd_behave_screen_edge(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc < 3) {
-    fprintf(stderr, "Invalid number of arguments (minimum is 3)\n");
+  if (context->argc < 2) {
+    fprintf(stderr, "Invalid number of arguments (minimum is 2)\n");
     fprintf(stderr, usage, cmd);
     return EXIT_FAILURE;
   }
@@ -64,9 +64,7 @@ int cmd_behave_screen_edge(context_t *context) {
   /* TODO(sissel): Refactor this into libxdo */
 
   long selectmask = PointerMotionMask;
-
   int screencount = ScreenCount(context->xdo->xdpy);
-
   int i = 0;
   for (i = 0; i < screencount; i++) {
     Screen *screen = ScreenOfDisplay(context->xdo->xdpy, i);
@@ -91,25 +89,27 @@ int cmd_behave_screen_edge(context_t *context) {
     switch (e.type) {
       case MotionNotify:
         //printf("%d,%d\n", e.xmotion.x_root, e.xmotion.y_root);
-        if (state == none) {
-          /* TODO(sissel): Make a dispatch table for this */
-          if (e.xmotion.x_root == 0 && !strcmp(edge_or_corner_spec, "left")) { /* left */
+        /* TODO(sissel): Make a dispatch table for this */
+        if (e.xmotion.x_root == 0 && !strcmp(edge_or_corner_spec, "left")) { /* left */
+          if (state == none) {
             state = left;
             trigger = True;
           }
-          if (e.xmotion.y_root == 0 && !strcmp(edge_or_corner_spec, "top")) { /* top */
+        } else if (e.xmotion.y_root == 0 && !strcmp(edge_or_corner_spec, "top")) { /* top */
+          if (state == none) {
             state = top;
             trigger = True;
           }
-          /* TODO(sissel): Add support for all other edges/corners */
-
-          if (trigger == True) {
-            ret = context_execute(tmpcontext);
-            need_new_context = True;
-          }
         } else {
-          //printf("Resetting state\n");
-          state = none;
+          if (state != none) {
+            printf("Resetting state\n");
+            state = none;
+          }
+        }
+        if (trigger == True) {
+          ret = context_execute(tmpcontext);
+          need_new_context = True;
+          trigger = False;
         }
         break;
       default:
