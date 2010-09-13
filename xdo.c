@@ -671,7 +671,7 @@ int xdo_window_get_active(const xdo_t *xdo, Window *window_ret) {
 int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
   int screen_num;
   Screen *screen;
-  xdo_mouselocation(xdo, NULL, NULL, &screen_num, NULL);
+  xdo_mouselocation(xdo, NULL, NULL, &screen_num);
 
   screen = ScreenOfDisplay(xdo->xdpy, screen_num);
 
@@ -759,7 +759,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     XButtonEvent xbpe;
     xdo_active_mods_t *active_mods;
 
-    xdo_mouselocation(xdo, &xbpe.x_root, &xbpe.y_root, &screen, NULL);
+    xdo_mouselocation(xdo, &xbpe.x_root, &xbpe.y_root, &screen);
     active_mods = xdo_get_active_modifiers(xdo);
 
     xbpe.window = window;
@@ -806,13 +806,17 @@ int xdo_mousedown(const xdo_t *xdo, Window window, int button) {
   return _xdo_mousebutton(xdo, window, button, True);
 }
 
-//int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret,
-                      //int *screen_num_ret) {
-  //return xdo_mouselocation2(xdo, x_ret, y_ret, screen_num_ret, NULL);
-//}
-
 int xdo_mouselocation(const xdo_t *xdo, int *x_ret, int *y_ret,
-                      int *screen_num_ret, Window *window_ret) {
+                      int *screen_num_ret) {
+  return xdo_mouselocation2(xdo, x_ret, y_ret, screen_num_ret, NULL);
+}
+
+int xdo_mousewindow(const xdo_t *xdo, Window *window_ret) {
+  return xdo_mouselocation2(xdo, NULL, NULL, NULL, window_ret);
+}
+
+int xdo_mouselocation2(const xdo_t *xdo, int *x_ret, int *y_ret,
+                       int *screen_num_ret, Window *window_ret) {
   int ret = False;
   int x = 0, y = 0, screen_num = 0;
   int i = 0;
@@ -1777,11 +1781,11 @@ int xdo_mouse_wait_for_move_from(const xdo_t *xdo, int origin_x, int origin_y) {
   int ret = 0;
   int tries = MAX_TRIES;
 
-  ret = xdo_mouselocation(xdo, &x, &y, NULL, NULL);
+  ret = xdo_mouselocation(xdo, &x, &y, NULL);
   while (tries > 0 && 
          (x == origin_x && y == origin_y)) {
     usleep(30000);
-    ret = xdo_mouselocation(xdo, &x, &y, NULL, NULL);
+    ret = xdo_mouselocation(xdo, &x, &y, NULL);
     tries--;
   }
 
@@ -1793,10 +1797,10 @@ int xdo_mouse_wait_for_move_to(const xdo_t *xdo, int dest_x, int dest_y) {
   int ret = 0;
   int tries = MAX_TRIES;
 
-  ret = xdo_mouselocation(xdo, &x, &y, NULL, NULL);
+  ret = xdo_mouselocation(xdo, &x, &y, NULL);
   while (tries > 0 && (x != dest_x && y != dest_y)) {
     usleep(30000);
-    ret = xdo_mouselocation(xdo, &x, &y, NULL, NULL);
+    ret = xdo_mouselocation(xdo, &x, &y, NULL);
     tries--;
   }
 

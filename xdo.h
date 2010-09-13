@@ -276,7 +276,26 @@ int xdo_mousedown(const xdo_t *xdo, Window window, int button);
 int xdo_mouseup(const xdo_t *xdo, Window window, int button);
 
 /**
- * Get the current mouse location
+ * Get the current mouse location (coordinates and screen number).
+ *
+ * @param x integer pointer where the X coordinate will be stored
+ * @param y integer pointer where the Y coordinate will be stored
+ * @param screen_num integer pointer where the screen number will be stored
+ */
+int xdo_mouselocation(const xdo_t *xdo, int *x, int *y, int *screen_num);
+
+/**
+ * Get the window the mouse is currently over
+ *
+ * @param window_ret Winter pointer where the window will be stored.
+ */
+int xdo_mousewindow(const xdo_t *xdo, Window *window_ret);
+
+/**
+ * Get all mouse location-related data.
+ *
+ * If null is passed for any parameter, we simply do not store it.
+ * Useful if you only want the 'y' coordinate, for example.
  *
  * @param x integer pointer where the X coordinate will be stored
  * @param y integer pointer where the Y coordinate will be stored
@@ -284,8 +303,8 @@ int xdo_mouseup(const xdo_t *xdo, Window window, int button);
  * @param window Window pointer where the window/client the mouse is over
  *   will be stored.
  */
-int xdo_mouselocation(const xdo_t *xdo, int *x, int *y, int *screen_num,
-                      Window *window_ret);
+int xdo_mouselocation2(const xdo_t *xdo, int *x_ret, int *y_ret,
+                       int *screen_num_ret, Window *window_ret);
 
 /**
  * Wait for the mouse to move from a location. This function will block

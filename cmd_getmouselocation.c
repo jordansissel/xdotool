@@ -37,7 +37,7 @@ int cmd_getmouselocation(context_t *context) {
 
   consume_args(context, optind);
 
-  ret = xdo_mouselocation(context->xdo, &x, &y, &screen_num, &window);
+  ret = xdo_mouselocation2(context->xdo, &x, &y, &screen_num, &window);
 
   if (output_shell) {
     printf("X=%d\n", x);

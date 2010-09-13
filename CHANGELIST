@@ -1,6 +1,8 @@
 3.??????????
-  - Changed xdo_mouselocation to also return the window
-    TODO(sissel): Make it xdo_mousewindow instead and then do NOT bump the version major
+  - New function: xdo_mousewindow, which lets you get the window the mouse is
+    currently over.
+  - New function: xdo_mouselocation2, which is an extended version of
+    xdo_mouselocation and includes the window the mouse is currently over.
   - Added behave_screen_edge to attach commands to edge and corner activities
     TODO(sissel): Document it
   - Catch pointer grab failures in selectwindow (xdo_window_select) and abort
