@@ -137,7 +137,7 @@ class XdotoolSearchTests < Test::Unit::TestCase
   
   def test_search_can_find_all_windows
     name = "searchall#{rand}"
-    windowcount = %{xwininfo -tree -root}.split("\n").grep(/^ *0x/).size
+    windowcount = %{xwininfo -tree -root}.split("\n").grep(/(^ *0x)|Root window id/).size
     ["name", "class", "classname"].each do |query|
       status, lines = xdotool "search --#{query} '^'"
       assert_equal(0, status, 
