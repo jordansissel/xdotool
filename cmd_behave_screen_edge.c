@@ -112,7 +112,7 @@ int cmd_behave_screen_edge(context_t *context) {
           }
         } else {
           if (state != none) {
-            printf("Resetting state\n");
+            //printf("Resetting state\n");
             state = none;
           }
         }
