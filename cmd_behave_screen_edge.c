@@ -13,6 +13,9 @@ typedef enum {
 int cmd_behave_screen_edge(context_t *context) {
   int ret = 0;
   char *cmd = *context->argv;
+  xdo_search_t search;
+  Window *windowlist;
+  int nwindows;
 
   int c;
   typedef enum {
@@ -62,14 +65,16 @@ int cmd_behave_screen_edge(context_t *context) {
    * or corner is hit */
 
   /* TODO(sissel): Refactor this into libxdo */
-
-  long selectmask = PointerMotionMask;
-  int screencount = ScreenCount(context->xdo->xdpy);
-  int i = 0;
-  for (i = 0; i < screencount; i++) {
-    Screen *screen = ScreenOfDisplay(context->xdo->xdpy, i);
-    Window root = RootWindowOfScreen(screen);
-    XSelectInput(context->xdo->xdpy, root, selectmask);
+  
+  memset(&search, 0, sizeof(xdo_search_t));
+  search.max_depth = -1;
+  search.require = SEARCH_ANY;
+  search.searchmask = SEARCH_NAME;
+  search.winname = "^"; /* Match anything */
+  xdo_window_search(context->xdo, &search, &windowlist, &nwindows);
+  int i;
+  for (i = 0; i < nwindows; i++) {
+    XSelectInput(context->xdo->xdpy, windowlist[i], PointerMotionMask | SubstructureNotifyMask);
   }
 
   int need_new_context = True;
@@ -87,8 +92,13 @@ int cmd_behave_screen_edge(context_t *context) {
 
     int trigger = False;
     switch (e.type) {
+      case CreateNotify:
+        XSelectInput(context->xdo->xdpy, e.xcreatewindow.window, PointerMotionMask | SubstructureNotifyMask);
+        break;
       case MotionNotify:
-        //printf("%d,%d\n", e.xmotion.x_root, e.xmotion.y_root);
+        //printf("%ld: %d,%d\n", e.xmotion.subwindow ? e.xmotion.subwindow : e.xmotion.window,
+               //e.xmotion.x_root, e.xmotion.y_root);
+
         /* TODO(sissel): Make a dispatch table for this */
         if (e.xmotion.x_root == 0 && !strcmp(edge_or_corner_spec, "left")) { /* left */
           if (state == none) {
@@ -111,6 +121,12 @@ int cmd_behave_screen_edge(context_t *context) {
           need_new_context = True;
           trigger = False;
         }
+        break;
+      case DestroyNotify:
+      case UnmapNotify:
+      case MapNotify:
+      case ConfigureNotify:
+        /* Ignore */
         break;
       default:
         printf("Unexpected event: %d\n", e.type);

@@ -3,10 +3,27 @@
     currently over.
   - New function: xdo_mouselocation2, which is an extended version of
     xdo_mouselocation and includes the window the mouse is currently over.
-  - Added behave_screen_edge to attach commands to edge and corner activities
-    TODO(sissel): Document it
   - Catch pointer grab failures in selectwindow (xdo_window_select) and abort
     if we can't grab it and report an error message.
+  @ Add  --delay and --repeat flags to click (Requested by meenakshi sundaram
+  via the mailing list)
+TODO(sissel): Implement the above.
+  @ Added behave_screen_edge to attach commands to edge and corner activities.
+TODO(sissel): Document it
+TODO(sissel): Use XSelect on all windows.
+TODO(sissel): Finish it (corner, other edge support, etc)
+TODO(sissel): Add delay until acting (default = no delay) 
+TODO(sissel): after acting, disable for some period (default = 100ms)
+
+TODO(sissel):
+  Document advanced behaviors
+    # Give a window the classname 'consoleme' then run this:
+    xdotool search --classname consoleme set_window --overrideredirect 1 windowunmap behave_screen_edge left windowmap windowmove 0 0 windowsize --usehints 100% 24 windowfocus windowraise
+    xdotool search --classname consoleme behave %@ mouse-leave windowunmap
+
+    Move the mouse to the top edge of the screen to have your window show up.
+    Move the mouse outside the window to have it hide again.
+
 
 2.20100818.*
   - New commands: 'get_desktop_viewport' and 'set_desktop_viewport'. Some

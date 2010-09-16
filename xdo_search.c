@@ -39,11 +39,22 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
 
   /* TODO(sissel): Support multiple screens */
   if (search->searchmask & SEARCH_SCREEN) {
+    ncandidate_windows = candidate_window_list_size = 1;
+    candidate_window_list = calloc(sizeof(Window), candidate_window_list_size);
+    candidate_window_list[0] = RootWindow(xdo->xdpy, search->screen);
     _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, search->screen), search->max_depth,
                            &candidate_window_list, &ncandidate_windows,
                            &candidate_window_list_size);
   } else {
     const int screencount = ScreenCount(xdo->xdpy);
+    ncandidate_windows = candidate_window_list_size = screencount;
+    candidate_window_list = calloc(sizeof(Window), candidate_window_list_size);
+
+    /* TODO(sissel): Refactor these loops into one loop */
+    for (i = 0; i < screencount; i++) {
+      candidate_window_list[i] = RootWindow(xdo->xdpy, i);
+    }
+
     for (i = 0; i < screencount; i++) {
       _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, i), search->max_depth,
                              &candidate_window_list, &ncandidate_windows,
@@ -103,13 +114,15 @@ static void _xdo_get_child_windows(const xdo_t *xdo, Window window,
 
   for (i = 0; i < nchildren; i++) {
     Window w = children[i];
-    (*candidate_window_list)[*ncandidate_windows] = w;
-    *ncandidate_windows += 1;
+
     if (*ncandidate_windows == *window_list_size) {
       *window_list_size *= 2;
       *candidate_window_list = realloc(*candidate_window_list,
                                    *window_list_size * sizeof(Window));
     }
+
+    (*candidate_window_list)[*ncandidate_windows] = w;
+    *ncandidate_windows += 1;
     _xdo_get_child_windows(xdo, w, max_depth - 1, candidate_window_list,
                            ncandidate_windows, window_list_size);
   }
