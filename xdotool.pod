@@ -217,6 +217,15 @@ wheel up is 4, wheel down is 5.
 
 Clear modifiers before clicking. See L<CLEARMODIFIERS> below.
 
+=item B<--repeat> REPEAT
+
+Specify how many times to click. Default is 1.
+
+=item B<--delay> MILLISECONDS
+
+Specify how long, in milliseconds, to delay between clicks. This option is not
+used if the I<--repeat> flag is set to 1 (default).
+
 =item B<--window> WINDOW 
 
 Specify a window to send a click to. See L<SENDEVENT NOTES> below for caveats. Uses the

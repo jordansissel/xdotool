@@ -5,9 +5,8 @@
     xdo_mouselocation and includes the window the mouse is currently over.
   - Catch pointer grab failures in selectwindow (xdo_window_select) and abort
     if we can't grab it and report an error message.
-  @ Add  --delay and --repeat flags to click (Requested by meenakshi sundaram
-  via the mailing list)
-TODO(sissel): Implement the above.
+  - Add  --delay and --repeat flags to click (Requested by meenakshi sundaram
+    via the mailing list)
   @ Added behave_screen_edge to attach commands to edge and corner activities.
 TODO(sissel): Document it
 TODO(sissel): Use XSelect on all windows.
