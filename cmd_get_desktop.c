@@ -29,12 +29,6 @@ int cmd_get_desktop(context_t *context) {
 
   consume_args(context, optind);
 
-  /* TODO(sissel): multiple-command support makes this check unnecessary */
-  //if (context->argv != 0) {
-    //fprintf(stderr, usage, cmd);
-    //return 1;
-  //}
-
   ret = xdo_get_current_desktop(context->xdo, &desktop);
   printf("%ld\n", desktop);
 

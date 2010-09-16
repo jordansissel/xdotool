@@ -137,7 +137,7 @@ void window_list(context_t *context, const char *window_arg,
    * TODO(sissel): Not implemented yet:
    * If window_arg is "%r" it means the root window of the current screen.
    * If window_arg is "%q" it means we will wait for you to select a window
-   *   by clicking on it.
+   *   by clicking on it. (May not be necessary since we have 'selectwindow')
    * If window_arg is "%c" it means the currently-active window.
    */
 
@@ -165,7 +165,9 @@ void window_list(context_t *context, const char *window_arg,
     } else if (window_arg[1] == 'q') {
       /* TODO(sissel): Wait for you to click on the window. */
     } else if (window_arg[1] == 'r') {
-      
+      /* TODO(sissel): Get the root window of the current screen */
+    } else if (window_arg[1] == 'c') {
+      /* TODO(sissel): Get the current window */
     } else {
       /* Otherwise assume %N */
       int window_index = atoi(window_arg + 1);
