@@ -334,6 +334,17 @@ int xdo_mouse_wait_for_move_to(const xdo_t *xdo, int dest_x, int dest_y);
 int xdo_click(const xdo_t *xdo, Window window, int button);
 
 /**
+ * Send a one or more clicks for a specific mouse button at the current mouse
+ * location.
+ *
+ * @param window The window you want to send the event to or CURRENTWINDOW
+ * @param button The mouse button. Generally, 1 is left, 2 is middle, 3 is
+ *    right, 4 is wheel up, 5 is wheel down.
+ */
+int xdo_click_multiple(const xdo_t *xdo, Window window, int button,
+                       int repeat, useconds_t delay);
+
+/**
  * Type a string to the specified window.
  *
  * If you want to send a specific key or key sequence, such as "alt+l", you

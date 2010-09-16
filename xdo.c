@@ -866,6 +866,17 @@ int xdo_click(const xdo_t *xdo, Window window, int button) {
   return ret;
 }
 
+int xdo_click_multiple(const xdo_t *xdo, Window window, int button,
+                       int repeat, useconds_t delay) {
+  while (repeat > 0) {
+    xdo_click(xdo, window, button);
+    repeat--;
+    if (repeat > 0) {
+      usleep(delay);
+    }
+  } /* while (repeat > 0) */
+} /* int xdo_click_multiple */
+
 /* XXX: Return proper code if errors found */
 int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
   int i = 0;
