@@ -11,7 +11,6 @@ struct mousemove {
   int y;
   int screen;
   useconds_t delay;
-
   int step;
 };
 
@@ -100,16 +99,29 @@ int cmd_mousemove(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc < 2) {
+  if (context->argc < 1 \
+      || (strcmp(context->argv[0], "restore") && context->argc < 2)) {
     fprintf(stderr, usage, cmd);
-    fprintf(stderr, "You specified the wrong number of args (expected 2).\n");
+    fprintf(stderr, "You specified the wrong number of args (expected 2 coordinates or 'restore').\n");
     return 1;
   }
 
-  mousemove.x = atoi(context->argv[0]);
-  mousemove.y = atoi(context->argv[1]);
+  if (!strcmp(context->argv[0], "restore")) {
+    if (!context->have_last_mouse) {
+      fprintf(stderr, "Have no previous mouse position. Cannot restore.\n");
+      return EXIT_FAILURE;
+    }
+    
+    mousemove.x = context->last_mouse_x;
+    mousemove.y = context->last_mouse_y;
+    mousemove.screen = context->last_mouse_screen;
+    consume_args(context, 1);
+  } else {
+    mousemove.x = atoi(context->argv[0]);
+    mousemove.y = atoi(context->argv[1]);
+    consume_args(context, 2);
+  }
 
-  consume_args(context, 2);
 
   window_each(context, window_arg, {
     mousemove.window = window;
@@ -130,6 +142,13 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
   int y = mousemove->y;
   int screen = mousemove->screen;
   Window window = mousemove->window;
+
+  /* Save the mouse position if the window is CURRENTWINDOW */
+  if (window == CURRENTWINDOW) {
+    context->have_last_mouse = True;
+    xdo_mouselocation(context->xdo, &(context->last_mouse_x),
+                      &(context->last_mouse_y), &(context->last_mouse_screen));
+  }
   
   if (mousemove->polar_coordinates) {
     /* x becomes angle (degrees), y becomes distance.

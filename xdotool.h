@@ -25,9 +25,17 @@ typedef struct context {
   const char *prog;
   int argc;
   char **argv;
+
+  /* Window stack */
   Window *windows;
   int nwindows;
   Window window_placeholder[1];
+
+  /* Last known mouse position */
+  unsigned int last_mouse_x;
+  unsigned int last_mouse_y;
+  int last_mouse_screen;
+  int have_last_mouse;
 } context_t;
 
 int xdotool_main(int argc, char **argv);

@@ -5,12 +5,19 @@
     xdo_mouselocation and includes the window the mouse is currently over.
   - Catch pointer grab failures in selectwindow (xdo_window_select) and abort
     if we can't grab it and report an error message.
-  - Add  --delay and --repeat flags to click (Requested by meenakshi sundaram
-    via the mailing list)
+  - Add  --delay and --repeat flags to click. Requested by meenakshi sundaram
+    via the mailing list.
+  - Add new option to mouse move 'restore'. This will restore the mouse position
+    to the last known position prior to the most recent move. That is:
+      xdotool mousemove 0 0 mousemove restore
+    the above will move the mouse to 0,0 then move the mouse back to the
+    position it was before. Requested by luc le rumeur and suffian amjad on the
+    mailing list.
+  @ xdotool type '?' seems to not work. Reported by Michael Fellinger.
   @ Added behave_screen_edge to attach commands to edge and corner activities.
 TODO(sissel): Document it
-TODO(sissel): Use XSelect on all windows.
-TODO(sissel): Finish it (corner, other edge support, etc)
+TODO(sissel): Refactor it into libxdo
+TODO(sissel): Add tests
 TODO(sissel): Add delay until acting (default = no delay) 
 TODO(sissel): after acting, disable for some period (default = 100ms)
 

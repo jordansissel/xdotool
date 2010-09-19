@@ -124,7 +124,7 @@ typedef struct xdo_active_mods {
 
 
 /**
- * Search only window title.
+ * Search only window title. DEPRECATED - Use SEARCH_NAME
  * @see xdo_window_search
  */
 #define SEARCH_TITLE (1UL << 0)
@@ -142,13 +142,13 @@ typedef struct xdo_active_mods {
 #define SEARCH_NAME (1UL << 2)
 
 /**
- * Search only window class.
+ * Search only window pid.
  * @see xdo_window_search
  */
 #define SEARCH_PID  (1UL << 3)
 
 /**
- * Search only window class.
+ * Search only visible windows.
  * @see xdo_window_search
  */
 #define SEARCH_ONLYVISIBLE  (1UL << 4)
@@ -173,10 +173,10 @@ typedef struct xdo_active_mods {
  * @see xdo_window_search
  */
 typedef struct xdo_search {
-  char *title;        /** pattern to test against a window title */
-  char *winclass;     /** pattern to test against a window class */
-  char *winclassname; /** pattern to test against a window class */
-  char *winname;      /** pattern to test against a window name */
+  const char *title;        /** pattern to test against a window title */
+  const char *winclass;     /** pattern to test against a window class */
+  const char *winclassname; /** pattern to test against a window class */
+  const char *winname;      /** pattern to test against a window name */
   int pid;            /** window pid (From window atom _NET_WM_PID) */
   long max_depth;     /** depth of search. 1 means only toplevel windows */
   int only_visible;   /** boolean; set true to search only visible windows */
@@ -188,7 +188,7 @@ typedef struct xdo_search {
   enum { SEARCH_ANY, SEARCH_ALL } require;
   
   /** bitmask of things you are searching for, such as SEARCH_NAME, etc.
-   * @see SEARCH_NAME
+   * @see SEARCH_NAME, SEARCH_CLASS, SEARCH_PID, SEARCH_CLASSNAME, etc
    */
   unsigned int searchmask; 
 } xdo_search_t;

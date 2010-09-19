@@ -1,14 +1,18 @@
-
 #include "xdo_cmd.h"
 #include <string.h>
 
+/* TODO(sissel): Implement XRANDR so we can detect when screen sizes change */
 /* So we can invoke xdotool from within this command */
 extern int context_execute(context_t *context);
 
 typedef enum {
   none, left, top_left, top, top_right, right,
   bottom_right, bottom, bottom_left,
-} current_edge_or_corner ;
+} edge_or_corner;
+
+int is_edge_or_corner(const xdo_t *xdo, const edge_or_corner what, 
+                      const Window window, const unsigned int x,
+                      const unsigned int y);
 
 int cmd_behave_screen_edge(context_t *context) {
   int ret = 0;
@@ -57,7 +61,6 @@ int cmd_behave_screen_edge(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  /* Can't use consume_args since this command uses the rest of the line. */
   const char *edge_or_corner_spec = context->argv[0];
   consume_args(context, 1);
 
@@ -65,7 +68,6 @@ int cmd_behave_screen_edge(context_t *context) {
    * or corner is hit */
 
   /* TODO(sissel): Refactor this into libxdo */
-  
   memset(&search, 0, sizeof(xdo_search_t));
   search.max_depth = -1;
   search.require = SEARCH_ANY;
@@ -77,9 +79,32 @@ int cmd_behave_screen_edge(context_t *context) {
     XSelectInput(context->xdo->xdpy, windowlist[i], PointerMotionMask | SubstructureNotifyMask);
   }
 
+  edge_or_corner want;
+  if (!strcmp(edge_or_corner_spec, "left")) { /* left */
+    want = left;
+  } else if (!strcmp(edge_or_corner_spec, "top_left")) {
+    want = top_left;
+  } else if (!strcmp(edge_or_corner_spec, "top")) {
+    want = top;
+  } else if (!strcmp(edge_or_corner_spec, "top_right")) {
+    want = top_right;
+  } else if (!strcmp(edge_or_corner_spec, "right")) {
+    want = right;
+  } else if (!strcmp(edge_or_corner_spec, "bottom_right")) {
+    want = bottom_right;
+  } else if (!strcmp(edge_or_corner_spec, "bottom")) {
+    want = bottom;
+  } else if (!strcmp(edge_or_corner_spec, "bottom_left")) {
+    want = bottom_left;
+  } else {
+    fprintf(stderr, "Invalid edge or corner, '%s'\n", edge_or_corner_spec);
+    fprintf(stderr, usage, cmd);
+    return EXIT_FAILURE;
+  } 
+
   int need_new_context = True;
   context_t *tmpcontext = NULL;
-  current_edge_or_corner state = none;
+  edge_or_corner state = none;
   while (True) {
     XEvent e;
     XNextEvent(context->xdo->xdpy, &e);
@@ -99,23 +124,19 @@ int cmd_behave_screen_edge(context_t *context) {
         //printf("%ld: %d,%d\n", e.xmotion.subwindow ? e.xmotion.subwindow : e.xmotion.window,
                //e.xmotion.x_root, e.xmotion.y_root);
 
-        /* TODO(sissel): Make a dispatch table for this */
-        if (e.xmotion.x_root == 0 && !strcmp(edge_or_corner_spec, "left")) { /* left */
+        /* TODO(sissel): Make a dispatch table for this? */
+        if (is_edge_or_corner(context->xdo, want, e.xmotion.root,
+                              e.xmotion.x_root, e.xmotion.y_root)) {
           if (state == none) {
-            state = left;
-            trigger = True;
-          }
-        } else if (e.xmotion.y_root == 0 && !strcmp(edge_or_corner_spec, "top")) { /* top */
-          if (state == none) {
-            state = top;
+            state = want;
             trigger = True;
           }
         } else {
           if (state != none) {
-            //printf("Resetting state\n");
             state = none;
           }
         }
+
         if (trigger == True) {
           ret = context_execute(tmpcontext);
           need_new_context = True;
@@ -126,6 +147,8 @@ int cmd_behave_screen_edge(context_t *context) {
       case UnmapNotify:
       case MapNotify:
       case ConfigureNotify:
+      case ClientMessage:
+      case ReparentNotify:
         /* Ignore */
         break;
       default:
@@ -138,5 +161,29 @@ int cmd_behave_screen_edge(context_t *context) {
     }
   }
   return ret;
-}
+} /* int cmd_behave_screen_edge */
 
+int is_edge_or_corner(const xdo_t *xdo, const edge_or_corner what, 
+                      const Window window, const unsigned int x,
+                      const unsigned int y) {
+  unsigned int width;
+  unsigned int height;
+  xdo_get_window_size(xdo, window, &width, &height);
+
+  unsigned int x_max = width - 1;
+  unsigned int y_max = height - 1;
+
+  switch (what) {
+    case left: return (x == 0); break;
+    case top_left: return (x == 0 && y == 0); break;
+    case top: return (y == 0); break;
+    case top_right: return (x == x_max && y == 0); break;
+    case right: return (x == x_max); break;
+    case bottom_right: return (x == x_max && y == y_max); break;
+    case bottom: return (y == y_max); break;
+    case bottom_left: return (x == 0 && y == y_max); break;
+    case none: return False; break;
+  }
+
+  return False;
+} /* int is_edge_or_corner */

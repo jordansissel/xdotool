@@ -381,6 +381,7 @@ int args_main(int argc, char **argv) {
   context.argv = argv;
   context.windows = NULL;
   context.nwindows = 0;
+  context.have_last_mouse = False;
 
   if (context.xdo == NULL) {
     fprintf(stderr, "Failed creating new xdo instance\n");
