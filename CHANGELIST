@@ -13,6 +13,8 @@
     the above will move the mouse to 0,0 then move the mouse back to the
     position it was before. Requested by luc le rumeur and suffian amjad on the
     mailing list.
+  @ Add 'build-static' and 'install-static' targets. Requested by Anthony
+    Thyssen on the mailing list.
   @ xdotool type '?' seems to not work. Reported by Michael Fellinger.
   @ Added behave_screen_edge to attach commands to edge and corner activities.
 TODO(sissel): Document it
