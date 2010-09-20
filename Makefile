@@ -50,6 +50,17 @@ CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
 .PHONY: all
 all: xdotool.1 libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) xdotool
 
+.PHONY: static
+static: xdotool.static
+
+.PHONY: install-static
+install-static: xdotool.static
+	install -d $(DINSTALLBIN)
+	install -m 755 xdotool.static $(DINSTALLBIN)/xdotool
+
+xdotool.static: xdotool.o $(CMDOBJS) xdo.o xdo_search.o
+	$(CC) -o xdotool.static xdotool.o xdo.o xdo_search.o $(CMDOBJS) $(LDFLAGS)  -lm $(LIBS)
+
 .PHONY: install
 install: pre-install installlib installprog installman installheader post-install
 
