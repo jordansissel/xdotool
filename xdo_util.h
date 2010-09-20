@@ -55,6 +55,7 @@ static const keysym_charmap_t keysym_charmap[] = {
   { "space", ' ', },
   { "tab", '\t', },
   { "underscore", '_', },
+  { "Escape", '\x1b', },
   { NULL, 0, },
 };
 

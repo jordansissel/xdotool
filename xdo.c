@@ -868,21 +868,24 @@ int xdo_click(const xdo_t *xdo, Window window, int button) {
 
 int xdo_click_multiple(const xdo_t *xdo, Window window, int button,
                        int repeat, useconds_t delay) {
+  int ret = 0;
   while (repeat > 0) {
-    xdo_click(xdo, window, button);
+    ret = xdo_click(xdo, window, button);
+    if (ret != XDO_SUCCESS) {
+      fprintf(stderr, "click failed with %d repeats remaining\n", repeat);
+      return ret;
+    }
     repeat--;
     if (repeat > 0) {
       usleep(delay);
     }
   } /* while (repeat > 0) */
+  return ret;
 } /* int xdo_click_multiple */
 
 /* XXX: Return proper code if errors found */
 int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
   int i = 0;
-  //char key = '\0';
-  //XXX: REMOVE //int keycode = 0;
-  //TODO(sissel): REMOVE //int key_index = 0;
 
   /* Since we're doing down/up, the delay should be based on the number
    * of keys pressed (including shift). Since up/down is two calls,
@@ -904,6 +907,7 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
     if (key.code == 0 && key.symbol == NoSymbol) {
       /* Try the charmap */
       int kci = 0;
+      //printf("Can't find key %c, checking charmap\n", key.key);
       for (kci = 0; keysym_charmap[kci].keysym; kci++) {
         if (key.key == keysym_charmap[kci].key) {
           key.symbol = XStringToKeysym(keysym_charmap[kci].keysym);
@@ -915,6 +919,10 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
                 key.key);
         continue;
       }
+    } else {
+      //printf("Found key for %c\n", key.key);
+      //printf("code: %d\n", key.code);
+      //printf("sym: %s\n", XKeysymToString(key.symbol));
     }
 
     if (key.code > 0) {
@@ -1274,6 +1282,8 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
       }
 
       xdo->charcodes[idx].key = _keysym_to_char(keybuf);
+      //printf("code: %d[%d] => %c (%s)\n",
+             //i, j, xdo->charcodes[idx].key, XKeysymToString(keysym));
       xdo->charcodes[idx].code = i;
       xdo->charcodes[idx].index = j;
       xdo->charcodes[idx].modmask = _xdo_query_keycode_to_modifier(xdo, i);
@@ -1319,7 +1329,7 @@ char _keysym_to_char(const char *keysym) {
   if (strlen(keysym) == 1)
     return keysym[0];
 
-  return '?';
+  return '\0';
 }
 
 int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
