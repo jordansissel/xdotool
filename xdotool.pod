@@ -122,16 +122,25 @@ Example: to type 'Hello world!' you would do:
 
 =over 
 
-=item B<mousemove> I<[options]> I<x> I<y>
+=item B<mousemove> I<[options]> I<x y OR 'restore'>
 
 Move the mouse to the specific X and Y coordinates on the screen.
+
+You can move the mouse to the previous location if you specify 'restore'
+instead of an X and Y coordinate. Restoring only works if you have moved
+previously in this same command invocation. Further, it does not work with the
+--window option.
+
+For example, to click the top-left corner of the screen and move the mouse to
+the original position before you moved it, use this:
+ xdotool mousemove 0 0 click 1 mousemove restore
 
 =over
 
 =item B<--window WINDOW> 
 
-Specify a window to move relative to. Coordinates 0,0
-are at the top left of the window you choose.
+Specify a window to move relative to. Coordinates 0,0 are at the top left of
+the window you choose.
 
 L<WINDOW STACK> references are valid here, such as %1 and %@. Though, using %@
 probably doesn't make sense.
@@ -152,8 +161,8 @@ the distance.
 Rotation starts at 'up' (0 degrees) and rotates clockwise: 90 = right, 180 =
 down, 270 = left.
 
-The origin defaults to the center of the current screen. If you specify a --window, 
-then the origin is the center of that window.
+The origin defaults to the center of the current screen. If you specify a
+--window, then the origin is the center of that window.
 
 =item B<--clearmodifiers> 
 
@@ -193,9 +202,9 @@ moved. If no movement is necessary, we will not wait. This is useful for
 scripts that depend on actions being completed before moving on.
 
 Note that we wait until the mouse moves at all, not necessarily that it
-actually reaches your intended destination. Some applications lock the 
-mouse cursor to certain regions of the screen, so waiting for any movement is
-better in the general case than waiting for a specific target.
+actually reaches your intended destination. Some applications lock the mouse
+cursor to certain regions of the screen, so waiting for any movement is better
+in the general case than waiting for a specific target.
 
 =item B<--clearmodifiers> 
 
