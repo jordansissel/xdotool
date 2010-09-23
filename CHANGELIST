@@ -16,6 +16,8 @@
   - xdotool type '?' seems to not work. Reported by Michael Fellinger.
   - Add 'static' and 'install-static' targets. Requested by Anthony
     Thyssen on the mailing list.
+  @ Add Henning Bekel's patch
+TODO(sissel): apply/review patch, add tests.
   @ Added behave_screen_edge to attach commands to edge and corner activities.
 TODO(sissel): Document it
 TODO(sissel): Refactor it into libxdo
