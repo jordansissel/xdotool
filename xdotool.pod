@@ -228,7 +228,8 @@ Clear modifiers before clicking. See L<CLEARMODIFIERS> below.
 
 =item B<--repeat> REPEAT
 
-Specify how many times to click. Default is 1.
+Specify how many times to click. Default is 1. For a double-click, use
+'--repeat 2'
 
 =item B<--delay> MILLISECONDS
 
@@ -256,7 +257,7 @@ Same as B<click>, except only a mouse up is sent.
 
 =item B<getmouselocation> I<[--shell]>
 
-Outputs the x, y, and screen location of the mouse cursor. Screen numbers will
+Outputs the x, y, screen, and window id of the mouse cursor. Screen numbers will
 be nonzero if you have multiple monitors and are not using Xinerama.
 
 =over
@@ -269,6 +270,7 @@ This makes getmouselocation output shell data you can eval. Example:
  X=880
  Y=443
  SCREEN=0
+ WINDOW=16777250
 
  % eval $(xdotool getmouselocation --shell)
  % echo $X,$Y
