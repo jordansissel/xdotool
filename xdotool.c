@@ -228,6 +228,8 @@ struct dispatch {
   { "version", cmd_version, },
 
   /* Action functions */
+  { "behave", cmd_behave, },
+  { "behave_screen_edge", cmd_behave_screen_edge, },
   { "click", cmd_click, },
   { "getmouselocation", cmd_getmouselocation, },
   { "key", cmd_key, },
@@ -237,19 +239,18 @@ struct dispatch {
   { "mousemove", cmd_mousemove, },
   { "mousemove_relative", cmd_mousemove_relative, },
   { "mouseup", cmd_mouseup, },
+  { "set_window", cmd_set_window, },
   { "type", cmd_type, },
   { "windowactivate", cmd_windowactivate, },
   { "windowfocus", cmd_windowfocus, },
+  { "windowkill", cmd_windowkill, },
   { "windowmap", cmd_windowmap, },
+  { "windowminimize", cmd_windowminimize, },
   { "windowmove", cmd_windowmove, },
   { "windowraise", cmd_windowraise, },
+  { "windowreparent", cmd_windowreparent, },
   { "windowsize", cmd_windowsize, },
   { "windowunmap", cmd_windowunmap, },
-  { "windowreparent", cmd_windowreparent, },
-  { "windowkill", cmd_windowkill, },
-  { "set_window", cmd_set_window, },
-  { "behave", cmd_behave, },
-  { "behave_screen_edge", cmd_behave_screen_edge, },
 
   { "set_num_desktops", cmd_set_num_desktops, },
   { "get_num_desktops", cmd_get_num_desktops, },
@@ -259,6 +260,8 @@ struct dispatch {
   { "get_desktop_for_window", cmd_get_desktop_for_window, },
   { "get_desktop_viewport", cmd_get_desktop_viewport, },
   { "set_desktop_viewport", cmd_set_desktop_viewport, },
+
+  { "exec", cmd_exec, },
 
   { NULL, NULL, },
 };
@@ -382,6 +385,7 @@ int args_main(int argc, char **argv) {
   context.windows = NULL;
   context.nwindows = 0;
   context.have_last_mouse = False;
+  context.debug = (getenv("DEBUG") != NULL);
 
   if (context.xdo == NULL) {
     fprintf(stderr, "Failed creating new xdo instance\n");

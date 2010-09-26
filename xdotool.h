@@ -25,6 +25,7 @@ typedef struct context {
   const char *prog;
   int argc;
   char **argv;
+  int debug;
 
   /* Window stack */
   Window *windows;
@@ -39,35 +40,36 @@ typedef struct context {
 } context_t;
 
 int xdotool_main(int argc, char **argv);
+int cmd_exec(context_t *context);
+int cmd_behave(context_t *context);
+int cmd_behave_screen_edge(context_t *context);
 int cmd_click(context_t *context);
+int cmd_getactivewindow(context_t *context);
+int cmd_getmouselocation(context_t *context);
 int cmd_getwindowfocus(context_t *context);
 int cmd_getwindowname(context_t *context);
 int cmd_getwindowpid(context_t *context);
-int cmd_getactivewindow(context_t *context);
 int cmd_help(context_t *context);
 int cmd_key(context_t *context);
 int cmd_mousedown(context_t *context);
 int cmd_mousemove(context_t *context);
 int cmd_mousemove_relative(context_t *context);
 int cmd_mouseup(context_t *context);
-int cmd_getmouselocation(context_t *context);
 int cmd_search(context_t *context);
+int cmd_set_window(context_t *context);
 int cmd_type(context_t *context);
+int cmd_version(context_t *context);
+int cmd_window_select(context_t *context);
 int cmd_windowactivate(context_t *context);
 int cmd_windowfocus(context_t *context);
+int cmd_windowkill(context_t *context);
 int cmd_windowmap(context_t *context);
+int cmd_windowminimize(context_t *context);
 int cmd_windowmove(context_t *context);
 int cmd_windowraise(context_t *context);
+int cmd_windowreparent(context_t *context);
 int cmd_windowsize(context_t *context);
 int cmd_windowunmap(context_t *context);
-int cmd_windowreparent(context_t *context);
-int cmd_set_window(context_t *context);
-int cmd_version(context_t *context);
-int cmd_windowkill(context_t *context);
-int cmd_behave(context_t *context);
-int cmd_behave_screen_edge(context_t *context);
-int cmd_window_select(context_t *context);
-
 /* pager-like commands */
 int cmd_set_num_desktops(context_t *context);
 int cmd_get_num_desktops(context_t *context);

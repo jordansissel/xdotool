@@ -21,12 +21,12 @@ module XdoTestHelper
     end
   end
 
-  def setup_launch_xterm
+  def setup_launch_xterm(cmd="exec sleep 300")
     # Clever pipe trick to get xterm to tell us its window id
     reader, writer = IO.pipe
     @windowpid = fork do
       reader.close
-      exec("exec xterm -T '#{@title}' -e 'echo $WINDOWID >& #{writer.fileno}; echo $$ >& #{writer.fileno}; exec sleep 300'")
+      exec("exec xterm -T '#{@title}' -e 'echo $WINDOWID >& #{writer.fileno}; echo $$ >& #{writer.fileno}; #{cmd}'")
     end # xterm fork
     writer.close
     @wid = reader.readline.to_i
@@ -58,7 +58,7 @@ module XdoTestHelper
 
   def teardown
     if @shellpid
-      Process.kill("TERM", @shellpid)
+      Process.kill("TERM", @shellpid) rescue nil
       Process.wait(@shellpid) rescue nil
     end
 

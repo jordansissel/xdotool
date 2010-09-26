@@ -1,10 +1,14 @@
 3.??????????
-  - New function: xdo_mousewindow, which lets you get the window the mouse is
-    currently over.
-  - New function: xdo_mouselocation2, which is an extended version of
-    xdo_mouselocation and includes the window the mouse is currently over.
-  - Catch pointer grab failures in selectwindow (xdo_window_select) and abort
-    if we can't grab it and report an error message.
+  - Bug fix: Catch pointer grab failures in selectwindow (xdo_window_select)
+    and abort if we can't grab it and report an error message.
+  - New command: 'windowminimize' for minimizing windows.
+  @ Added behave_screen_edge to attach commands to edge and corner activities.
+TODO(sissel): DONE Document it
+TODO(sissel): DEFERRED Refactor it into libxdo
+TODO(sissel): Add tests
+DONE(sissel): DONE Add delay until acting (default = no delay) 
+TODO(sissel): after acting, disable for some period (default = 100ms)
+  @ New command: 'exec' for executing commands. Useful with behave_screen_edge.
   - Add  --delay and --repeat flags to click. Requested by meenakshi sundaram
     via the mailing list.
   - Add new option to mouse move 'restore'. This will restore the mouse position
@@ -13,17 +17,16 @@
     the above will move the mouse to 0,0 then move the mouse back to the
     position it was before. Requested by luc le rumeur and suffian amjad on the
     mailing list.
-  - xdotool type '?' seems to not work. Reported by Michael Fellinger.
   - Add 'static' and 'install-static' targets. Requested by Anthony
     Thyssen on the mailing list.
+  - New function: xdo_mousewindow, which lets you get the window the mouse is
+    currently over.
+  - New function: xdo_mouselocation2, which is an extended version of
+    xdo_mouselocation and includes the window the mouse is currently over.
+  - New function: xdo_window_minimize, which minimizes a window.
+  @ xdotool type '?' seems to not work. Reported by Michael Fellinger.
   @ Add Henning Bekel's patch
 TODO(sissel): apply/review patch, add tests.
-  @ Added behave_screen_edge to attach commands to edge and corner activities.
-TODO(sissel): Document it
-TODO(sissel): Refactor it into libxdo
-TODO(sissel): Add tests
-TODO(sissel): Add delay until acting (default = no delay) 
-TODO(sissel): after acting, disable for some period (default = 100ms)
 
 TODO(sissel):
   Document advanced behaviors

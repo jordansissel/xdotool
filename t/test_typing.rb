@@ -7,6 +7,8 @@ require "xdo_test_helper"
 
 class XdotoolTypingTests < Test::Unit::TestCase
   include XdoTestHelper
+  SYMBOLS = "`12345678990-=~ !@\#$%^&*()_+[]\{}|;':\",./<>?"
+  LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
   # override XdoTestHelper#setup
   def setup
@@ -16,20 +18,11 @@ class XdotoolTypingTests < Test::Unit::TestCase
     setup_ensure_x_is_healthy
     @file = Tempfile.new("xdotool-test")
 
-    setup_launch("xterm -u8 -T '#{@title}' -e 'cat >> #{@file.path}'")
-
-    found = false
-    while !found
-      #status, lines = xdotool "search --onlyvisible --pid #{@launchpid}"
-      status, lines = xdotool "search --onlyvisible --name '#{@title}'"
-      found = (status == 0)
-      assert(lines.length < 2, "Should only be at most 1 window matching #{@launchpid}")
-      @wid = lines.first.to_i
-      sleep 0.2
-    end
+    setup_launch_xterm("cat >> #{@file.path}")
 
     ready = false
     while !ready
+      #puts "Waiting for focus"
       xdotool "windowfocus #{@wid}"
       status, lines = xdotool "getwindowfocus -f"
       if status == 0 and lines.first.to_i == @wid
@@ -53,6 +46,7 @@ class XdotoolTypingTests < Test::Unit::TestCase
   def type(input)
     #status, lines = xdotool "type --window #{@wid} --clearmodifiers '#{input}'"
     #_xdotool "key ctrl+s ctrl+q"
+    input.gsub!(/'/, "\\'")
     status, lines = xdotool "type --clearmodifiers '#{input}'"
     xdotool "key ctrl+d ctrl+d"
     Process.wait(@launchpid) rescue nil
@@ -66,53 +60,62 @@ class XdotoolTypingTests < Test::Unit::TestCase
 
   def test_us_simple_typing
     system("setxkbmap us")
-    _test_typing("Hello world")
+    _test_typing(LETTERS)
   end
 
   def test_us_symbol_typing
     system("setxkbmap us")
-    _test_typing("!@\#$%^&*()")
+    _test_typing(SYMBOLS)
   end
 
   def test_us_se_simple_typing
     system("setxkbmap -option grp:switch,grp:shifts_toggle us,se")
-    _test_typing("Hello world")
+    _test_typing(LETTERS)
   end
 
   def test_us_se_symbol_typing
     system("setxkbmap -option grp:switch,grp:shifts_toggle us,se")
-    _test_typing("!@\#$%^&*()")
+    _test_typing(SYMBOLS)
   end
 
   def test_se_us_simple_typing
     system("setxkbmap -option grp:switch,grp:shifts_toggle se,us")
-    _test_typing("Hello world")
+    _test_typing(LETTERS)
   end
 
   def test_se_us_symbol_typing
     system("setxkbmap -option grp:switch,grp:shifts_toggle se,us")
-    _test_typing("!@\#$%^&*()")
+    _test_typing(SYMBOLS)
   end
 
   def test_us_dvorak_simple_typing
     system("setxkbmap us dvorak")
-    _test_typing("Hello world")
+    _test_typing(LETTERS)
   end
 
   def test_us_dvorak_symbol_typing
     system("setxkbmap us dvorak")
-    _test_typing("!@\#$%^&*()")
+    _test_typing(SYMBOLS)
   end
 
   def test_se_simple_typing
     system("setxkbmap se")
-    _test_typing("Hello world")
+    _test_typing(LETTERS)
   end
 
   def test_se_symbol_typing
     system("setxkbmap se")
-    # SE keymap has no '^' or '$'
-    _test_typing("!#%&*()")
+    _test_typing(SYMBOLS)
+  end
+
+  def test_de_simple_typing
+    system("setxkbmap de")
+    _test_typing(LETTERS)
+  end
+
+  def test_de_symbol_typing
+    system("setxkbmap de")
+    _test_typing(SYMBOLS)
   end
 
 end # class XdotoolTypingTests

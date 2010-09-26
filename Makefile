@@ -23,15 +23,15 @@ LIBSUFFIX=$(shell sh platform.sh libsuffix)
 VERLIBSUFFIX=$(shell sh platform.sh libsuffix $(MAJOR))
 DYNLIBFLAG=$(shell sh platform.sh dynlibflag)
 LIBNAMEFLAG=$(shell sh platform.sh libnameflag $(MAJOR) $(INSTALLLIB))
+LIBS=$(shell sh platform.sh extralibs)
  
 CFLAGS?=-pipe -O2 $(WARNFLAGS)
 
 DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst
 DEFAULT_INC=-I/usr/X11R6/include -I/usr/local/include
 
-LIBS=$(shell pkg-config --libs x11 xtst 2> /dev/null || echo "$(DEFAULT_LIBS)")
+LIBS+=$(shell pkg-config --libs x11 xtst 2> /dev/null || echo "$(DEFAULT_LIBS)")
 INC=$(shell pkg-config --cflags x11 xtst 2> /dev/null || echo "$(DEFAULT_INC)")
-
 CFLAGS+=-std=c99 $(INC)
 
 CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
@@ -45,7 +45,8 @@ CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
          cmd_set_desktop_for_window.o cmd_get_desktop_for_window.o \
          cmd_get_desktop_viewport.o cmd_set_desktop_viewport.o \
          cmd_windowkill.o cmd_behave.o cmd_window_select.o \
-         cmd_getwindowname.o cmd_behave_screen_edge.o
+         cmd_getwindowname.o cmd_behave_screen_edge.o \
+         cmd_windowminimize.o cmd_exec.o
 
 .PHONY: all
 all: xdotool.1 libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) xdotool
@@ -110,7 +111,8 @@ uninstall:
 
 .PHONY: clean
 clean:
-	rm -f *.o xdotool xdotool.1 xdotool.html libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) || true
+	rm -f *.o xdotool xdotool.static xdotool.1 xdotool.html \
+	      libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) || true
 
 xdo.o: xdo.c xdo_version.h
 	$(CC) $(CFLAGS) -fPIC -c xdo.c
@@ -131,8 +133,11 @@ libxdo.$(LIBSUFFIX): xdo.o xdo_search.o
 libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 	ln -s $< $@
 
+# xdotool the binary requires libX11 now for XSelectInput and friends.
+# This requirement will go away once more things are refactored into
+# libxdo.
 xdotool: xdotool.o $(CMDOBJS) libxdo.$(LIBSUFFIX)
-	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS)  -lm
+	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS)  -lm $(LIBS)
 
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@

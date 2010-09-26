@@ -604,6 +604,11 @@ int xdo_window_map(const xdo_t *xdo, Window wid);
  */
 int xdo_window_unmap(const xdo_t *xdo, Window wid);
 
+/**
+ * Minimize a window.
+ */
+int xdo_window_minimize(const xdo_t *xdo, Window wid);
+
 /** 
  * Reparents a window
  *
@@ -831,4 +836,5 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
                         unsigned char **name_ret, int *name_len_ret,
                         int *name_type);
+
 #endif /* ifndef _XDO_H_ */

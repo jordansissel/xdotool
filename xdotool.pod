@@ -278,6 +278,58 @@ This makes getmouselocation output shell data you can eval. Example:
 
 =back
 
+=item B<behave_screen_edge> I<[options]> I<where> I<command ...>
+
+Bind an action to events when the mouse hits the screen edge or corner.
+
+Options are:
+
+=over
+
+=item I<--delay MILLISECONDS>
+
+Delay in milliseconds before running the command. This allows you to require
+a given edge or corner to be held for a short period before your command will
+run. If you leave the edge or corner before the delay expires then the time
+will reset.
+
+=back
+
+Valid 'where' values are:
+
+=over
+
+=item left
+
+=item top-left
+
+=item top
+
+=item top-right
+
+=item right
+
+=item bottom-left
+
+=item bottom
+
+=item bottom-right
+
+=back
+
+Examples:
+ # Activate google-chrome when you move the mouse to the bottom-left corner:
+ xdotool behave_screen_edge bottom-left \
+   search --class google-chrome windowactivate
+
+ # Go to the next workspace (right). Known to work in GNOME (metacity and compiz)
+ xdotool behave_screen_edge --delay 500 bottom-right key XF86Forward
+
+ # Activate firefox and do a web search in a new tab for text in your clipboard
+ xdotool behave_screen_edge --delay 1000 top-left \
+     search --classname Navigator \
+     windowactivate --sync key --delay 250 ctrl+t ctrl+k ctrl+v Return
+
 =back
 
 =head1 WINDOW COMMANDS
@@ -521,13 +573,11 @@ before moving on.
 
 =back
 
-
 =item B<windowmap> I<[options]> I<[window=%1]>
 
 Map a window. In X11 terminology, mapping a window means making it visible on
 the screen. If no window is given, %1 is the default. See L<WINDOW STACK> and
 L<COMMAND CHAINING> for more details.
-
 
 =over
 
@@ -535,6 +585,22 @@ L<COMMAND CHAINING> for more details.
 
 After requesting the window map, wait until the window is actually mapped
 (visible). This is useful for scripts that depend on actions being completed
+before moving on.
+
+=back
+
+=item B<windowminimize> I<[options]> I<[window=%1]>
+
+Minimize a window. In X11 terminology, this is called 'iconify.'
+If no window is given, %1 is the default. See L<WINDOW STACK> and
+L<COMMAND CHAINING> for more details.
+
+=over
+
+=item B<--sync> 
+
+After requesting the window minimize, wait until the window is actually
+minimized. This is useful for scripts that depend on actions being completed
 before moving on.
 
 =back
@@ -697,6 +763,37 @@ different desktop. If no window is given, %1 is the default. See L<WINDOW
 STACK> and L<COMMAND CHAINING> for more details.
 
 =back
+
+=head1 MISCELLANEOUS COMMANDS
+
+=item B<exec> I<[options]> I<command> I<[...]>
+
+Execute a program. This is often useful when combined with behave_screen_edge
+to do things like locking your screen.
+
+Options:
+
+=over
+
+=item B<--sync> 
+
+Block until the child process exits. The child process exit status is then
+passed to the parent process (xdotool) which copies it.
+
+=back
+
+Examples:
+ # Lock the screen when the mouse sits in the top-right corner
+ xdotool behave_screen_edge --delay 1000 top-right \
+   exec gnome-screensaver-command --lock
+ # Substitute 'xscreensaver-command -lock' if you use that program.
+
+ # The following will fail to move the mouse because we use '--sync' and
+ # /bin/false exits nonzero:
+ xdotool exec --sync /bin/false mousemove 0 0
+
+ # This succeeds, though, since we do not use --sync on the exec command.
+ xdotool exec /bin/false mousemove 0 0
 
 =head1 SCRIPTS
 

@@ -1,3 +1,12 @@
+Refactor behave stuff
+  - One api. 
+  - Behave:
+      xdo_t
+      when (mouse-leave, etc)
+      what (window, ignored if when 'screen edge or corner')
+      action (function)
+
+
 Features
   * Screen edge detection / actions 
     - delay until acting (default = no delay) 

@@ -1041,7 +1041,8 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
       keymapchanged = 1;
     }
 
-    //fprintf(stderr, "Sending %c (%d, mods %x)\n", keys[i].key, keys[i].code, *modifier);
+    //fprintf(stderr, "keyseqlist_do: Sending %c %s (%d, mods %x)\n", 
+            //keys[i].key, (pressed ? "down" : "up"), keys[i].code, *modifier);
     _xdo_send_key(xdo, window, &(keys[i]), *modifier, pressed, delay);
 
     if (keys[i].needs_binding == 1) {
@@ -1558,18 +1559,20 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
           switch(masks[i]) {
             case ShiftMask:  maskname = "shift"; break;
             case ControlMask: maskname = "control"; break;
+            case Mod1Mask: maskname = "mod1/alt"; break;
             case Mod3Mask: maskname = "mod3"; break;
+            case Mod4Mask: maskname = "mod4/super"; break;
           }
           modkey = _xdo_cached_modifier_to_keycode(xdo, masks[i]);
-          //fprintf(stderr, "Sending modkey for mod %d, %s, (keycode %d) %s\n",
+          //printf("XTEST: Sending modifier key for mod %d, %s, (keycode %d) %s\n",
                  //masks[i], maskname, modkey, is_press ? "down" : "up");
           XTestFakeKeyEvent(xdo->xdpy, modkey, is_press, CurrentTime);
           XSync(xdo->xdpy, False);
         } /* if modestate includes this mask */
       } /* loop over possible masks */
-    }
+    } /* if we have a mask set */ 
 
-    //printf("Sending key %d %s\n", key->code, is_press ? "down" : "up");
+    //printf("XTEST: Sending key %d %s\n", key->code, is_press ? "down" : "up");
     XTestFakeKeyEvent(xdo->xdpy, key->code, is_press, CurrentTime);
     XSync(xdo->xdpy, False);
   } else {
@@ -1930,4 +1933,18 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
   *name_type = type;
 
   return 0;
+}
+
+int xdo_window_minimize(const xdo_t *xdo, Window window) {
+  int ret;
+  int screen;
+
+  /* Get screen number */
+  XWindowAttributes attr;
+  XGetWindowAttributes(xdo->xdpy, window, &attr);
+  screen = XScreenNumberOfScreen(attr.screen);
+
+  /* Minimize it */
+  ret = XIconifyWindow(xdo->xdpy, window, screen);
+  return _is_success("XIconifyWindow", ret == 0);
 }

@@ -37,11 +37,22 @@ libnameflag() {
   esac
 }
 
+extralibs() {
+  case $uname in
+    Linux) echo "-lrt" ;;
+  esac
+}
+
 command=$1
 shift
 case $command in
   libsuffix) $command "$@" ;;
   dynlibflag) $command "$@" ;;
   libnameflag) $command "$@" ;;
+  extralibs) $command "$@" ;;
+  *) 
+    echo "Invalid $0 command, '$command'" >&2
+    exit 1
+    ;;
 esac
 
