@@ -22,6 +22,7 @@
 #include <string.h>
 #include <strings.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "xdo.h"
 #include "xdotool.h"
@@ -281,32 +282,42 @@ int main(int argc, char **argv) {
 }
 
 int xdotool_main(int argc, char **argv) {
-  /* read stdin if stdin is not a tty or first argument is "-" */
 
-  int want_script;
+  /* If argv[1] is a file or "-", read commands from file or stdin,
+   * else use commands from argv.
+   */
+
   struct stat data;
   int stat_ret;
 
-  /* If we are being run from a script with shebang line #!/path/to/xdotool
-   * then the input file will be argv[argc - 1].
-   */
-  stat_ret = stat(argv[argc - 1], &data);
-
-  want_script = ((argc == 2 && !strcmp(argv[1], "-"))
-                 || (argc == 2 && stat_ret == 0));
-  if (want_script) {
-    return script_main(argc, argv);
-  } else {
-    return args_main(argc, argv);
+  if(argc >= 2) {
+    stat_ret = stat(argv[1], &data);
+    
+    if ( strcmp(argv[1], "-") == 0 || stat_ret == 0)
+      return script_main(argc, argv);
   }
+  return args_main(argc, argv);
 }
 
 int script_main(int argc, char **argv) {
+
+  /* Tokenize the input file while expanding positional parameters and
+   * environment variables. Pass the resulting argument list to
+   * args_main().
+   */
+
   FILE *input = NULL;
-  const char *path = argv[argc - 1];
-  char *cmd;
+  const char *path = argv[1];
   char buffer[4096];
 
+  char **script_argv = (char **) calloc(1, sizeof(char *));
+  int script_argc = 1;
+
+  /* copy argv[0] to script_argv[0] */
+  script_argv[0] = (char *) calloc(strlen(argv[0])+1, sizeof(char));
+  strcpy(script_argv[0], argv[0]);
+
+  /* determine whether reading from a file or from stdin */
   if (!strcmp(path, "-") || !isatty(0)) {
     input = fdopen(0, "r");
   } else {
@@ -316,39 +327,115 @@ int script_main(int argc, char **argv) {
       return EXIT_FAILURE;
     }
   }
+  
+  /* read input... */
+  int pos;
+  char *token;
+  char **tmp;
 
-  int ret;
   while (fgets(buffer, 4096, input) != NULL) {
     char *line = buffer;
-    // Ignore leading whitespace
+
+    /* Ignore leading whitespace */
     line += strspn(line, " \t");
 
-    // blanklines or line comment are ignored, too
+    /* blanklines or line comment are ignored, too */
     if (line[0] == '\n' || line[0] == '#') {
       continue;
     }
-    line[strlen(line) - 1] = '\0'; /* replace newline with null */
 
-    if (asprintf(&cmd, "%s %s", argv[0], line) == -1) {
-      fprintf(stderr, "asprintf failed\n");
-      exit(1);
-    }
-    //printf("Running: %s\n", cmd);
-    ret = system(cmd);
-    free(cmd);
+    /* replace newline with null */
+    if (line[strlen(line)-1] == '\n') 
+      line[strlen(line)-1] = '\0'; 
 
-    if (ret != EXIT_SUCCESS) {
-      return ret;
+    /* tokenize line into script_argv... */
+    while (strlen(line)) {
+      token = NULL;
+
+      /* modify line to contain the current token. Tokens are
+       * separated by whitespace, or quoted with single/double quotes.
+       */
+      if (line[0] == '"') {
+	line++;
+	line[strcspn(line, "\"")] = '\0';
+      }
+      else if (line[0] == '\'') {
+	line++;
+	line[strcspn(line, "\'")] = '\0';
+      }
+      else {
+	line[strcspn(line, " \t")] = '\0';
+      }
+
+      /* if a token begins with "$", append the corresponding
+       * positional parameter or environment variable to
+       * script_argv...
+      */
+      if (line[0] == '$') {
+	/* ignore dollar sign */
+	line++; 
+      
+	if (isdigit(line[0])) {
+	  /* get the position of this parameter in argv */ 
+	  pos=atoi(line)+1;
+
+	  /* bail if no argument was given for this parameter */
+	  if(pos+1 > argc) {
+	    fprintf (stderr, "%s: error: `%s' needs at least %d argument(s).\n",
+		     argv[0], argv[1], pos-2);
+	    exit(EXIT_FAILURE);
+	  }
+	  /* use command line argument */
+	  token = argv[pos];
+	}
+	else {
+	  /* use environment variable */
+	  token = getenv(line);
+	  if (token == NULL)
+	    fprintf(stderr, "%s: warning: environment variable $%s is not set.\n",
+		    argv[0], line);
+	}
+      }
+      else { 
+	/* use the verbatim token */
+	token = line;
+      }      
+
+      /* append token */
+      if(token != NULL) {
+
+	tmp = realloc(script_argv, (script_argc+1) * sizeof(char *));
+	if(tmp == NULL) {
+	  fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n", 
+		  argv[0], argv[1]);
+	  exit(EXIT_FAILURE);
+	}
+	script_argv = tmp;
+	script_argv[script_argc] = (char *) calloc(strlen(token)+1, sizeof(char));
+
+	strncpy(script_argv[script_argc], token, strlen(token)+1);      
+	script_argc++;
+      }
+      
+      /* advance line to the next token */
+      line += strlen(line)+1;
+      line += strspn(line, " \t");
     }
   }
+  fclose(input);
 
-  return EXIT_SUCCESS;
+  /* run the parsed script */
+  return args_main(script_argc, script_argv);
 }
 
 int args_main(int argc, char **argv) {
   int ret = 0;
   int opt;
   int option_index;
+  int i;
+  Window w[256];
+  int wc=0;
+
   const char *usage = "Usage: %s <cmd> <args>\n";
   static struct option long_options[] = {
     { "help", no_argument, NULL, 'h' },
@@ -361,29 +448,56 @@ int args_main(int argc, char **argv) {
     cmd_help(NULL);
     exit(1);
   }
+  
+  // remove any leading digit-only arguments and remember them in w[]
+  while( isdigit(argv[1][0]) ) {
+    w[wc++] = (Window) atoi(argv[1]);
+    for(i=1; i<argc-1; i++) {
+      argv[i] = argv[i+1];
+    }
+    argc--;
+  }
+
+  // insert implicit search if first argument is not a command
+  if ( !is_command(argv[1]) ) {
+    for(i=argc; i>0; i--) {
+      argv[i] = argv[i-1];
+    }
+    argv[1] = "search";
+    argc++;
+  }
+
+  for(i=0; i<argc; i++) {
+    fprintf(stderr, "argv[%d] = \"%s\"\n", i, argv[i]);
+  }
 
   while ((opt = getopt_long_only(argc, argv, "++hv", long_options, &option_index)) != -1) {
     switch (opt) {
-      case 'h':
-        cmd_help(NULL);
-        exit(EXIT_SUCCESS);
-      case 'v':
-        cmd_version(NULL);
-        exit(EXIT_SUCCESS);
-      default:
-        fprintf(stderr, usage, argv[0]);
-        exit(EXIT_FAILURE);
+    case 'h':
+      cmd_help(NULL);
+      exit(EXIT_SUCCESS);
+    case 'v':
+      cmd_version(NULL);
+      exit(EXIT_SUCCESS);
+    default:
+      fprintf(stderr, usage, argv[0]);
+      exit(EXIT_FAILURE);
     }
   }
-
+  
   context_t context;
   context.xdo = xdo_new(NULL);
   context.prog = *argv;
   argv++; argc--;
   context.argc = argc;
   context.argv = argv;
-  context.windows = NULL;
-  context.nwindows = 0;
+  if (wc > 0) {
+    context.windows = w;
+    context.nwindows = wc;
+  } else {
+    context.windows = NULL;
+    context.nwindows = 0;
+  }
   context.have_last_mouse = False;
   context.debug = (getenv("DEBUG") != NULL);
 
@@ -395,9 +509,9 @@ int args_main(int argc, char **argv) {
   ret = context_execute(&context);
 
   xdo_free(context.xdo);
-  if (context.windows != NULL) {
-    free(context.windows);
-  }
+  //if (wc == 0 && context.windows != NULL) {
+  //  free(context.windows);
+  //}
 
   return ret;
 } /* int args_main(int, char **) */
