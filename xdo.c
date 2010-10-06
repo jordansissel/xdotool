@@ -849,6 +849,7 @@ int xdo_mouselocation2(const xdo_t *xdo, int *x_ret, int *y_ret,
         /* If no client found, search down the stack */
         findret = xdo_window_find_client(xdo, window, &client, XDO_FIND_CHILDREN);
       }
+      //fprintf(stderr, "%ld, %ld, %ld, %d\n", window, root, client, findret);
       if (findret == XDO_SUCCESS) {
         window = client;
       }
@@ -1184,12 +1185,12 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
       } else if (direction == XDO_FIND_CHILDREN) {
         unsigned int i = 0;
         int ret;
+        done = True; /* recursion should end us */
         for (i = 0; i < nchildren && !done; i++) {
           ret = xdo_window_find_client(xdo, children[i], &window, direction);
-          //printf("findclient: %ld\n", window);
+          printf("findclient: %ld\n", window);
           if (ret == XDO_SUCCESS) {
             *window_ret = window;
-            done = True; /* recursion should end us */
             break;
           }
         }
