@@ -838,9 +838,20 @@ int xdo_mouselocation2(const xdo_t *xdo, int *x_ret, int *y_ret,
   }
 
   /* Find the client window if we are not root. */
-  //if (window != root) {
-    //xdo_window_find_client(xdo, &window, window, XDO_FIND_PARENTS);
-  //}
+  if (window != root) {
+    int findret;
+    Window client = 0;
+
+    /* Search up the stack */
+    findret = xdo_window_find_client(xdo, window, &client, XDO_FIND_PARENTS);
+    if (findret == XDO_ERROR) {
+      /* If no client found, search down the stack */
+      findret = xdo_window_find_client(xdo, window, &client, XDO_FIND_CHILDREN);
+    }
+    if (findret == XDO_SUCCESS) {
+      window = client;
+    }
+  }
   //printf("mouseloc root: %ld\n", root);
   //printf("mouseloc window: %ld\n", window);
 
@@ -1150,6 +1161,10 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
 
   int done = False;
   while (!done) {
+    if (window == 0) {
+      return XDO_ERROR;
+    }
+
     long items;
     xdo_getwinprop(xdo, window, atom_wmstate, &items, NULL, NULL);
 
@@ -1174,9 +1189,11 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
             break;
           }
         }
+        if (nchildren == 0) {
+          return XDO_ERROR;
+        }
         if (children != NULL)
           XFree(children);
-        return XDO_ERROR;
       } else {
         fprintf(stderr, "Invalid find_client direction (%d)\n", direction);
         *window_ret = 0;
