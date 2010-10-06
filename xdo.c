@@ -838,11 +838,11 @@ int xdo_mouselocation2(const xdo_t *xdo, int *x_ret, int *y_ret,
   }
 
   /* Find the client window if we are not root. */
-  if (window != root) {
+  if (window != root && window != 0) {
     int findret;
     Window client = 0;
 
-    /* Search up the stack */
+    /* Search up the stack for a client window for this window */
     findret = xdo_window_find_client(xdo, window, &client, XDO_FIND_PARENTS);
     if (findret == XDO_ERROR) {
       /* If no client found, search down the stack */
@@ -851,6 +851,8 @@ int xdo_mouselocation2(const xdo_t *xdo, int *x_ret, int *y_ret,
     if (findret == XDO_SUCCESS) {
       window = client;
     }
+  } else {
+    window = root;
   }
   //printf("mouseloc root: %ld\n", root);
   //printf("mouseloc window: %ld\n", window);
