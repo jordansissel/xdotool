@@ -800,9 +800,17 @@ Examples:
 xdotool can read a list of commands via stdin or a file if you want. A script
 will fail when any command fails. 
 
-Truthfully, 'script' mode isn't very well fleshed out and may fall below your
+Truthfully, 'script' mode isn't fully fleshed out and may fall below your
 expectations. If you have suggestions, please email the list or file a bug (See
-L<CONTACT>)
+L<CONTACT>).
+
+Scripts can use positional arguments (Represented by $1, $2, ...) and
+environment variables (like $HOME or $WINDOWID). Quoting arguments should work
+as expected.
+
+Scripts are processed for parameter and environment variable expansion and then
+run as if you had invoked xdotool with the entire script on one line (using
+COMMAND CHAINING).
 
 =over
 
@@ -823,16 +831,26 @@ L<CONTACT>)
 You can also write scripts that only execute xdotool. Example:
 
  #!/usr/local/bin/xdotool
- windowactivate $WINDOWID
- mousemove -window $WINDOWID 50 50
- click 1
- click 1
+ search --onlyvisible --classname $1
 
-All commands are run as if you had typed 'xdotool <line>' via /bin/sh. This
-means any shell magic should work here, too, including the use of environment
-variables. For above, here's how you'd set the value of WINDOWID:
+ windowsize %@ $2 $3
+ windowraise %@
 
- % WINDOWID=1234 ./myscript
+ windowmove %1 0 0
+ windowmove %2 $2 0
+ windowmove %3 0 $3
+ windowmove %4 $2 $3
+
+This script will take all windows matched by the classname query given by arg1
+($1) and sizes/moves them into a 2x2 grid with windows sized by the 2nd and 3rd
+parameters.
+
+Here's an example usage:
+
+ % ./myscript xterm 600 400
+
+Running it like this will take 4 visible xterms, raise them, and move them into
+a 2x2 tile grid with each window 600x400 pixels in size.
 
 =head1 CLEARMODIFIERS
 
@@ -1020,5 +1038,8 @@ xdotool was written by Jordan Sissel.
 This manual page was written originally by Daniel Kahn Gillmor
 E<lt>dkg@fifthhorseman.netE<gt> for the Debian project (but may be
 used by others). It is maintained by Jordan Sissel.
+
+Patches, ideas, and other contributions by many, nice folks. See the CHANGELIST
+file for who provided what.
 
 =cut

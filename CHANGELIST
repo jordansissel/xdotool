@@ -3,13 +3,11 @@
     and abort if we can't grab it and report an error message.
   - New command: 'windowminimize' for minimizing windows.
   @ Added behave_screen_edge to attach commands to edge and corner activities.
-TODO(sissel): DONE Document it
-TODO(sissel): DEFERRED Refactor it into libxdo
 TODO(sissel): Add tests
-DONE(sissel): DONE Add delay until acting (default = no delay) 
 TODO(sissel): after acting, disable for some period (default = 100ms)
-  @ New command: 'exec' for executing commands. Useful with behave_screen_edge.
-  - Add  --delay and --repeat flags to click. Requested by meenakshi sundaram
+  - New command: 'exec' for executing commands. Useful with behave_screen_edge.
+  - Add  --delay and --repeat flags to click. This allows you to easily
+    double-click (or more) in a single command. Requested by meenakshi sundaram
     via the mailing list.
   - Add new option to mouse move 'restore'. This will restore the mouse position
     to the last known position prior to the most recent move. That is:
@@ -19,14 +17,20 @@ TODO(sissel): after acting, disable for some period (default = 100ms)
     mailing list.
   - Add 'static' and 'install-static' targets. Requested by Anthony
     Thyssen on the mailing list.
+  - Fix bug in xdotool getmouselocation that didn't search for the client window
+    correctly.
   - New function: xdo_mousewindow, which lets you get the window the mouse is
     currently over.
   - New function: xdo_mouselocation2, which is an extended version of
     xdo_mouselocation and includes the window the mouse is currently over.
   - New function: xdo_window_minimize, which minimizes a window.
+  @ Add patch from Henning Bekel that greatly improves xdotool's script
+    feature. Scripts now no longer invoke /bin/sh for each line, but instead
+    build a command chain to execute. Further, positional arguments ($1, $2,
+    etc) and environment variables ($FOO, $WINDOWID, etc) work as expected
+    despite the removal of /bin/sh.
+TODO(sissel): Add tests.
   @ xdotool type '?' seems to not work. Reported by Michael Fellinger.
-  @ Add Henning Bekel's patch
-TODO(sissel): apply/review patch, add tests.
 
 TODO(sissel):
   Document advanced behaviors
