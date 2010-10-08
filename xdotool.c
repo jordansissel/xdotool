@@ -336,6 +336,7 @@ int script_main(int argc, char **argv) {
 
   while (fgets(buffer, 4096, input) != NULL) {
     char *line = buffer;
+    token = NULL;
 
     /* Ignore leading whitespace */
     line += strspn(line, " \t");
@@ -378,12 +379,13 @@ int script_main(int argc, char **argv) {
       
         if (isdigit(line[0])) {
           /* get the position of this parameter in argv */ 
-          pos = atoi(line)+1;
+          pos = atoi(line) + 1; /* $1 is actually index 2 in the argv array */
 
           /* bail if no argument was given for this parameter */
-          if (pos+1 > argc) {
-            fprintf (stderr, "%s: error: `%s' needs at least %d argument(s).\n",
-                     argv[0], argv[1], pos-2);
+          if (pos >= argc) {
+            fprintf (stderr, "%s: error: `%s' needs at least %d %s; only %d given\n",
+                     argv[0], argv[1], pos - 1, pos == 2 ? "argument" : "arguments",
+                     argc - 2);
             return EXIT_FAILURE;
           }
           /* use command line argument */
@@ -409,15 +411,15 @@ int script_main(int argc, char **argv) {
       /* append token */
       if (token != NULL) {
 
-        tmp = realloc(script_argv, (script_argc+1) * sizeof(char *));
-        if (tmp == NULL) {
+        script_argv = realloc(script_argv, (script_argc+1) * sizeof(char *));
+        if (script_argv == NULL) {
           fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n", 
                   argv[0], argv[1]);
           exit(EXIT_FAILURE);
         }
-        script_argv = tmp;
         script_argv[script_argc] = (char *) calloc(strlen(token)+1, sizeof(char));
 
+        printf("arg %d: %s\n", script_argc, token);
         strncpy(script_argv[script_argc], token, strlen(token)+1);      
         script_argc++;
       }
@@ -428,6 +430,10 @@ int script_main(int argc, char **argv) {
     }
   }
   fclose(input);
+
+  /* Add NULL at the end */
+  script_argv = realloc(script_argv, (script_argc+1) * sizeof(char *));
+  /* TODO(sissel): STOPPED HERE */
 
   /* run the parsed script */
   return args_main(script_argc, script_argv);
