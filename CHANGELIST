@@ -3,7 +3,6 @@
     and abort if we can't grab it and report an error message.
   - New command: 'windowminimize' for minimizing windows.
   @ Added behave_screen_edge to attach commands to edge and corner activities.
-TODO(sissel): Add tests
 TODO(sissel): after acting, disable for some period (default = 100ms)
   - New command: 'exec' for executing commands. Useful with behave_screen_edge.
   - Add  --delay and --repeat flags to click. This allows you to easily
@@ -24,12 +23,11 @@ TODO(sissel): after acting, disable for some period (default = 100ms)
   - New function: xdo_mouselocation2, which is an extended version of
     xdo_mouselocation and includes the window the mouse is currently over.
   - New function: xdo_window_minimize, which minimizes a window.
-  @ Add patch from Henning Bekel that greatly improves xdotool's script
+  - Add patch from Henning Bekel that greatly improves xdotool's script
     feature. Scripts now no longer invoke /bin/sh for each line, but instead
     build a command chain to execute. Further, positional arguments ($1, $2,
     etc) and environment variables ($FOO, $WINDOWID, etc) work as expected
     despite the removal of /bin/sh.
-TODO(sissel): Add tests.
   @ xdotool type '?' seems to not work. Reported by Michael Fellinger.
 
 TODO(sissel):

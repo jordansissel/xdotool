@@ -419,7 +419,7 @@ int script_main(int argc, char **argv) {
         }
         script_argv[script_argc] = (char *) calloc(strlen(token)+1, sizeof(char));
 
-        printf("arg %d: %s\n", script_argc, token);
+        //printf("arg %d: %s\n", script_argc, token);
         strncpy(script_argv[script_argc], token, strlen(token)+1);      
         script_argc++;
       }

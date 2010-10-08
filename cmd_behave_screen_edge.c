@@ -34,21 +34,25 @@ int cmd_behave_screen_edge(context_t *context) {
   Window *windowlist;
   int nwindows;
   useconds_t delay = 0;
+  useconds_t quiesce = 0;
 
   int c;
   typedef enum {
-    opt_unused, opt_help, opt_delay
+    opt_unused, opt_help, opt_delay, opt_quiesce
   } optlist_t;
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { "delay", required_argument, NULL, opt_delay },
+    { "quiesce", required_argument, NULL, opt_quiesce },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
     "Usage: %s [options] edge-or-corner action [args...]\n"
     "--delay MILLISECONDS     - delay before activating. During this time,"
     "        your mouse must stay in the area selected (corner or edge)"
-    "        otherwise this timer will reset. Default is no delay (0)."
+    "        otherwise this timer will reset. Default is no delay (0).\n"
+    "--quiesce MILLISECONDS   - quiet time period after activating that no "
+    "        new activation will occur."
     "\n"
     "edge-or-corner can be any of:\n"
     "  Edges: left, top, right, bottom\n"
@@ -56,7 +60,7 @@ int cmd_behave_screen_edge(context_t *context) {
     "The action is any valid xdotool command (chains OK here)\n";
 
   int option_index;
-  while ((c = getopt_long_only(context->argc, context->argv, "+h",
+  while ((c = getopt_long_only(context->argc, context->argv, "+hdq",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
@@ -68,6 +72,11 @@ int cmd_behave_screen_edge(context_t *context) {
       case 'd':
       case opt_delay:
         delay = atoi(optarg) * 1000; /* convert ms to usec */
+        /* TODO(sissel): Do validation */
+        break;
+      case 'q':
+      case opt_quiesce:
+        quiesce = atoi(optarg) * 1000; /* convert ms to usec */
         /* TODO(sissel): Do validation */
         break;
       default:
@@ -131,7 +140,8 @@ int cmd_behave_screen_edge(context_t *context) {
   struct timeval sleeptime = {-1,0};
   struct timeval triggertime = {0,0};
   struct timeval delaytime = { delay / 1000000, delay % 1000000 };
-  printf("Delay time: %ld.%ld\n", delaytime.tv_sec, delaytime.tv_usec);
+  struct timeval quiescetime = { quiesce / 1000000, quiesce % 1000000 };
+  //printf("Delay time: %ld.%ld\n", delaytime.tv_sec, delaytime.tv_usec);
   struct timeval tmptime = {0,0};
   struct timespec now = {0,0};
 
@@ -230,6 +240,7 @@ int cmd_behave_screen_edge(context_t *context) {
           need_new_context = True;
           trigger = False;
           timerclear(&triggertime);
+          /* TODO(sissel): Set quiescetime if necessary*/
         }
         break;
       case DestroyNotify:
