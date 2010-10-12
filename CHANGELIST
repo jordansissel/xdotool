@@ -1,4 +1,4 @@
-3.??????????
+2.20101012.*
   - New command: 'windowminimize' for minimizing windows.
   - New command: 'behave_screen_edge' to attach commands to edge and corner activities.
     For example, to lock your screen when the mouse hits the top-right corner
