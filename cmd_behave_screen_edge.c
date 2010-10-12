@@ -4,9 +4,13 @@
 #include <time.h> /* for clock_gettime */
 #include <sys/time.h> /* for timeradd and friends */
 
+/* TODO(sissel): Refactor the madness.
+ * The event look, delay and quiesce state handling, etc, are all pretty
+ * intermingled. This needs a serious refactor into separate functions and
+ * a struct to hold state, etc.
+ */
 
-/* TODO(sissel): Implement XRANDR so we can detect when screen sizes change */
-/* So we can invoke xdotool from within this command 
+/* TODO(sissel): Implement XRANDR so we can detect when screen sizes change?
  *
  * Then again, since we always query the size of the window (root) that
  * the mouse is in, maybe it doesn't matter.
@@ -34,7 +38,8 @@ int cmd_behave_screen_edge(context_t *context) {
   Window *windowlist;
   int nwindows;
   useconds_t delay = 0;
-  useconds_t quiesce = 0;
+  useconds_t quiesce = 2000000 /* 2 second default quiesce */;
+  enum { quiesce_start, quiesce_ing, quiesce_done } quiesce_state = quiesce_start;
 
   int c;
   typedef enum {
@@ -48,11 +53,13 @@ int cmd_behave_screen_edge(context_t *context) {
   };
   static const char *usage = 
     "Usage: %s [options] edge-or-corner action [args...]\n"
-    "--delay MILLISECONDS     - delay before activating. During this time,"
-    "        your mouse must stay in the area selected (corner or edge)"
+    "--delay MILLISECONDS     - delay before activating. During this time,\n"
+    "        your mouse must stay in the area selected (corner or edge)\n"
     "        otherwise this timer will reset. Default is no delay (0).\n"
-    "--quiesce MILLISECONDS   - quiet time period after activating that no "
-    "        new activation will occur."
+    "--quiesce MILLISECONDS   - quiet time period after activating that no\n"
+    "        new activation will occur. This helps prevent accidental\n"
+    "        re-activation immediately after an event. Default is 2000 (2\n"
+    "        seconds)."
     "\n"
     "edge-or-corner can be any of:\n"
     "  Edges: left, top, right, bottom\n"
@@ -141,6 +148,7 @@ int cmd_behave_screen_edge(context_t *context) {
   struct timeval triggertime = {0,0};
   struct timeval delaytime = { delay / 1000000, delay % 1000000 };
   struct timeval quiescetime = { quiesce / 1000000, quiesce % 1000000 };
+  struct timeval quiesceuntil = {0,0};
   //printf("Delay time: %ld.%ld\n", delaytime.tv_sec, delaytime.tv_usec);
   struct timeval tmptime = {0,0};
   struct timespec now = {0,0};
@@ -155,16 +163,30 @@ int cmd_behave_screen_edge(context_t *context) {
 
   while (True) {
     XEvent e;
-    fd_set fdset_copy = fdset;
+    e.type = 0; /* clear event */
+
+    fd_set fdset_copy = fdset; 
     int ready = 0;
 
     /* TODO(sissel): use select, not XNextEvent */
     /* Take tv_sec value of '-1' to mean block-forever */
+
     ready = select(xfd + 1, &fdset_copy, NULL, NULL,
-                   (sleeptime.tv_sec == -1 ? NULL : &sleeptime));
+                   (sleeptime.tv_sec < 0 ? NULL : &sleeptime));
     sleeptime.tv_sec = -1; /* default to block forever */
 
-    XNextEvent(context->xdo->xdpy, &e);
+    int trigger = False;
+    if (ready) {
+      XNextEvent(context->xdo->xdpy, &e);
+    } else {
+      /* timeout */
+      printf("Timeout\n");
+      if (quiesce_state == quiesce_ing) {
+        quiesce_state = quiesce_done;
+      } else if (state == want) {
+        trigger = True;
+      }
+    }
 
     /* Only create a context copy if we need one */
     if (need_new_context) {
@@ -172,7 +194,6 @@ int cmd_behave_screen_edge(context_t *context) {
       memcpy(tmpcontext, context, sizeof(context_t));
     }
 
-    int trigger = False;
     int (*old_error_handler)(Display *dpy, XErrorEvent *xerr);
     switch (e.type) {
       case CreateNotify:
@@ -203,8 +224,6 @@ int cmd_behave_screen_edge(context_t *context) {
               timeradd(&tmptime, &delaytime, &triggertime);
               /* Set select() to sleep on our delay */
               memcpy(&sleeptime, &delaytime, sizeof(struct timeval));
-              //printf("new Now: %ld.%ld\n", tmptime.tv_sec, tmptime.tv_usec);
-              //printf("new Trigger at: %ld.%ld\n", triggertime.tv_sec, triggertime.tv_usec);
             } else {
               trigger = True;
             }
@@ -216,10 +235,7 @@ int cmd_behave_screen_edge(context_t *context) {
               clock_gettime(CLOCK_MONOTONIC, &now);
               tmptime.tv_sec = now.tv_sec;
               tmptime.tv_usec = now.tv_nsec / 1000;
-              //printf("old Now: %ld.%ld\n", tmptime.tv_sec, tmptime.tv_usec);
-              //printf("old Trigger at: %ld.%ld\n", triggertime.tv_sec, triggertime.tv_usec);
               if (timercmp(&tmptime, &triggertime, >=)) {
-                printf("now > triggertime\n");
                 trigger = True;
               } else {
                 /* Not time yet, so next sleep should be the
@@ -234,14 +250,6 @@ int cmd_behave_screen_edge(context_t *context) {
             delaytime.tv_usec = -1;
           }
         }
-
-        if (trigger == True) {
-          ret = context_execute(tmpcontext);
-          need_new_context = True;
-          trigger = False;
-          timerclear(&triggertime);
-          /* TODO(sissel): Set quiescetime if necessary*/
-        }
         break;
       case DestroyNotify:
       case UnmapNotify:
@@ -249,17 +257,53 @@ int cmd_behave_screen_edge(context_t *context) {
       case ConfigureNotify:
       case ClientMessage:
       case ReparentNotify:
+      case 0: /* Special "non event" internal to xdotool */
         /* Ignore */
         break;
       default:
         printf("Unexpected event: %d\n", e.type);
         break;
-    }
+    } /* X11 event handling */
+
+    if (trigger == True) {
+      //printf("Quiesce: %d / %d == %d?\n", quiesce, quiesce_state, quiesce_ing);
+      if (quiesce > 0 && quiesce_state == quiesce_ing) {
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        tmptime.tv_sec = now.tv_sec;
+        tmptime.tv_usec = now.tv_nsec / 1000;
+        //printf("Start waiting until %ld.%ld (now: %ld.%ld) due to quiesce\n",
+               //quiesceuntil.tv_sec, quiesceuntil.tv_usec,
+               //tmptime.tv_sec, tmptime.tv_usec);
+        if (timercmp(&quiesceuntil, &tmptime, >)) {
+          /* Don't trigger yet. Wait until quiesceuntil time. */
+          timersub(&quiesceuntil, &tmptime, &sleeptime);
+          //printf("Waiting for %ld.%ld due to quiesce\n", sleeptime.tv_sec,
+                 //sleeptime.tv_usec);
+          continue;
+        } /* if quiesceuntil has not passed yet */
+        quiesce_state = quiesce_done;
+      } /* if quiesce */
+
+      ret = context_execute(tmpcontext);
+      need_new_context = True;
+      trigger = False;
+      timerclear(&triggertime);
+      if (quiesce > 0) {
+        /* TODO(sissel): refactor clock_gettime calls */
+        clock_gettime(CLOCK_MONOTONIC, &now); 
+        quiesceuntil.tv_sec = now.tv_sec;
+        quiesceuntil.tv_usec = now.tv_nsec / 1000;
+        timeradd(&quiesceuntil, &quiescetime, &quiesceuntil);
+        quiesce_state = quiesce_ing;
+        //printf("Start waiting for %ld.%ld due to quiesce\n", quiesceuntil.tv_sec,
+               //quiesceuntil.tv_usec);
+      } /* if quiesce */
+    } /* if trigger == True */
 
     if (ret != XDO_SUCCESS) {
       printf("Command failed.\n");
     }
-  }
+  } /* while True */
   return ret;
 } /* int cmd_behave_screen_edge */
 

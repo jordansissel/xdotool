@@ -293,7 +293,21 @@ a given edge or corner to be held for a short period before your command will
 run. If you leave the edge or corner before the delay expires then the time
 will reset.
 
+=item I<--quiesce MILLISECONDS>
+
+Delay in milliseconds before the next command will run. This helps prevent
+accidentally running your command extra times; especially useful if you have
+a very short --delay (like the default of 0).
+
 =back
+
+Event timeline
+
+ * Mouse hits an edge or corner.
+ * If delay is nonzero, the mouse must stay in this edge or corner until delay time expires.
+ * If still in the edge/corner, trigger.
+ * If quiesce is nonzero, then there is a cool-down period where the next
+   trigger cannot occur
 
 Valid 'where' values are:
 

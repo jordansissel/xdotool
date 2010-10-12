@@ -332,7 +332,6 @@ int script_main(int argc, char **argv) {
   /* read input... */
   int pos;
   char *token;
-  char **tmp;
 
   while (fgets(buffer, 4096, input) != NULL) {
     char *line = buffer;
