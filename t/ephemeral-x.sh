@@ -71,13 +71,12 @@ cleanup() {
   pkill -KILL -P $$ || true
 }
 
-
-eval "set -- $( (POSIXLY_CORRECT=1 getopt +x:w:qh "$@" || echo " "FAIL) | tr -d '\n' )"
+eval "set -- $( (POSIXLY_CORRECT=1 getopt -s sh +x:w:qh "$@" || echo " "FAIL) | tr -d '\n' )"
 
 while [ "0$#" -gt 0 ] ; do
   case $1 in
-    -x) XSERVER=$2; shift ;;
-    -w) WINMGR=$2; shift ;;
+    -x) XSERVER="$2"; shift ;;
+    -w) WINMGR="$2"; shift ;;
     -q) QUIET=1 ;;
     -h) usage; exit ;;
     --) shift; break ;;
@@ -108,6 +107,7 @@ while true; do
       exec > /dev/null
       exec 2> /dev/null
     fi
+    echo set -- $XSERVER
     set -- $XSERVER
     cmd=$1
     shift
