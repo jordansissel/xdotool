@@ -1,8 +1,20 @@
+2.2010????.*
+  - New set_window feature: --urgency. This lets you set the urgency flag on a
+    window Window managers will interpret this as something about your window
+    needing attention. It might flash in the taskbar, pop up, or other.
+    Original patch and suggestion by ervandew.
+    Issue: http://code.google.com/p/semicomplete/issues/detail?id=39
+  - New function: xdo_window_seturgency (see above)
+  - Hack in OS X support as it is missing a proper clock_gettime.
+    Should fix http://code.google.com/p/semicomplete/issues/detail?id=37
+    Reported by ryandesign.com
+  @ TODO: Add search --desktop
+
 2.20101012.*
   - New command: 'windowminimize' for minimizing windows.
-  - New command: 'behave_screen_edge' to attach commands to edge and corner activities.
-    For example, to lock your screen when the mouse hits the top-right corner
-    for more than 2 seconds:
+  - New command: 'behave_screen_edge' to attach commands to edge and corner
+    activities. For example, to lock your screen when the mouse hits the
+    top-right corner for more than 2 seconds:
       xdotool behave_screen_edge --delay 2000 top-right exec xscreensaver-command -lock
     'xscreensaver-command' comes with the xscreensaver package.
   - New command: 'exec' for executing commands. Useful with behave_screen_edge.
@@ -17,8 +29,8 @@
     the above will move the mouse to 0,0 then move the mouse back to the
     position it was before. Requested by luc le rumeur and suffian amjad on the
     mailing list.
-  - Add 'static' and 'install-static' targets. Requested by Anthony
-    Thyssen on the mailing list.
+  - Add 'static' and 'install-static' targets. Requested by Anthony Thyssen on
+    the mailing list.
   - Fix bug in xdotool getmouselocation that didn't search for the client window
     correctly.
   - New function: xdo_mousewindow, which lets you get the window the mouse is
