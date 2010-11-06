@@ -321,6 +321,22 @@ int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name,
   return _is_success("XSetClassHint", ret == 0);
 }
 
+int xdo_window_seturgency (const xdo_t *xdo, Window wid, int urgency) {
+  int ret = 0;
+  XWMHints *hint = XGetWMHints(xdo->xdpy, wid);
+  if (hint == NULL)
+    hint = XAllocWMHints();
+
+  if (urgency)
+    hint->flags = hint->flags | XUrgencyHint;
+  else
+    hint->flags = hint->flags & ~XUrgencyHint;
+
+  ret = XSetWMHints(xdo->xdpy, wid, hint);
+  XFree(hint);
+  return _is_success("XSetWMHint", ret == 0);
+}
+
 int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property, const char *value) {
   
   char netwm_property[256] = "_NET_";

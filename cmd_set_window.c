@@ -13,6 +13,7 @@ int cmd_set_window(context_t *context) {
   char *role = NULL, *icon = NULL, *name = NULL, *class = NULL,
        *classname = NULL;
   int override_redirect = -1;
+  int urgency = -1;
   const char *window_arg = "%1";
 
   struct option longopts[] = {
@@ -22,6 +23,7 @@ int cmd_set_window(context_t *context) {
     { "class", required_argument, NULL, 'C' },
     { "classname", required_argument, NULL, 'N' },
     { "overrideredirect", required_argument, NULL, 'O' },
+    { "urgency", required_argument, NULL, 'u' },
     { "help", no_argument, NULL, 'h' },
     { 0, 0, 0, 0 },
   };
@@ -34,9 +36,11 @@ int cmd_set_window(context_t *context) {
       "--class CLASS - set the window's class\n"
       "--classname CLASSNAME - set the window's classname\n"
       "--overrideredirect OVERRIDE - set override_redirect.\n"
-      "  1 means the window manager will not manage this window.\n";
+      "  1 means the window manager will not manage this window.\n"
+      "--urgency URGENT - set the window's urgency hint.\n"
+      "  1 sets the urgency flag, 0 removes it.\n";
 
-  while ((c = getopt_long_only(context->argc, context->argv, "+hn:i:r:C:N:",
+  while ((c = getopt_long_only(context->argc, context->argv, "+hn:i:r:C:N:u:",
                                longopts, &option_index)) != -1) {
     switch(c) {
       case 'n': 
@@ -56,6 +60,9 @@ int cmd_set_window(context_t *context) {
         break;
       case 'O':
         override_redirect = (atoi(optarg) > 0);
+        break;
+      case 'u':
+        urgency = (atoi(optarg) > 0);
         break;
       case 'h':
         printf(usage, cmd);
@@ -89,6 +96,8 @@ int cmd_set_window(context_t *context) {
       xdo_window_set_override_redirect(context->xdo, window,
                                        override_redirect);
     }
+    if (urgency != -1)
+      xdo_window_seturgency(context->xdo, window, urgency);
   }); /* window_each(...) */
 
   return 0;

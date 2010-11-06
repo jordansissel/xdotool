@@ -502,6 +502,11 @@ int xdo_window_setclass(const xdo_t *xdo, Window wid, const char *name,
                         const char *class);
 
 /**
+ * Sets the urgency hint for a window.
+ */
+int xdo_window_seturgency (const xdo_t *xdo, Window wid, int urgency);
+
+/**
  * Set the override_redirect value for a window. This generally means
  * whether or not a window manager will manage this window.
  *
