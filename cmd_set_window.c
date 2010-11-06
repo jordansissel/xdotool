@@ -92,10 +92,9 @@ int cmd_set_window(context_t *context) {
       xdo_window_setprop(context->xdo, window, "WM_WINDOW_ROLE", role);
     if (classname || class)
       xdo_window_setclass(context->xdo, window, classname, class);
-    if (override_redirect != -1) {
+    if (override_redirect != -1)
       xdo_window_set_override_redirect(context->xdo, window,
                                        override_redirect);
-    }
     if (urgency != -1)
       xdo_window_seturgency(context->xdo, window, urgency);
   }); /* window_each(...) */
