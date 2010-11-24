@@ -8,7 +8,12 @@
   - Hack in OS X support as it is missing a proper clock_gettime.
     Should fix http://code.google.com/p/semicomplete/issues/detail?id=37
     Reported by ryandesign.com
+  - Add support for typing UTF-8 characters. Patch from Joseph Krahn.
   @ TODO: Add search --desktop
+  @ TODO: bug: keymap changes unnecessarily
+  @ TODO: Change cursor when in 'selectwindow'
+  @ TODO: Search --sync (blocks until the search is successful)
+  @ TODO: minimize, maximize, unmaximize windows
 
 2.20101012.*
   - New command: 'windowminimize' for minimizing windows.
