@@ -12,6 +12,7 @@
 #include <X11/Xlib.h>
 #include <X11/X.h>
 #include <unistd.h>
+#include <wchar.h>
 
 /**
  * @mainpage
@@ -53,7 +54,7 @@
  */
 typedef struct keysym_charmap {
   const char *keysym;
-  char key;
+  wchar_t key;
 } keysym_charmap_t;
 
 /**
@@ -62,7 +63,7 @@ typedef struct keysym_charmap {
  * this key (keycode, modifiers, key index, etc)
  */
 typedef struct charcodemap {
-  char key; /** the letter for this key, like 'a' */
+  wchar_t key; /** the letter for this key, like 'a' */
   KeyCode code; /** the keycode that this key is on */
   KeySym symbol; /** the symbol representing this key */
   int index; /** the index in the keysym-per-keycode list that is this key */
@@ -355,7 +356,7 @@ int xdo_click_multiple(const xdo_t *xdo, Window window, int button,
  * @param delay The delay between keystrokes in microseconds. 12000 is a decent
  *    choice if you don't have other plans.
  */
-int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay);
+int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t delay);
 
 /**
  * Send a keysequence to the specified window.

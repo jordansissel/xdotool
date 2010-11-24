@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <regex.h>
 #include <ctype.h>
+#include <locale.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -49,10 +50,10 @@
 static void _xdo_populate_charcode_map(xdo_t *xdo);
 static int _xdo_has_xtest(const xdo_t *xdo);
 
-static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, char key);
-static KeySym _xdo_keysym_from_char(const xdo_t *xdo, char key);
+static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, wchar_t key);
+static KeySym _xdo_keysym_from_char(const xdo_t *xdo, wchar_t key);
 //static int _xdo_get_shiftcode_if_needed(const xdo_t *xdo, char key);
-static int _xdo_get_key_index(const xdo_t *xdo, char key);
+static int _xdo_get_key_index(const xdo_t *xdo, wchar_t key);
 
 static int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
                                             charcodemap_t **keys, int *nkeys);
@@ -71,7 +72,7 @@ static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_
 static int _is_success(const char *funcname, int code);
 
 /* context-free functions */
-static char _keysym_to_char(const char *keysym);
+static wchar_t _keysym_to_char(const char *keysym);
 
 /* Default to -1, initialize it when we need it */
 static Atom atom_NET_WM_PID = -1;
@@ -916,8 +917,7 @@ int xdo_click_multiple(const xdo_t *xdo, Window window, int button,
 } /* int xdo_click_multiple */
 
 /* XXX: Return proper code if errors found */
-int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
-  int i = 0;
+int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t delay) {
 
   /* Since we're doing down/up, the delay should be based on the number
    * of keys pressed (including shift). Since up/down is two calls,
@@ -930,8 +930,14 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
   //charcodemap_t *keys = calloc(nkeys, sizeof(charcodemap_t));
   charcodemap_t key;
   //int modifier = 0;
-  for (i = 0; string[i] != '\0'; i++) {
-    key.key = string[i];
+  setlocale(LC_CTYPE,"");
+  mbstate_t ps = {0};
+  ssize_t len;
+  while ( (len = mbsrtowcs(&key.key, &string, 1, &ps)) ) {
+    if (len == -1) {
+      fprintf(stderr, "Invalid multi-byte sequence encountered\n");
+      return XDO_ERROR;
+    }
     key.code = _xdo_keycode_from_char(xdo, key.key);
     key.symbol = _xdo_keysym_from_char(xdo, key.key);
     key.modmask = 0;
@@ -947,7 +953,7 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
       }
 
       if (key.symbol == NoSymbol) {
-        fprintf(stderr, "I don't what key produces '%c', skipping.\n",
+        fprintf(stderr, "I don't what key produces '%lc', skipping.\n",
                 key.key);
         continue;
       }
@@ -1231,7 +1237,7 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
 }
 
 /* Helper functions */
-static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, char key) {
+static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, wchar_t key) {
   int i = 0;
   int len = xdo->charcodes_len;
 
@@ -1244,7 +1250,7 @@ static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, char key) {
   return 0;
 }
 
-static KeySym _xdo_keysym_from_char(const xdo_t *xdo, char key) {
+static KeySym _xdo_keysym_from_char(const xdo_t *xdo, wchar_t key) {
   int i = 0;
   int len = xdo->charcodes_len;
 
@@ -1258,12 +1264,14 @@ static KeySym _xdo_keysym_from_char(const xdo_t *xdo, char key) {
     }
   }
 
+  if (key >= 0x100) key += 0x01000000;
+  if (XKeysymToString(key)) return key;
   return NoSymbol;
 }
 
 /* TODO(sissel): Return the keycodes (for modifiers) required to type a given
  * key */
-static int _xdo_get_key_index(const xdo_t *xdo, char key) {
+static int _xdo_get_key_index(const xdo_t *xdo, wchar_t key) {
   int i = 0;
   int len = xdo->charcodes_len;
 
@@ -1350,7 +1358,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
 }
 
 /* context-free functions */
-char _keysym_to_char(const char *keysym) {
+wchar_t _keysym_to_char(const char *keysym) {
   int i;
 
   if (keysym == NULL)
