@@ -167,6 +167,13 @@ typedef struct xdo_active_mods {
  */
 #define SEARCH_CLASSNAME (1UL << 6)
 
+/**
+ * Search a specific desktop
+ * @see xdo_search.screen
+ * @see xdo_window_search
+ */
+#define SEARCH_DESKTOP (1UL << 7)
+
 
 /**
  * The window search query structure.
@@ -192,6 +199,9 @@ typedef struct xdo_search {
    * @see SEARCH_NAME, SEARCH_CLASS, SEARCH_PID, SEARCH_CLASSNAME, etc
    */
   unsigned int searchmask; 
+
+  /** What desktop to search, if any. If none given, search all screens. */
+  long desktop;
 } xdo_search_t;
 
 #define XDO_ERROR 1
@@ -711,6 +721,9 @@ int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop);
 /**
  * Get the desktop a window is on.
  * Uses _NET_WM_DESKTOP of the EWMH spec.
+ *
+ * If your desktop does not support _NET_WM_DESKTOP, then '*desktop' remains
+ * unmodified.
  *
  * @param wid the window to query
  * @param deskto pointer to long where the desktop of the window is stored

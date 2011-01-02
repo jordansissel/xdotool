@@ -14,7 +14,7 @@ int cmd_search(context_t *context) {
   int search_classname = 0;
   typedef enum { 
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_class, opt_maxdepth,
-    opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname
+    opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname, opt_desktop,
   } optlist_t;
   struct option longopts[] = {
     { "all", no_argument, NULL, opt_all },
@@ -28,6 +28,7 @@ int cmd_search(context_t *context) {
     { "pid", required_argument, NULL, opt_pid },
     { "screen", required_argument, NULL, opt_screen },
     { "title", no_argument, NULL, opt_title },
+    { "desktop", required_argument, NULL, opt_desktop },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
@@ -41,6 +42,7 @@ int cmd_search(context_t *context) {
       "--pid PID       only show windows belonging to specific process\n"
       "                Not supported by all X11 applications\n"
       "--screen N      only search a specific screen. Default is all screens\n"
+      "--desktop N     only search a specific desktop number\n"
       "--name          check regexp_pattern agains the window name\n"
       "--title         DEPRECATED. Same as --name.\n"
       "--all           Require all conditions match a window. Default is --any\n"
@@ -100,6 +102,10 @@ int cmd_search(context_t *context) {
         /* fall through */
       case opt_name:
         search_name = True;
+        break;
+      case opt_desktop:
+        search.desktop = strtol(optarg, NULL, 0);
+        search.searchmask |= SEARCH_DESKTOP;
         break;
       default:
         fprintf(stderr, "Invalid usage\n");

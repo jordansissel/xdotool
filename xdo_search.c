@@ -268,20 +268,32 @@ static int check_window_match(const xdo_t *xdo, Window wid,
   /* Set this to 1 for dev debugging */
   static const int debug = 0;
 
-  int visible_ok, pid_ok, title_ok, name_ok, class_ok, classname_ok;
-  int visible_want, pid_want, title_want, name_want, class_want, classname_want;
+  int visible_ok, pid_ok, title_ok, name_ok, class_ok, classname_ok, desktop_ok;
+  int visible_want, pid_want, title_want, name_want, class_want, classname_want, desktop_want;
 
-  visible_ok = pid_ok = title_ok = name_ok = class_ok = classname_ok = True;
+  visible_ok = pid_ok = title_ok = name_ok = class_ok = classname_ok = desktop_ok = True;
     //(search->require == SEARCH_ANY ? False : True);
 
+  desktop_want = search->searchmask & SEARCH_DESKTOP;
   visible_want = search->searchmask & SEARCH_ONLYVISIBLE;
   pid_want = search->searchmask & SEARCH_PID;
   title_want = search->searchmask & SEARCH_TITLE;
   name_want = search->searchmask & SEARCH_NAME;
   class_want = search->searchmask & SEARCH_CLASS;
   classname_want = search->searchmask & SEARCH_CLASSNAME;
+  printf("Desktop: %d\n", desktop_want);
 
   do {
+    if (desktop_want) {
+      long desktop = -1;
+      int ret = xdo_get_desktop_for_window(xdo, wid, &desktop);
+      fprintf(stderr, "desktop want: %ld vs %ld\n", desktop, search->desktop);
+
+      /* Desktop matched if we support desktop queries *and* the desktop is
+       * equal */
+      desktop_ok = (ret == XDO_SUCCESS && desktop == search->desktop);
+    }
+
     /* Visibility is a hard condition, fail always if we wanted 
      * only visible windows and this one isn't */
     if (visible_want && !_xdo_is_window_visible(xdo, wid)) {
@@ -332,13 +344,14 @@ static int check_window_match(const xdo_t *xdo, Window wid,
 
   switch (search->require) {
     case SEARCH_ALL:
-      return visible_ok && pid_ok && title_ok && name_ok && class_ok && classname_ok;
+      return visible_ok && pid_ok && title_ok && name_ok && class_ok && classname_ok && desktop_ok;
       break;
     case SEARCH_ANY:
       return visible_ok && ((pid_want && pid_ok) || (title_want && title_ok) \
                             || (name_want && name_ok) \
                             || (class_want && class_ok) \
-                            || (classname_want && classname_ok));
+                            || (classname_want && classname_ok)) \
+                         && desktop_ok;
       break;
   }
   
