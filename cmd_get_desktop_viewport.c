@@ -36,10 +36,10 @@ int cmd_get_desktop_viewport(context_t *context) {
   ret = xdo_get_desktop_viewport(context->xdo, &x, &y);
 
   if (shell_output) {
-    printf("X=%d\n", x);
-    printf("Y=%d\n", y);
+    xdotool_output(context, "X=%d", x);
+    xdotool_output(context, "Y=%d", y);
   } else {
-    printf("%d,%d\n", x, y);
+    xdotool_output(context, "%d,%d", x, y);
   }
 
   return ret;

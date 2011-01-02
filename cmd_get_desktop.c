@@ -30,7 +30,7 @@ int cmd_get_desktop(context_t *context) {
   consume_args(context, optind);
 
   ret = xdo_get_current_desktop(context->xdo, &desktop);
-  printf("%ld\n", desktop);
+  xdotool_output(context, "%ld", desktop);
 
   return ret;
 }

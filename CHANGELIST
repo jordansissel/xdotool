@@ -9,6 +9,8 @@
     Should fix http://code.google.com/p/semicomplete/issues/detail?id=37
     Reported by ryandesign.com
   - Add support for typing UTF-8 characters. Patch from Joseph Krahn.
+  - Make all output call fflush to send data immediately (for pipes). Reported
+    by Andreas Wagner on the mailing list.
   @ TODO: Add search --desktop
   @ TODO: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
   @ TODO: Get window position and size (Requested by Anthony Thyssen via mailing list)

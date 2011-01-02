@@ -39,7 +39,7 @@ int cmd_get_desktop_for_window(context_t *context) {
 
   window_each(context, window_arg, {
     ret = xdo_get_desktop_for_window(context->xdo, window, &desktop);
-    printf("%ld\n", desktop);
+    xdotool_output(context, "%ld", desktop);
   }); /* window_each(...) */
   return ret;
 }

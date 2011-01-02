@@ -41,7 +41,7 @@ int cmd_getwindowname(context_t *context) {
 
   window_each(context, window_arg, {
     xdo_get_window_name(context->xdo, window, &name, &name_len, &name_type);
-    printf("%.*s\n", name_len, name);
+    xdotool_output(context, "%.*s", name_len, name);
     XFree(name);
   }); /* window_each(...) */
   return EXIT_SUCCESS;

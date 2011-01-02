@@ -44,7 +44,7 @@ int cmd_getwindowpid(context_t *context) {
       fprintf(stderr, "window %ld has no pid associated with it.\n", window);
       return EXIT_FAILURE;
     } else {
-      printf("%d\n", pid);
+      xdotool_output(context, "%d", pid);
     }
   }); /* window_each(...) */
   return EXIT_SUCCESS;

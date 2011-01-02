@@ -36,6 +36,6 @@ int cmd_get_num_desktops(context_t *context) {
 
   ret = xdo_get_number_of_desktops(context->xdo, &ndesktops);
 
-  printf("%ld\n", ndesktops);
+  xdotool_output(context, "%ld", ndesktops);
   return ret;
 }

@@ -143,7 +143,7 @@ int cmd_behave(context_t *context) {
     }
 
     if (ret != XDO_SUCCESS) {
-      printf("Command failed.\n");
+      xdotool_output(context, "Command failed.");
     }
   }
   return ret;

@@ -23,6 +23,7 @@
 #include <strings.h>
 #include <errno.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #include "xdo.h"
 #include "xdotool.h"
@@ -39,6 +40,8 @@ int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
                    const char **window_arg);
 int window_is_valid(context_t *context, const char *window_arg);
 int is_command(char* cmd);
+void xdotool_debug(context_t *context, const char *format, ...);
+void xdotool_output(context_t *context, const char *format, ...);
 
 void consume_args(context_t *context, int argc) {
   if (argc > context->argc) {
@@ -514,6 +517,9 @@ int context_execute(context_t *context) {
       if (!strcasecmp(dispatch[i].name, cmd)) {
         cmd_found = 1;
         optind = 0;
+        if (context->debug) {
+          fprintf(stderr, "command: %s\n", cmd);
+        }
         ret = dispatch[i].func(context);
       }
     }
@@ -543,10 +549,29 @@ int cmd_help(context_t *context) {
 }
 
 int cmd_version(context_t *context) {
-  printf("xdotool version %s\n", xdo_version());
+  xdotool_output(context, "xdotool version %s", xdo_version());
   if (context != NULL) {
     consume_args(context, 1);
   }
 
   return 0;
 }
+
+void xdotool_debug(context_t *context, const char *format, ...) {
+  va_list args;
+
+  va_start(args, format);
+  if (context->debug) {
+    vfprintf(stderr, format, args);
+    fprintf(stderr, "\n");
+  }
+} /* xdotool_debug */
+
+void xdotool_output(context_t *context, const char *format, ...) {
+  va_list args;
+
+  va_start(args, format);
+  vfprintf(stdout, format, args);
+  fprintf(stdout, "\n");
+  fflush(stdout);
+} /* xdotool_output */

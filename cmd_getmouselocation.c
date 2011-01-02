@@ -40,12 +40,12 @@ int cmd_getmouselocation(context_t *context) {
   ret = xdo_mouselocation2(context->xdo, &x, &y, &screen_num, &window);
 
   if (output_shell) {
-    printf("X=%d\n", x);
-    printf("Y=%d\n", y);
-    printf("SCREEN=%d\n", screen_num);
-    printf("WINDOW=%d\n", window);
+    xdotool_output(context, "X=%d", x);
+    xdotool_output(context, "Y=%d", y);
+    xdotool_output(context, "SCREEN=%d", screen_num);
+    xdotool_output(context, "WINDOW=%d", window);
   } else {
-    printf("x:%d y:%d screen:%d window:%ld\n", x, y, screen_num, window);
+    xdotool_output(context, "x:%d y:%d screen:%d window:%ld", x, y, screen_num, window);
   }
   return ret;
 }
