@@ -1,12 +1,3 @@
-TODO(sissel):
-  Document advanced behaviors
-    # Give a window the classname 'consoleme' then run this:
-    xdotool search --classname consoleme set_window --overrideredirect 1 windowunmap behave_screen_edge left windowmap windowmove 0 0 windowsize --usehints 100% 24 windowfocus windowraise
-    xdotool search --classname consoleme behave %@ mouse-leave windowunmap
-
-    Move the mouse to the top edge of the screen to have your window show up.
-    Move the mouse outside the window to have it hide again.
-
 2.2010????.*
   - New set_window feature: --urgency. This lets you set the urgency flag on a
     window Window managers will interpret this as something about your window
@@ -24,7 +15,7 @@ TODO(sissel):
   @ NEEDSTEST NEEDSFLAGHELP: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
   @ NEEDSTEST NEEDSFLAGHELP: New command 'getwindowgeometry' for fetching window
     position and size (Requested by Anthony Thyssen via mailing list)
-  @ NEEDSTEST NEEDSDOC: Search --sync (blocks until the search is successful)
+  @ NEEDSTEST: Search --sync (blocks until the search is successful)
   @ TODO: bug: keymap changes unnecessarily
   @ TODO: set_desktop relative movements (+N or -N to move relative) (Requested
     by Anthony Thyssen)

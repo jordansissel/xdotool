@@ -361,6 +361,9 @@ is silent.
 The result is saved to the window stack for future chained commands. See
 L<WINDOW STACK> and L<COMMAND CHAINING> for details.
 
+The default options are C<--name --class --classname> (unless you specify one
+one or more of --name --class or --classname).
+
 The options available are:
 
 =over
@@ -436,9 +439,16 @@ default. For example:
 This will match any windows owned by pid 1424 or windows with name "Hello
 World"
 
-=back
+=item B<--sync >
 
-The default options are C<--name --class --classname>
+Block until there are results. This is useful when you are launching an
+application want want to wait until the application window is visible.
+For example:
+
+ google-chrome &
+ xdotool search --sync --onlyvisible --class "google-chrome"
+
+=back
 
 =item B<selectwindow>
 
