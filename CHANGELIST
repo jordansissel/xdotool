@@ -1,3 +1,12 @@
+TODO(sissel):
+  Document advanced behaviors
+    # Give a window the classname 'consoleme' then run this:
+    xdotool search --classname consoleme set_window --overrideredirect 1 windowunmap behave_screen_edge left windowmap windowmove 0 0 windowsize --usehints 100% 24 windowfocus windowraise
+    xdotool search --classname consoleme behave %@ mouse-leave windowunmap
+
+    Move the mouse to the top edge of the screen to have your window show up.
+    Move the mouse outside the window to have it hide again.
+
 2.2010????.*
   - New set_window feature: --urgency. This lets you set the urgency flag on a
     window Window managers will interpret this as something about your window
@@ -11,7 +20,7 @@
   - Add support for typing UTF-8 characters. Patch from Joseph Krahn.
   - Make all output call fflush to send data immediately (for pipes). Reported
     by Andreas Wagner on the mailing list.
-  @ NEEDSTEST: Add search --desktop
+  @ NEEDSTEST NEEDSDOC: Add search --desktop
   @ TODO: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
   @ TODO: bug: keymap changes unnecessarily
   @ TODO: set_desktop relative movements (+N or -N to move relative) (Requested
@@ -61,16 +70,6 @@
     build a command chain to execute. Further, positional arguments ($1, $2,
     etc) and environment variables ($FOO, $WINDOWID, etc) work as expected
     despite the removal of /bin/sh.
-
-TODO(sissel):
-  Document advanced behaviors
-    # Give a window the classname 'consoleme' then run this:
-    xdotool search --classname consoleme set_window --overrideredirect 1 windowunmap behave_screen_edge left windowmap windowmove 0 0 windowsize --usehints 100% 24 windowfocus windowraise
-    xdotool search --classname consoleme behave %@ mouse-leave windowunmap
-
-    Move the mouse to the top edge of the screen to have your window show up.
-    Move the mouse outside the window to have it hide again.
-
 
 2.20100818.*
   - New commands: 'get_desktop_viewport' and 'set_desktop_viewport'. Some
