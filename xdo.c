@@ -19,6 +19,7 @@
 #include <regex.h>
 #include <ctype.h>
 #include <locale.h>
+#include <stdarg.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -70,6 +71,7 @@ static int _xdo_cached_modifier_to_keycode(const xdo_t *xdo, int modmask);
 static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press);
 
 static int _is_success(const char *funcname, int code, const xdo_t *xdo);
+static void xdo_debug(const xdo_t *xdo, const char *format, ...);
 
 /* context-free functions */
 static wchar_t _keysym_to_char(const char *keysym);
@@ -1035,7 +1037,7 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
                             int nkeys, int pressed, int *modifier, useconds_t delay) {
   int i = 0;
   int modstate = 0;
-  int keymapchanged;
+  int keymapchanged = 0;
 
   /* Find an unused keycode in case we need to bind unmapped keysyms */
   KeySym *keysyms = NULL;
@@ -1054,6 +1056,8 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
       symname = XKeysymToString(keysyms[symindex]);
       if (keysyms[symindex] != 0) {
         key_is_empty = 0;
+      } else {
+        break;
       }
     }
     if (key_is_empty) {
@@ -1071,7 +1075,7 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
   for (i = 0; i < nkeys; i++) {
     if (keys[i].needs_binding == 1) {
       KeySym keysym_list[] = { keys[i].symbol };
-      fprintf(stderr, "Mapping sym %lu to %d\n", keys[i].symbol, scratch_keycode);
+      xdo_debug(xdo, "Mapping sym %lu to %d", keys[i].symbol, scratch_keycode);
       XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
       XSync(xdo->xdpy, False);
       /* override the code in our current key to use the scratch_keycode */
@@ -1100,6 +1104,8 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
 
   if (keymapchanged) {
     KeySym keysym_list[] = { 0 };
+    xdo_debug(xdo, "Reverting scratch keycode (sym %lu to %d)",
+              keys[i].symbol, scratch_keycode);
     XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
   }
 
@@ -1469,6 +1475,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
         /* Inject a 'shift' key item if we should be using shift */
         (*keys)[*nkeys].symbol = NoSymbol;
         (*keys)[*nkeys].code = shift_keycode;
+        (*keys)[*nkeys].needs_binding = 0;
         (*keys)[*nkeys].index = 0;
         (*nkeys)++;
 
@@ -1994,3 +2001,14 @@ int xdo_window_minimize(const xdo_t *xdo, Window window) {
   ret = XIconifyWindow(xdo->xdpy, window, screen);
   return _is_success("XIconifyWindow", ret == 0, xdo);
 }
+
+void xdo_debug(const xdo_t *xdo, const char *format, ...) {
+  va_list args;
+
+  va_start(args, format);
+  if (xdo->debug) {
+    vfprintf(stderr, format, args);
+    fprintf(stderr, "\n");
+  }
+} /* xdo_debug */
+

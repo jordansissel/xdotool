@@ -79,6 +79,7 @@ int cmd_behave(context_t *context) {
   for (i = 0; events[i].name != NULL; i++) {
     //printf("%s vs %s\n", events[i].name, event);
     if (!strcmp(events[i].name, event)) {
+      xdotool_debug(context, "Adding mask for event '%s': 0x%lx", event, events[i].mask);
       selectmask |= events[i].mask;
     }
   }
@@ -88,8 +89,12 @@ int cmd_behave(context_t *context) {
     return EXIT_FAILURE;
   }
 
+  xdotool_debug(context, "Selectmask: 0x%lx", selectmask);
   window_each(context, window_arg, {
+    xdotool_debug(context, "Selecting events on window %ld: mask = 0x%lx",
+                  window, selectmask);
     ret = XSelectInput(context->xdo->xdpy, window, selectmask);
+    xdotool_debug(context, "Select: %d", ret);
     if (ret != True) {
       fprintf(stderr, "XSelectInput reported an error\n");
     }
@@ -97,7 +102,9 @@ int cmd_behave(context_t *context) {
 
   while (True) {
     XEvent e;
+    xdotool_debug(context, "Waiting for next event...");
     XNextEvent(context->xdo->xdpy, &e);
+    xdotool_debug(context, "Got event type %d", e.type);
 
     context_t *tmpcontext = calloc(1, sizeof(context_t));
     memcpy(tmpcontext, context, sizeof(context_t));

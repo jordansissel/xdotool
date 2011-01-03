@@ -110,6 +110,9 @@ typedef struct xdo {
 
   /** Be extra quiet? (omits some error/message output) */
   int quiet;
+
+  /** Enable debug output? */
+  int debug;
 } xdo_t;
 
 

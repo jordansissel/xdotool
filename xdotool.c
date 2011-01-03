@@ -488,6 +488,7 @@ int args_main(int argc, char **argv) {
   context.nwindows = 0;
   context.have_last_mouse = False;
   context.debug = (getenv("DEBUG") != NULL);
+  context.xdo->debug = context.debug;
 
   if (context.xdo == NULL) {
     fprintf(stderr, "Failed creating new xdo instance\n");

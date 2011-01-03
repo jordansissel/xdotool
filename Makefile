@@ -156,6 +156,9 @@ xdotool.html: xdotool.pod
 .PHONY: package
 package: test-package-build create-package
 
+.PHONY: package-deb
+package-deb: test-package-build create-package-deb
+
 .PHONY: test
 test: xdotool libxdo.$(VERLIBSUFFIX)
 	$(MAKE) -C t
@@ -180,6 +183,14 @@ create-package: pre-create-package VERSION xdo_version.h
 	rm -r $${NAME}
 	rm VERSION
 
+create-package-deb: pre-create-package VERSION xdo_version.h
+	@NAME=xdotool-$(VERSION); \
+	echo "Creating deb package: $$NAME"; \
+	mkdir $${NAME}; \
+	rsync --exclude .svn --exclude '.*' -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* version.sh platform.sh VERSION Doxyfile 2> /dev/null` $${NAME}/; \
+	tar -zcf $${NAME}.tar.gz $${NAME}/; \
+	rm -r $${NAME}
+	rm VERSION
 # Make sure the package we're building compiles.
 .PHONY: test-package-build
 test-package-build: create-package
