@@ -26,7 +26,8 @@
   @ TODO: Window move along one axis. (Requested by etnlIcarus via mailing
     list)
   @ TODO: snapshot and restore window geometries? Maybe best as a script.
-
+    (Requested by Joseph Krahn)
+ 
 2.20101012.*
   - New command: 'windowminimize' for minimizing windows.
   - New command: 'behave_screen_edge' to attach commands to edge and corner
