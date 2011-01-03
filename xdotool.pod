@@ -376,8 +376,9 @@ Match against the window classname.
 =item B<--maxdepth> N 
 
 Set recursion/child search depth. Default is -1,
-meaning infinite. 0 means no depth, aka no results. If you only want toplevel
-windows, set maxdepth of 1.
+meaning infinite. 0 means no depth, only root windows will be searched. If you
+only want toplevel windows, set maxdepth of 1 (or 2, depending on how your
+window manager does decorations).
 
 =item B<--name>
 
@@ -399,6 +400,18 @@ X applications that do not set this metadata on its windows.
 Select windows only on a specific screen. Default is to
 search all screens. Only meaningful if you have multiple displays and are not
 using Xinerama.
+
+=item B<--desktop N>
+
+Only match windows on a certain desktop. 'N' is a number. The default
+is to search all desktops.
+
+=item B<--limit N>
+
+Stop searching after finding N matching windows. Specifying a limit will help
+speed up your search if you only want a few results.
+
+The default is no search limit (which is equivalent to '--limit 0')
 
 =item B<--title> 
 
