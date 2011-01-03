@@ -7,6 +7,7 @@ int cmd_search(context_t *context) {
   int nwindows;
   int i;
   int c;
+  int op_sync = False;
 
   int search_title = 0;
   int search_name = 0;
@@ -15,7 +16,7 @@ int cmd_search(context_t *context) {
   typedef enum { 
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_class, opt_maxdepth,
     opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname, opt_desktop,
-    opt_limit,
+    opt_limit, opt_sync
   } optlist_t;
   struct option longopts[] = {
     { "all", no_argument, NULL, opt_all },
@@ -31,6 +32,7 @@ int cmd_search(context_t *context) {
     { "title", no_argument, NULL, opt_title },
     { "desktop", required_argument, NULL, opt_desktop },
     { "limit", required_argument, NULL, opt_limit },
+    { "sync", no_argument, NULL, opt_sync },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
@@ -45,10 +47,12 @@ int cmd_search(context_t *context) {
       "                Not supported by all X11 applications\n"
       "--screen N      only search a specific screen. Default is all screens\n"
       "--desktop N     only search a specific desktop number\n"
+      "--limit N       break search after N results\n"
       "--name          check regexp_pattern agains the window name\n"
       "--title         DEPRECATED. Same as --name.\n"
       "--all           Require all conditions match a window. Default is --any\n"
       "--any           Windows matching any condition will be reported\n"
+      "--sync          Wait until a search result is found.\n"
       "-h, --help      show this help output\n"
       "\n"
       "If none of --name, --classname, or --class are specified, the \n"
@@ -112,6 +116,9 @@ int cmd_search(context_t *context) {
       case opt_limit:
         search.limit = atoi(optarg);
         break;
+      case opt_sync:
+        op_sync = True;
+        break;
       default:
         fprintf(stderr, "Invalid usage\n");
         fprintf(stderr, usage, cmd);
@@ -156,14 +163,24 @@ int cmd_search(context_t *context) {
   }
 
   consume_args(context, 1);
-  xdo_window_search(context->xdo, &search, &list, &nwindows);
 
-  if (context->argc == 0) {
-    /* only print if we're the last command */
-    for (i = 0; i < nwindows; i++) {
-      window_print(list[i]);
+  do {
+    xdo_window_search(context->xdo, &search, &list, &nwindows);
+
+    if (context->argc == 0) {
+      /* only print if we're the last command */
+      for (i = 0; i < nwindows; i++) {
+        window_print(list[i]);
+      }
     }
-  }
+
+    if (op_sync && nwindows == 0) {
+      xdotool_debug(context, "No search results, still waiting...");
+
+      /* TODO(sissel): Make this tunable */
+      usleep(500000);
+    }
+  } while (op_sync && nwindows == 0);
 
   /* Free old list as it's malloc'd by xdo_window_search */
   if (context->windows != NULL) {

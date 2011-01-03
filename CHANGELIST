@@ -20,17 +20,17 @@ TODO(sissel):
   - Add support for typing UTF-8 characters. Patch from Joseph Krahn.
   - Make all output call fflush to send data immediately (for pipes). Reported
     by Andreas Wagner on the mailing list.
-  @ NEEDSTEST: Add search --desktop
-  @ NEEDSTEST: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
-  @ NEEDSDOC NEEDSTEST: New command 'getwindowgeometry' for fetching window
+  @ NEEDSTEST NEEDSFLAGHELP: Add search --desktop
+  @ NEEDSTEST NEEDSFLAGHELP: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
+  @ NEEDSTEST NEEDSFLAGHELP: New command 'getwindowgeometry' for fetching window
     position and size (Requested by Anthony Thyssen via mailing list)
+  @ NEEDSTEST NEEDSDOC: Search --sync (blocks until the search is successful)
   @ TODO: bug: keymap changes unnecessarily
   @ TODO: set_desktop relative movements (+N or -N to move relative) (Requested
     by Anthony Thyssen)
   @ TODO: Window relative movements (Requested by Anthony Thyssen via mailing list)
   @ TODO: Change cursor when in 'selectwindow' (Requested by Anthony Thyssen
     via mailing list)
-  @ TODO: Search --sync (blocks until the search is successful)
   @ TODO: minimize, maximize, unmaximize windows (Requested by Joe Krahn via
     mailing list)
   @ TODO: Window move along one axis. (Requested by etnlIcarus via mailing
