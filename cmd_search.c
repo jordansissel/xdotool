@@ -15,6 +15,7 @@ int cmd_search(context_t *context) {
   typedef enum { 
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_class, opt_maxdepth,
     opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname, opt_desktop,
+    opt_limit,
   } optlist_t;
   struct option longopts[] = {
     { "all", no_argument, NULL, opt_all },
@@ -29,6 +30,7 @@ int cmd_search(context_t *context) {
     { "screen", required_argument, NULL, opt_screen },
     { "title", no_argument, NULL, opt_title },
     { "desktop", required_argument, NULL, opt_desktop },
+    { "limit", required_argument, NULL, opt_limit },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
@@ -106,6 +108,9 @@ int cmd_search(context_t *context) {
       case opt_desktop:
         search.desktop = strtol(optarg, NULL, 0);
         search.searchmask |= SEARCH_DESKTOP;
+        break;
+      case opt_limit:
+        search.limit = atoi(optarg);
         break;
       default:
         fprintf(stderr, "Invalid usage\n");

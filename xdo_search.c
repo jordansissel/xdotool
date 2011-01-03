@@ -61,6 +61,7 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
                              &candidate_window_list_size);
     }
   }
+
   //printf("Window count: %d\n", (int)ncandidate_windows);
   //printf("Search:\n");
   //printf("onlyvisible: %d\n", search->only_visible);
@@ -78,6 +79,11 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
 
     (*windowlist_ret)[*nwindows_ret] = wid;
     (*nwindows_ret)++;
+
+    if (search->limit > 0 && *nwindows_ret >= search->limit) {
+      /* Limit hit, break early. */
+      break;
+    }
 
     if (matched_window_list_size == *nwindows_ret) {
       matched_window_list_size *= 2;

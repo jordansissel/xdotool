@@ -205,6 +205,9 @@ typedef struct xdo_search {
 
   /** What desktop to search, if any. If none given, search all screens. */
   long desktop;
+
+  /** How many results to return? If 0, return all. */
+  unsigned int limit;
 } xdo_search_t;
 
 #define XDO_ERROR 1
