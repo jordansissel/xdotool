@@ -1,6 +1,6 @@
-Package: xdotool
+Package: xdotool-doc
 Version: 1:%VERSION%
-Architecture: amd64
+Architecture: all
 Maintainer: Jordan Sissel <jls@semicomplete.com>
 Installed-Size: 152
 Depends: libc6 (>= 2.4), libx11-6 (>= 0), libxdo%MAJOR% (>= 1:%VERSION%-1), libxtst6

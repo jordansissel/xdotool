@@ -197,49 +197,48 @@ test-package-build: create-package
 
 DEBDIR=deb-build
 create-package-deb: pre-create-package VERSION xdo_version.h
-	[ -d $(DEBDIR) ] && rm -r $(DEBDIR)
-	$(MAKE) install DESTDIR=$(DEBDIR) PREFIX=/usr INSTALLMAN=/usr/share/man
-	$(MAKE) create-package-deb-xdotool
+	[ -d $(DEBDIR) ] && rm -r $(DEBDIR) || true
+	$(MAKE) xdotool.deb xdotool-doc.deb libxdo$(MAJOR).deb libxdo$(MAJOR)-dev.deb
 
-# Package 'xdotool*.deb'
-create-package-deb-xdotool: $(DEBDIR)/usr $(DEBDIR)/xdotool
-	$(MAKE) xdotool_$(VERSION)-1_$(shell uname -m).deb
-
-%.deb:
+%.deb: $(DEBDIR)/usr
 	$(MAKE) $(DEBDIR)/$*/data.tar.gz $(DEBDIR)/$*/control.tar.gz \
 	        $(DEBDIR)/$*/debian-binary
-	pwd=$$PWD; \
-	cd $(DEBDIR)/ \
-	  ar -qc $$pwd/$*_$(VERSION)-1_$(shell uname -m).deb \
+	wd=$$PWD; \
+	cd $(DEBDIR)/$*; \
+	  ar -qc $$wd/$*_$(VERSION)-1_$(shell uname -m).deb \
 	    debian-binary data.tar.gz control.tar.gz
 
-$(DEBDIR)/*/:
+$(DEBDIR)/usr:
+	$(MAKE) install DESTDIR=$(DEBDIR) PREFIX=/usr INSTALLMAN=/usr/share/man
+
+$(DEBDIR)/xdotool $(DEBDIR)/xdotool-doc $(DEBDIR)/libxdo$(MAJOR) $(DEBDIR)/libxdo$(MAJOR)-dev:
 	mkdir -p $@
 
 $(DEBDIR)/%/debian-binary:
 	echo "2.0" > $@
 
 # Generate the 'control' file
-$(DEBDIR)/%/control: $(DEBDIR)/%
-	sed -e 's/%VERSION%/$(VERSION)/g; s/%MAJOR%/$(MAJOR)/' ext/debian/$*.control > $@
+$(DEBDIR)/%/control: $(DEBDIR)/%/
+	sed -e 's/%VERSION%/$(VERSION)/g; s/%MAJOR%/$(MAJOR)/' \
+		ext/debian/$(shell echo $* | tr -d 0-9).control > $@
 
 # Generate the 'md5sums' file 
-$(DEBDIR)/%/md5sums: $(DEBDIR)/% $(DEBDIR)/%/data.tar.gz 
+$(DEBDIR)/%/md5sums: $(DEBDIR)/%/ $(DEBDIR)/%/data.tar.gz 
 	tar -ztf $(DEBDIR)/$*/data.tar.gz | (cd $(DEBDIR); xargs md5sum || true) > $@
 
 # Generate the 'control.tar.gz'
 $(DEBDIR)/%/control.tar.gz: $(DEBDIR)/%/control $(DEBDIR)/%/md5sums
 	tar -C $(DEBDIR)/$* -zcf $(DEBDIR)/$*/control.tar.gz control md5sums 
 
-$(DEBDIR)/xdotool/data.tar.gz: $(DEBDIR)/xdotool
+$(DEBDIR)/xdotool/data.tar.gz: $(DEBDIR)/xdotool/
 	tar -C $(DEBDIR) -zcf $@ usr/bin
 
-$(DEBDIR)/libxdo/data.tar.gz: $(DEBDIR)/libxdo
+$(DEBDIR)/libxdo$(MAJOR)/data.tar.gz: $(DEBDIR)/libxdo$(MAJOR)/
 	tar -C $(DEBDIR) -zcf $@ usr/lib
 
-$(DEBDIR)/libxdo-dev/data.tar.gz: $(DEBDIR)/libxdo-dev
+$(DEBDIR)/libxdo$(MAJOR)-dev/data.tar.gz: $(DEBDIR)/libxdo$(MAJOR)-dev/
 	tar -C $(DEBDIR) -zcf $@ usr/include
 
-$(DEBDIR)/xdotool-doc/data.tar.gz: $(DEBDIR)/xdotool-doc
+$(DEBDIR)/xdotool-doc/data.tar.gz: $(DEBDIR)/xdotool-doc/
 	tar -C $(DEBDIR) -zcf $@ usr/share
 
