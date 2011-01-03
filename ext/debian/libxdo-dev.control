@@ -1,0 +1,14 @@
+Package: libxdo-dev%MAJOR%
+Version: 1:%VERSION%
+Architecture: all
+Maintainer: Jordan Sissel <jls@semicomplete.com>
+Installed-Size: 152
+Depends: libc6 (>= 2.4), libx11-6 (>= 0), libxdo%MAJOR% (>= 1:%VERSION%-1), libxtst6
+Section: x11
+Priority: extra
+Homepage: http://www.semicomplete.com/blog/projects/xdotool/
+Description: library simulate X11 keyboard/mouse input
+ xdotool lets you programatically (or manually) simulate keyboard
+ input and mouse activity, move and resize windows, etc. It does this
+ using X11's XTEST extension and other Xlib functions.
+
