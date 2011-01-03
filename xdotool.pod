@@ -10,7 +10,7 @@ B<xdotool> I<cmd> I<args...>
 
 Notation: Some documentation uses I<[window=%1]> to denote an optional
 argument. This case means that the argument, if not present, will default to
-%1.
+"%1".
 
 =head1 DESCRIPTION
 
@@ -515,6 +515,19 @@ displayed in the window's titlebar by your window manager.
 
 If no window is given, the default is '%1'. If no windows are on the stack, then
 this is an error. See L<WINDOW STACK> for more details.
+
+=item B<getwindowgeometry> [options] I<[window=%1]>
+
+Output the geometry (location and position) of a window. The values include: x,
+y, width, height, and screen number.
+
+=over
+
+=item B<--shell> 
+
+Output values suitable for 'eval' in a shell.
+
+=back
 
 =item B<getwindowfocus> [-f]
 
