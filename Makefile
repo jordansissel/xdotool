@@ -195,6 +195,12 @@ test-package-build: create-package
 	rm -rf $${NAME}
 
 
+### Build .deb packages for xdotool. The target 'create-package-deb' will
+# create {xdotool,xdotool-doc,libxdo$(MAJOR),libxdo$(MAJOR)-dev}*.deb packages
+# The reason I do this is to avoid any madness involved in dealing with
+# debuild, dh_make, and related tools. '.deb' packages are an 'ar' with two
+# tarballs.
+
 DEBDIR=deb-build
 create-package-deb: pre-create-package VERSION xdo_version.h
 	[ -d $(DEBDIR) ] && rm -r $(DEBDIR) || true
