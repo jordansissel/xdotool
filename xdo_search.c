@@ -13,10 +13,6 @@
 #include <X11/extensions/XTest.h>
 #include "xdo.h"
 
-static void _xdo_get_child_windows(const xdo_t *xdo, Window window, int max_depth,
-                                   Window **candidate_window_list, 
-                                   int *ncandidate_windows, 
-                                   int *window_list_size);
 static int compile_re(const char *pattern, regex_t *re);
 static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *search);
 static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re);
@@ -25,40 +21,48 @@ static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_window_match_title(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_window_match_pid(const xdo_t *xdo, Window window, int pid);
 static int _xdo_is_window_visible(const xdo_t *xdo, Window wid);
+static void find_matching_windows(const xdo_t *xdo, Window window, 
+                                  const xdo_search_t *search,
+                                  Window **windowlist_ret,
+                                  int *nwindows_ret,
+                                  int *windowlist_size,
+                                  int current_depth);
 
 int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
                       Window **windowlist_ret, int *nwindows_ret) {
-  Window *candidate_window_list = NULL;
-  int ncandidate_windows = 0;
-  int candidate_window_list_size = 0;
-  int matched_window_list_size = 100;
   int i = 0;
 
+  int windowlist_size = 100;
   *nwindows_ret = 0;
-  *windowlist_ret = calloc(sizeof(Window), matched_window_list_size);
+  *windowlist_ret = calloc(sizeof(Window), windowlist_size);
 
   /* TODO(sissel): Support multiple screens */
   if (search->searchmask & SEARCH_SCREEN) {
-    ncandidate_windows = candidate_window_list_size = 1;
-    candidate_window_list = calloc(sizeof(Window), candidate_window_list_size);
-    candidate_window_list[0] = RootWindow(xdo->xdpy, search->screen);
-    _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, search->screen), search->max_depth,
-                           &candidate_window_list, &ncandidate_windows,
-                           &candidate_window_list_size);
+      Window root = RootWindow(xdo->xdpy, search->screen);
+      if (check_window_match(xdo, root, search)) {
+        (*windowlist_ret)[*nwindows_ret] = root;
+        (*nwindows_ret)++;
+        /* Don't have to check for size bounds here because
+         * we start with array size 100 */
+      }
+
+      /* Start with depth=1 since we already covered the root windows */
+      find_matching_windows(xdo, root, search, windowlist_ret, nwindows_ret,
+                            &windowlist_size, 1);
   } else {
     const int screencount = ScreenCount(xdo->xdpy);
-    ncandidate_windows = candidate_window_list_size = screencount;
-    candidate_window_list = calloc(sizeof(Window), candidate_window_list_size);
-
-    /* TODO(sissel): Refactor these loops into one loop */
     for (i = 0; i < screencount; i++) {
-      candidate_window_list[i] = RootWindow(xdo->xdpy, i);
-    }
+      Window root = RootWindow(xdo->xdpy, i);
+      if (check_window_match(xdo, root, search)) {
+        (*windowlist_ret)[*nwindows_ret] = root;
+        (*nwindows_ret)++;
+        /* Don't have to check for size bounds here because
+         * we start with array size 100 */
+      }
 
-    for (i = 0; i < screencount; i++) {
-      _xdo_get_child_windows(xdo, RootWindow(xdo->xdpy, i), search->max_depth,
-                             &candidate_window_list, &ncandidate_windows,
-                             &candidate_window_list_size);
+      /* Start with depth=1 since we already covered the root windows */
+      find_matching_windows(xdo, root, search, windowlist_ret,
+                            nwindows_ret, &windowlist_size, 1);
     }
   }
 
@@ -72,75 +76,14 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
   //printf("classname: %s\n", search->winclassname);
   //printf("//Search\n");
 
-  for (i = 0; i < ncandidate_windows; i++) {
-    Window wid = candidate_window_list[i];
-    if (!check_window_match(xdo, wid, search))
-      continue;
-
-    (*windowlist_ret)[*nwindows_ret] = wid;
-    (*nwindows_ret)++;
-
-    if (search->limit > 0 && *nwindows_ret >= search->limit) {
-      /* Limit hit, break early. */
-      break;
-    }
-
-    if (matched_window_list_size == *nwindows_ret) {
-      matched_window_list_size *= 2;
-      *windowlist_ret = realloc(*windowlist_ret, 
-                                matched_window_list_size * sizeof(Window));
-    }
-  }
-  free(candidate_window_list);
-
   return XDO_SUCCESS;
-}
-
-static void _xdo_get_child_windows(const xdo_t *xdo, Window window, 
-                                   int max_depth,
-                                   Window **candidate_window_list, 
-                                   int *ncandidate_windows,
-                                   int *window_list_size) {
-  Window dummy;
-  Window *children;
-  unsigned int i, nchildren;
-
-  if (max_depth == 0) {
-    return;
-  }
-
-  if (*window_list_size == 0) {
-    *ncandidate_windows = 0;
-    *window_list_size = 100;
-    *candidate_window_list = malloc(*window_list_size * sizeof(Window));
-  }
-
-  if (!XQueryTree(xdo->xdpy, window, &dummy, &dummy, &children, &nchildren))
-    return;
-
-  for (i = 0; i < nchildren; i++) {
-    Window w = children[i];
-
-    if (*ncandidate_windows == *window_list_size) {
-      *window_list_size *= 2;
-      *candidate_window_list = realloc(*candidate_window_list,
-                                   *window_list_size * sizeof(Window));
-    }
-
-    (*candidate_window_list)[*ncandidate_windows] = w;
-    *ncandidate_windows += 1;
-    _xdo_get_child_windows(xdo, w, max_depth - 1, candidate_window_list,
-                           ncandidate_windows, window_list_size);
-  }
-
-  XFree(children);
-}
+} /* int xdo_window_search */
 
 static int _xdo_window_match_title(const xdo_t *xdo, Window window, regex_t *re) {
   fprintf(stderr, "This function (match window by title) is deprecated."
           " You want probably want to match by the window name.\n");
   return _xdo_window_match_name(xdo, window, re);
-}
+} /* int _xdo_window_match_title */
 
 static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re) {
   /* historically in xdo, 'match_name' matched the classhint 'name' which we
@@ -175,7 +118,7 @@ static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re) 
   XFreeStringList(list);
   XFree(tp.value);
   return False;
-}
+} /* int _xdo_window_match_name */
 
 static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re) {
   XWindowAttributes attr;
@@ -198,7 +141,7 @@ static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re)
     }
   }
   return False;
-}
+} /* int _xdo_window_match_class */
 
 static int _xdo_window_match_classname(const xdo_t *xdo, Window window, regex_t *re) {
   XWindowAttributes attr;
@@ -220,7 +163,7 @@ static int _xdo_window_match_classname(const xdo_t *xdo, Window window, regex_t 
     }
   }
   return False;
-}
+} /* int _xdo_window_match_classname */
 
 static int _xdo_window_match_pid(const xdo_t *xdo, Window window, const int pid) {
   int window_pid;
@@ -231,7 +174,7 @@ static int _xdo_window_match_pid(const xdo_t *xdo, Window window, const int pid)
   } else {
     return False;
   }
-}
+} /* int _xdo_window_match_pid */
 
 static int compile_re(const char *pattern, regex_t *re) {
   int ret;
@@ -246,7 +189,7 @@ static int compile_re(const char *pattern, regex_t *re) {
     return False;
   }
   return True;
-}
+} /* int compile_re */
 
 static int _xdo_is_window_visible(const xdo_t *xdo, Window wid) {
   XWindowAttributes wattr;
@@ -255,7 +198,7 @@ static int _xdo_is_window_visible(const xdo_t *xdo, Window wid) {
     return False;
 
   return True;
-}
+} /* int _xdo_is_window_visible */
 
 static int check_window_match(const xdo_t *xdo, Window wid,
                               const xdo_search_t *search) {
@@ -372,4 +315,69 @@ static int check_window_match(const xdo_t *xdo, Window wid,
           "this may be a bug?\n",
           search->require);
   return False;
-}
+} /* int check_window_match */
+
+static void find_matching_windows(const xdo_t *xdo, Window window, 
+                                  const xdo_search_t *search,
+                                  Window **windowlist_ret,
+                                  int *nwindows_ret,
+                                  int *windowlist_size,
+                                  int current_depth) {
+  /* Query for children of 'wid'. For each child, check match.
+   * We want to do a breadth-first search.
+   *
+   * If match, add to list.
+   * If over limit, break.
+   * Recurse.
+   */
+
+  Window dummy;
+  Window *children;
+  unsigned int i, nchildren;
+
+  /* Break early, if we have enough windows already. */
+  if (search->limit > 0 && *nwindows_ret >= search->limit) {
+    return;
+  }
+
+  /* Break if too deep */
+  if (search->max_depth != -1 && current_depth > search->max_depth) {
+    return;
+  }
+
+  /* Break if XQueryTree fails.
+   * TODO(sissel): report an error? */
+  if (!XQueryTree(xdo->xdpy, window, &dummy, &dummy, &children, &nchildren)) {
+    return;
+  }
+
+  /* Breadth first, check all children for matches */
+  for (i = 0; i < nchildren; i++) {
+    Window child = children[i];
+    if (!check_window_match(xdo, child, search))
+      continue;
+
+    (*windowlist_ret)[*nwindows_ret] = child;
+    (*nwindows_ret)++;
+
+    if (search->limit > 0 && *nwindows_ret >= search->limit) {
+      /* Limit hit, break early. */
+      break;
+    }
+
+    if (*windowlist_size == *nwindows_ret) {
+      *windowlist_size *= 2;
+      *windowlist_ret = realloc(*windowlist_ret, 
+                                *windowlist_size * sizeof(Window));
+    }
+  } /* for (i in children) ... */
+
+  /* Now check children-children */
+  if (search->max_depth == -1 || (current_depth + 1) <= search->max_depth) {
+    for (i = 0; i < nchildren; i++) {
+      find_matching_windows(xdo, children[i], search, windowlist_ret,
+                            nwindows_ret, windowlist_size,
+                            current_depth + 1);
+    }
+  } /* recurse on children if not at max depth */
+} /* void find_matching_windows */

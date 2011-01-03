@@ -21,7 +21,7 @@ TODO(sissel):
   - Make all output call fflush to send data immediately (for pipes). Reported
     by Andreas Wagner on the mailing list.
   @ NEEDSTEST NEEDSDOC: Add search --desktop
-  @ TODO: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
+  @ NEEDSTEST NEEDSDOC: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
   @ TODO: bug: keymap changes unnecessarily
   @ TODO: set_desktop relative movements (+N or -N to move relative) (Requested
     by Anthony Thyssen)
