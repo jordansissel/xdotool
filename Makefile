@@ -46,7 +46,7 @@ CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
          cmd_get_desktop_viewport.o cmd_set_desktop_viewport.o \
          cmd_windowkill.o cmd_behave.o cmd_window_select.o \
          cmd_getwindowname.o cmd_behave_screen_edge.o \
-         cmd_windowminimize.o cmd_exec.o
+         cmd_windowminimize.o cmd_exec.o cmd_getwindowgeometry.o
 
 .PHONY: all
 all: xdotool.1 libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) xdotool

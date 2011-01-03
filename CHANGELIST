@@ -22,10 +22,11 @@ TODO(sissel):
     by Andreas Wagner on the mailing list.
   @ NEEDSTEST: Add search --desktop
   @ NEEDSTEST: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
+  @ NEEDSDOC NEEDSTEST: New command 'getwindowgeometry' for fetching window
+    position and size (Requested by Anthony Thyssen via mailing list)
   @ TODO: bug: keymap changes unnecessarily
   @ TODO: set_desktop relative movements (+N or -N to move relative) (Requested
     by Anthony Thyssen)
-  @ TODO: Get window position and size (Requested by Anthony Thyssen via mailing list)
   @ TODO: Window relative movements (Requested by Anthony Thyssen via mailing list)
   @ TODO: Change cursor when in 'selectwindow' (Requested by Anthony Thyssen
     via mailing list)
