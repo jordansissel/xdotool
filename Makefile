@@ -154,7 +154,7 @@ xdotool.html: xdotool.pod
 	pod2html $< > $@
 
 .PHONY: package
-package: test-package-build create-package
+package: test-package-build create-package create-package-deb
 
 .PHONY: package-deb
 package-deb: test-package-build create-package-deb
@@ -230,15 +230,19 @@ $(DEBDIR)/%/md5sums: $(DEBDIR)/%/ $(DEBDIR)/%/data.tar.gz
 $(DEBDIR)/%/control.tar.gz: $(DEBDIR)/%/control $(DEBDIR)/%/md5sums
 	tar -C $(DEBDIR)/$* -zcf $(DEBDIR)/$*/control.tar.gz control md5sums 
 
+# Build a tarball for xdotool files
 $(DEBDIR)/xdotool/data.tar.gz: $(DEBDIR)/xdotool/
 	tar -C $(DEBDIR) -zcf $@ usr/bin
 
+# Build a tarball for libxdo# files
 $(DEBDIR)/libxdo$(MAJOR)/data.tar.gz: $(DEBDIR)/libxdo$(MAJOR)/
 	tar -C $(DEBDIR) -zcf $@ usr/lib
 
+# Build a tarball for libxdo#-dev files
 $(DEBDIR)/libxdo$(MAJOR)-dev/data.tar.gz: $(DEBDIR)/libxdo$(MAJOR)-dev/
 	tar -C $(DEBDIR) -zcf $@ usr/include
 
+# Build a tarball for xdotool-doc files
 $(DEBDIR)/xdotool-doc/data.tar.gz: $(DEBDIR)/xdotool-doc/
 	tar -C $(DEBDIR) -zcf $@ usr/share
 
