@@ -258,6 +258,7 @@ static int check_window_match(const xdo_t *xdo, Window wid,
   regex_t classname_re;
   regex_t name_re;
 
+
   if (!compile_re(search->title, &title_re) \
       || !compile_re(search->winclass, &class_re) \
       || !compile_re(search->winclassname, &classname_re) \
@@ -281,13 +282,18 @@ static int check_window_match(const xdo_t *xdo, Window wid,
   name_want = search->searchmask & SEARCH_NAME;
   class_want = search->searchmask & SEARCH_CLASS;
   classname_want = search->searchmask & SEARCH_CLASSNAME;
-  printf("Desktop: %d\n", desktop_want);
 
   do {
     if (desktop_want) {
       long desktop = -1;
-      int ret = xdo_get_desktop_for_window(xdo, wid, &desktop);
-      fprintf(stderr, "desktop want: %ld vs %ld\n", desktop, search->desktop);
+
+      /* We're modifying xdo here, but since we restore it, we're still 
+       * obeying the "const" contract. */
+      int old_quiet = xdo->quiet;
+      xdo_t *xdo2 = (xdo_t *)xdo;
+      xdo2->quiet = 1;
+      int ret = xdo_get_desktop_for_window(xdo2, wid, &desktop);
+      xdo2->quiet = old_quiet;
 
       /* Desktop matched if we support desktop queries *and* the desktop is
        * equal */

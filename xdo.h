@@ -107,6 +107,9 @@ typedef struct xdo {
 
   /** Should we close the display when calling xdo_free? */
   int close_display_when_freed;
+
+  /** Be extra quiet? (omits some error/message output) */
+  int quiet;
 } xdo_t;
 
 

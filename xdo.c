@@ -69,7 +69,7 @@ static int _xdo_cached_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode);
 static int _xdo_cached_modifier_to_keycode(const xdo_t *xdo, int modmask);
 static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press);
 
-static int _is_success(const char *funcname, int code);
+static int _is_success(const char *funcname, int code, const xdo_t *xdo);
 
 /* context-free functions */
 static wchar_t _keysym_to_char(const char *keysym);
@@ -157,21 +157,21 @@ int xdo_window_map(const xdo_t *xdo, Window wid) {
   int ret = 0;
   ret = XMapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
-  return _is_success("XMapWindow", ret == 0);
+  return _is_success("XMapWindow", ret == 0, xdo);
 }
 
 int xdo_window_unmap(const xdo_t *xdo, Window wid) {
   int ret = 0;
   ret = XUnmapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
-  return _is_success("XUnmapWindow", ret == 0);
+  return _is_success("XUnmapWindow", ret == 0, xdo);
 }
 
 int xdo_window_reparent(const xdo_t *xdo, Window wid_source, Window wid_target) {
   int ret = 0;
   ret = XReparentWindow(xdo->xdpy, wid_source, wid_target, 0, 0);
   XFlush(xdo->xdpy);
-  return _is_success("XReparentWindow", ret == 0);
+  return _is_success("XReparentWindow", ret == 0, xdo);
 }
 
 int xdo_get_window_location(const xdo_t *xdo, Window wid,
@@ -199,7 +199,7 @@ int xdo_get_window_location(const xdo_t *xdo, Window wid,
       *screen_ret = attr.screen;
     }
   }
-  return _is_success("XGetWindowAttributes", ret == 0);
+  return _is_success("XGetWindowAttributes", ret == 0, xdo);
 }
 
 int xdo_get_window_size(const xdo_t *xdo, Window wid, unsigned int *width_ret,
@@ -216,7 +216,7 @@ int xdo_get_window_size(const xdo_t *xdo, Window wid, unsigned int *width_ret,
       *height_ret = attr.height;
     }
   }
-  return _is_success("XGetWindowAttributes", ret == 0);
+  return _is_success("XGetWindowAttributes", ret == 0, xdo);
 }
 
 int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y) {
@@ -226,7 +226,7 @@ int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y) {
   wc.y = y;
 
   ret = XConfigureWindow(xdo->xdpy, wid, CWX | CWY, &wc);
-  return _is_success("XConfigureWindow", ret == 0);
+  return _is_success("XConfigureWindow", ret == 0, xdo);
 }
 
 int xdo_window_translate_with_sizehint(const xdo_t *xdo, Window window,
@@ -292,7 +292,7 @@ int xdo_window_setsize(const xdo_t *xdo, Window window, int width, int height, i
 
   ret = XConfigureWindow(xdo->xdpy, window, cw_flags, &wc);
   XFlush(xdo->xdpy);
-  return _is_success("XConfigureWindow", ret == 0);
+  return _is_success("XConfigureWindow", ret == 0, xdo);
 }
 
 int xdo_window_set_override_redirect(const xdo_t *xdo, Window wid,
@@ -303,7 +303,7 @@ int xdo_window_set_override_redirect(const xdo_t *xdo, Window wid,
   wattr.override_redirect = override_redirect;
   ret = XChangeWindowAttributes(xdo->xdpy, wid, mask, &wattr);
 
-  return _is_success("XChangeWindowAttributes", ret == 0);
+  return _is_success("XChangeWindowAttributes", ret == 0, xdo);
 }
 
 int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name,
@@ -319,7 +319,7 @@ int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name,
 
   ret = XSetClassHint(xdo->xdpy, wid, hint);
   XFree(hint);
-  return _is_success("XSetClassHint", ret == 0);
+  return _is_success("XSetClassHint", ret == 0, xdo);
 }
 
 int xdo_window_seturgency (const xdo_t *xdo, Window wid, int urgency) {
@@ -335,7 +335,7 @@ int xdo_window_seturgency (const xdo_t *xdo, Window wid, int urgency) {
 
   ret = XSetWMHints(xdo->xdpy, wid, hint);
   XFree(hint);
-  return _is_success("XSetWMHint", ret == 0);
+  return _is_success("XSetWMHint", ret == 0, xdo);
 }
 
 int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property, const char *value) {
@@ -350,7 +350,7 @@ int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property, cons
                         XInternAtom(xdo->xdpy, "STRING", False), 8, 
                         PropModeReplace, (unsigned char*)value, strlen(value));
   if (ret == 0) {
-    return _is_success("XChangeProperty", ret == 0);
+    return _is_success("XChangeProperty", ret == 0, xdo);
   }
 
   // Change _NET_<property> just in case for simpler NETWM compliance?
@@ -358,14 +358,14 @@ int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property, cons
                         XInternAtom(xdo->xdpy, netwm_property, False), 
                         XInternAtom(xdo->xdpy, "STRING", False), 8, 
                         PropModeReplace, (unsigned char*)value, strlen(value));
-  return _is_success("XChangeProperty", ret == 0);
+  return _is_success("XChangeProperty", ret == 0, xdo);
 }
 
 int xdo_window_focus(const xdo_t *xdo, Window wid) {
   int ret = 0;
   ret = XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
   XFlush(xdo->xdpy);
-  return _is_success("XSetInputFocus", ret == 0);
+  return _is_success("XSetInputFocus", ret == 0, xdo);
 }
 
 int xdo_window_wait_for_size(const xdo_t *xdo, Window window,
@@ -465,7 +465,7 @@ int xdo_window_activate(const xdo_t *xdo, Window wid) {
 
   /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
    * Manpage says it will only generate BadWindow or BadValue errors */
-  return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret == 0);
+  return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret == 0, xdo);
 }
 
 int xdo_set_number_of_desktops(const xdo_t *xdo, long ndesktops) {
@@ -496,7 +496,7 @@ int xdo_set_number_of_desktops(const xdo_t *xdo, long ndesktops) {
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  return _is_success("XSendEvent[EWMH:_NET_NUMBER_OF_DESKTOPS]", ret == 0);
+  return _is_success("XSendEvent[EWMH:_NET_NUMBER_OF_DESKTOPS]", ret == 0, xdo);
 }
 
 int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops) {
@@ -527,7 +527,7 @@ int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops) {
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_NUMBER_OF_DESKTOPS]",
-                     *ndesktops == 0);
+                     *ndesktops == 0, xdo);
 }
 
 int xdo_set_current_desktop(const xdo_t *xdo, long desktop) {
@@ -559,7 +559,7 @@ int xdo_set_current_desktop(const xdo_t *xdo, long desktop) {
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  return _is_success("XSendEvent[EWMH:_NET_CURRENT_DESKTOP]", ret == 0);
+  return _is_success("XSendEvent[EWMH:_NET_CURRENT_DESKTOP]", ret == 0, xdo);
 }
 
 int xdo_get_current_desktop(const xdo_t *xdo, long *desktop) {
@@ -591,7 +591,7 @@ int xdo_get_current_desktop(const xdo_t *xdo, long *desktop) {
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_CURRENT_DESKTOP]",
-                     *desktop == -1);
+                     *desktop == -1, xdo);
 }
 
 int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop) {
@@ -622,7 +622,7 @@ int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop) {
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  return _is_success("XSendEvent[EWMH:_NET_WM_DESKTOP]", ret == 0);
+  return _is_success("XSendEvent[EWMH:_NET_WM_DESKTOP]", ret == 0, xdo);
 }
 
 int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
@@ -652,7 +652,7 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_WM_DESKTOP]",
-                     *desktop == -1);
+                     *desktop == -1, xdo);
 }
 
 int xdo_window_get_active(const xdo_t *xdo, Window *window_ret) {
@@ -682,7 +682,7 @@ int xdo_window_get_active(const xdo_t *xdo, Window *window_ret) {
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_ACTIVE_WINDOW]",
-                     *window_ret == 0);
+                     *window_ret == 0, xdo);
 }
 
 int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
@@ -728,7 +728,7 @@ int xdo_window_raise(const xdo_t *xdo, Window wid) {
   int ret = 0;
   ret = XRaiseWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
-  return _is_success("XRaiseWindow", ret == 0);
+  return _is_success("XRaiseWindow", ret == 0, xdo);
 }
 
 int xdo_mousemove(const xdo_t *xdo, int x, int y, int screen)  {
@@ -742,7 +742,7 @@ int xdo_mousemove(const xdo_t *xdo, int x, int y, int screen)  {
   Window screen_root = RootWindow(xdo->xdpy, screen);
   ret = XWarpPointer(xdo->xdpy, None, screen_root, 0, 0, 0, 0, x, y);
   XFlush(xdo->xdpy);
-  return _is_success("XWarpPointer", ret == 0);
+  return _is_success("XWarpPointer", ret == 0, xdo);
 }
 
 int xdo_mousemove_relative_to_window(const xdo_t *xdo, Window window, int x, int y) {
@@ -760,7 +760,7 @@ int xdo_mousemove_relative(const xdo_t *xdo, int x, int y)  {
   int ret = 0;
   ret = XTestFakeRelativeMotionEvent(xdo->xdpy, x, y, CurrentTime);
   XFlush(xdo->xdpy);
-  return _is_success("XTestFakeRelativeMotionEvent", ret == 0);
+  return _is_success("XTestFakeRelativeMotionEvent", ret == 0, xdo);
 }
 
 int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) {
@@ -769,7 +769,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
   if (window == CURRENTWINDOW) {
     ret = XTestFakeButtonEvent(xdo->xdpy, button, is_press, CurrentTime);
     XFlush(xdo->xdpy);
-    return _is_success("XTestFakeButtonEvent(down)", ret == 0);
+    return _is_success("XTestFakeButtonEvent(down)", ret == 0, xdo);
   } else {
     /* Send to specific window */
     int screen = 0;
@@ -811,7 +811,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     ret = XSendEvent(xdo->xdpy, window, True, ButtonPressMask, (XEvent *)&xbpe);
     XFlush(xdo->xdpy);
     xdo_free_active_modifiers(active_mods);
-    return _is_success("XSendEvent(mousedown)", ret == 0);
+    return _is_success("XSendEvent(mousedown)", ret == 0, xdo);
   }
 }
 
@@ -884,7 +884,7 @@ int xdo_mouselocation2(const xdo_t *xdo, int *x_ret, int *y_ret,
     if (window_ret != NULL) *window_ret = window;
   }
 
-  return _is_success("XQueryPointer", ret == False);
+  return _is_success("XQueryPointer", ret == False, xdo);
 }
 
 int xdo_click(const xdo_t *xdo, Window window, int button) {
@@ -1144,7 +1144,7 @@ int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret) {
             "XGetInputFocus returned the focused window of %ld. "
             "This is likely a bug in the X server.\n", *window_ret);
   }
-  return _is_success("XGetInputFocus", ret == 0);
+  return _is_success("XGetInputFocus", ret == 0, xdo);
 }
 
 int xdo_window_wait_for_focus(const xdo_t *xdo, Window window, int want_focus) {
@@ -1175,7 +1175,7 @@ int xdo_window_wait_for_focus(const xdo_t *xdo, Window window, int want_focus) {
 int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret) {
   xdo_window_get_focus(xdo, window_ret);
   xdo_window_find_client(xdo, *window_ret, window_ret, XDO_FIND_PARENTS);
-  return _is_success("xdo_window_sane_get_focus", *window_ret == 0);
+  return _is_success("xdo_window_sane_get_focus", *window_ret == 0, xdo);
 }
 
 int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
@@ -1498,9 +1498,9 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
   return True;
 }
 
-int _is_success(const char *funcname, int code) {
+int _is_success(const char *funcname, int code, const xdo_t *xdo) {
   /* Nonzero is failure. */
-  if (code != 0)
+  if (code != 0 && !xdo->quiet)
     fprintf(stderr, "%s failed (code=%d)\n", funcname, code);
   return code;
 }
@@ -1934,13 +1934,13 @@ int xdo_set_desktop_viewport(const xdo_t *xdo, int x, int y) {
 
   /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
    * Manpage says it will only generate BadWindow or BadValue errors */
-  return _is_success("XSendEvent[EWMH:_NET_DESKTOP_VIEWPORT]", ret == 0);
+  return _is_success("XSendEvent[EWMH:_NET_DESKTOP_VIEWPORT]", ret == 0, xdo);
 }
 
 int xdo_window_kill(const xdo_t *xdo, Window window) {
   int ret;
   ret = XKillClient(xdo->xdpy, window);
-  return _is_success("XKillClient", ret == 0);
+  return _is_success("XKillClient", ret == 0, xdo);
 }
 
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
@@ -1992,5 +1992,5 @@ int xdo_window_minimize(const xdo_t *xdo, Window window) {
 
   /* Minimize it */
   ret = XIconifyWindow(xdo->xdpy, window, screen);
-  return _is_success("XIconifyWindow", ret == 0);
+  return _is_success("XIconifyWindow", ret == 0, xdo);
 }

@@ -32,5 +32,6 @@ extern int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
                           const char **window_arg);
 
 extern void xdotool_debug(context_t *context, const char *format, ...);
+extern void xdotool_output(context_t *context, const char *format, ...);
 
 #endif /* _XDO_CMD_H_ */
