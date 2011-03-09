@@ -11,6 +11,8 @@
   - Add support for typing UTF-8 characters. Patch from Joseph Krahn.
   - Make all output call fflush to send data immediately (for pipes). Reported
     by Andreas Wagner on the mailing list.
+  - Make 'get_desktop_viewport' output usable with 'set_desktop_viewport'
+    http://code.google.com/p/semicomplete/issues/detail?id=47
   @ FIXED: bug: keymap changes unnecessarily
   @ NEEDSTEST NEEDSFLAGHELP: Add search --desktop
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=38
