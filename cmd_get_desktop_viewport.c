@@ -39,7 +39,7 @@ int cmd_get_desktop_viewport(context_t *context) {
     xdotool_output(context, "X=%d", x);
     xdotool_output(context, "Y=%d", y);
   } else {
-    xdotool_output(context, "%d,%d", x, y);
+    xdotool_output(context, "%d %d", x, y);
   }
 
   return ret;
