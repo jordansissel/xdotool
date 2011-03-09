@@ -1,0 +1,4 @@
+*.o
+*.so
+*.1
+xdo_version.h
