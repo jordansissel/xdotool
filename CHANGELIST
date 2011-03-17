@@ -33,7 +33,7 @@ KNOWN ISSUES:
   @ NEEDSTEST: Search --sync (blocks until the search is successful)
   @ BUG: behave mouse-click doesn't work right. 
     http://code.google.com/p/semicomplete/issues/detail?id=42
-  @ NEEDS DOC+TEST: Window move along one axis. (Requested by etnlIcarus via mailing
+  @ NEEDS TEST: Window move along one axis. (Requested by etnlIcarus via mailing
     list)
   @ TODO: set_desktop relative movements (+N or -N to move relative) (Requested
     by Anthony Thyssen)

@@ -595,6 +595,16 @@ Example: To set a terminal to be 80x24 characters, you would use:
 Move the window to the given position. If no window is given, %1 is the
 default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
 
+If the given x coordinate is literally 'x', then the window's current x
+position will be unchanged. The same applies for 'y'.
+
+Examples:
+
+ xdotool getactivewindow windowmove 100 100    # Moves to 100,100
+ xdotool getactivewindow windowmove x 100      # Moves to x,100
+ xdotool getactivewindow windowmove 100 y      # Moves to 100,y
+ xdotool getactivewindow windowmove 100 y      # Moves to 100,y
+
 =over
 
 =item B<--sync> 
