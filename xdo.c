@@ -71,7 +71,8 @@ static int _xdo_cached_modifier_to_keycode(const xdo_t *xdo, int modmask);
 static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press);
 
 static int _is_success(const char *funcname, int code, const xdo_t *xdo);
-static void xdo_debug(const xdo_t *xdo, const char *format, ...);
+static void _xdo_debug(const xdo_t *xdo, const char *format, ...);
+static void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...);
 
 /* context-free functions */
 static wchar_t _keysym_to_char(const char *keysym);
@@ -87,8 +88,13 @@ xdo_t* xdo_new(char *display_name) {
   Display *xdpy;
 
   if ((xdpy = XOpenDisplay(display_name)) == NULL) {
+    /* Can't use _xdo_eprintf yet ... */
     fprintf(stderr, "Error: Can't open display: %s\n", display_name);
     return NULL;
+  }
+
+  if (display_name == NULL) {
+    display_name = getenv("DISPLAY");
   }
 
   return xdo_new_with_opened_display(xdpy, display_name, 1);
@@ -99,6 +105,7 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
   xdo_t *xdo = NULL;
 
   if (xdpy == NULL) {
+    /* Can't use _xdo_eprintf yet ... */
     fprintf(stderr, "xdo_new: xdisplay I was given is a null pointer\n");
     return NULL;
   }
@@ -110,14 +117,22 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
   xdo->xdpy = xdpy;
   xdo->close_display_when_freed = close_display_when_freed;
 
-  if (display == NULL)
+  if (display == NULL) {
     display = "unknown";
+  }
 
-  if (!_xdo_has_xtest(xdo)) {
-    fprintf(stderr, "Error: XTEST extension unavailable on '%s'.", 
-            xdo->display_name);
-    xdo_free(xdo);
-    return NULL;
+  if (getenv("XDO_QUIET")) {
+    xdo->quiet = True;
+  }
+
+  if (_xdo_has_xtest(xdo)) {
+    xdo_enable_feature(xdo, XDO_FEATURE_XTEST);
+    _xdo_debug(xdo, "XTEST enabled.");
+  } else {
+    _xdo_eprintf(xdo, False, "Warning: XTEST extension unavailable on '%s'. Some"
+                " functionality may be disabled; See 'man xdotool' for more"
+                " info.", xdo->display_name);
+    xdo_disable_feature(xdo, XDO_FEATURE_XTEST);
   }
 
   _xdo_populate_charcode_map(xdo);
@@ -933,7 +948,7 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
   charcodemap_t key;
   //int modifier = 0;
   setlocale(LC_CTYPE,"");
-  mbstate_t ps = {0};
+  mbstate_t ps = { 0 };
   ssize_t len;
   while ( (len = mbsrtowcs(&key.key, &string, 1, &ps)) ) {
     if (len == -1) {
@@ -1075,7 +1090,7 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
   for (i = 0; i < nkeys; i++) {
     if (keys[i].needs_binding == 1) {
       KeySym keysym_list[] = { keys[i].symbol };
-      xdo_debug(xdo, "Mapping sym %lu to %d", keys[i].symbol, scratch_keycode);
+      _xdo_debug(xdo, "Mapping sym %lu to %d", keys[i].symbol, scratch_keycode);
       XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
       XSync(xdo->xdpy, False);
       /* override the code in our current key to use the scratch_keycode */
@@ -1104,7 +1119,7 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
 
   if (keymapchanged) {
     KeySym keysym_list[] = { 0 };
-    xdo_debug(xdo, "Reverting scratch keycode (sym %lu to %d)",
+    _xdo_debug(xdo, "Reverting scratch keycode (sym %lu to %d)",
               keys[i].symbol, scratch_keycode);
     XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
   }
@@ -2002,7 +2017,7 @@ int xdo_window_minimize(const xdo_t *xdo, Window window) {
   return _is_success("XIconifyWindow", ret == 0, xdo);
 }
 
-void xdo_debug(const xdo_t *xdo, const char *format, ...) {
+void _xdo_debug(const xdo_t *xdo, const char *format, ...) {
   va_list args;
 
   va_start(args, format);
@@ -2010,5 +2025,29 @@ void xdo_debug(const xdo_t *xdo, const char *format, ...) {
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
   }
-} /* xdo_debug */
+} /* _xdo_debug */
 
+/* Used for printing things conditionally based on xdo->quiet */
+void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...) {
+  va_list args;
+
+  va_start(args, format);
+  if (xdo->quiet == True && hushable) {
+    return;
+  }
+
+  vfprintf(stderr, format, args);
+  fprintf(stderr, "\n");
+} /* _xdo_eprintf */
+
+void xdo_enable_feature(xdo_t *xdo, int feature) {
+  xdo->features_mask |= (0 << feature);
+}
+
+void xdo_disable_feature(xdo_t *xdo, int feature) {
+  xdo->features_mask &= ~(1 << feature);
+}
+
+int xdo_has_feature(xdo_t *xdo, int feature) {
+  return (xdo->features_mask & (1 << feature));
+}

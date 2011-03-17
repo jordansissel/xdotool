@@ -1,12 +1,18 @@
 #include "xdo_cmd.h"
 
+#define WINDOWMOVE_X_CURRENT (0x01)
+#define WINDOWMOVE_Y_CURRENT (0x02)
+
 struct windowmove {
   Window window;
   int x;
   int y;
   int opsync;
+  int flags;
 };
 
+/* This function exists because at one time I had problems embedding certain
+ * blocks of code within macros (window_each). */
 static int _windowmove(context_t *context, struct windowmove *windowmove);
 
 int cmd_windowmove(context_t *context) {
@@ -18,6 +24,7 @@ int cmd_windowmove(context_t *context) {
   windowmove.y = 0;
   windowmove.opsync = 0;
   windowmove.window = CURRENTWINDOW;
+  windowmove.flags = 0;
 
   int c;
   typedef enum {
@@ -30,7 +37,11 @@ int cmd_windowmove(context_t *context) {
   };
   static const char *usage = 
     "Usage: %s [options] [window=%1] x y\n"
-    "--sync    - only exit once the window has moved\n";
+    "--sync    - only exit once the window has moved\n"
+    "\n"
+    "If you use literal 'x' or 'y' for the x coordinates, then the current\n"
+    "coordinate will be used. This is useful for moving the window along\n"
+    "only one axis\n";
 
   int option_index;
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
@@ -60,8 +71,17 @@ int cmd_windowmove(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  windowmove.x = (int)strtol(context->argv[0], NULL, 0);
-  windowmove.y = (int)strtol(context->argv[1], NULL, 0);
+  if (context->argv[0][0] == 'x') {
+    windowmove.flags |= WINDOWMOVE_X_CURRENT;
+  } else {
+    windowmove.x = (int)strtol(context->argv[0], NULL, 0);
+  }
+
+  if (context->argv[1][0] == 'y') {
+    windowmove.flags |= WINDOWMOVE_Y_CURRENT;
+  } else {
+    windowmove.y = (int)strtol(context->argv[1], NULL, 0);
+  }
 
   consume_args(context, 2);  
 
@@ -77,15 +97,26 @@ static int _windowmove(context_t *context, struct windowmove *windowmove) {
   int orig_win_y = 0;
   int ret;
 
-  if (windowmove->opsync) {
+  /* Grab the current position of the window if we are moving synchronously
+   * or if we are moving along an axis. 
+   * That is, with --sync or x or y in args were literally 'x' or 'y' */
+  if (windowmove->opsync || windowmove->flags != 0) {
     xdo_get_window_location(context->xdo, windowmove->window,
                             &orig_win_x, &orig_win_y, NULL);
-    //fprintf(stderr, "%d,%d vs orig:%d,%d\n", windowmove->x, windowmove->y,
-            //orig_win_x, orig_win_y);
+    /* Break early if we don't need to move the window */
     if (orig_win_x == windowmove->x && orig_win_y == windowmove->y) {
-      /* Break early if we don't need to move the window */
       return 0;
     }
+  }
+
+  if (windowmove->flags & WINDOWMOVE_X_CURRENT) {
+    windowmove->x = orig_win_x;
+    xdotool_debug(context, "Using %d for x\n", windowmove->x);
+  }
+
+  if (windowmove->flags & WINDOWMOVE_Y_CURRENT) {
+    windowmove->y = orig_win_y;
+    xdotool_debug(context, "Using %d for y\n", windowmove->y);
   }
 
   ret = xdo_window_move(context->xdo, windowmove->window,

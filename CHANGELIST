@@ -1,4 +1,12 @@
-2.2010????.*
+KNOWN ISSUES:
+  - OSX: windowmove in OSX/X11 default WM incorrectly reports or accepts window position.
+    The coordinates of a window's current position cannot be used to correctly place
+    the window. Normally, window managers are supposed to report reserved window extents
+    in the property list of the root window (say, for the OS X menu bar), but OS X's 
+    default X11 wm does not do this. If this affects you, please let me know and
+    I will attempt to fix it.
+
+2.2011????.*
   - New set_window feature: --urgency. This lets you set the urgency flag on a
     window Window managers will interpret this as something about your window
     needing attention. It might flash in the taskbar, pop up, or other.
@@ -13,7 +21,10 @@
     by Andreas Wagner on the mailing list.
   - Make 'get_desktop_viewport' output usable with 'set_desktop_viewport'
     http://code.google.com/p/semicomplete/issues/detail?id=47
-  @ FIXED: bug: keymap changes unnecessarily
+  @ FEATURE: Build cleanly in C++ environments (Reported by psc on the mailing
+  list)
+  @ FEATURE: Build 'libxdo.a' for static library inclusion (Requested by psc on
+    the mailing list) @ FIXED: bug: keymap changes unnecessarily
   @ NEEDSTEST NEEDSFLAGHELP: Add search --desktop
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=38
   @ NEEDSTEST NEEDSFLAGHELP: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
@@ -22,13 +33,13 @@
   @ NEEDSTEST: Search --sync (blocks until the search is successful)
   @ BUG: behave mouse-click doesn't work right. 
     http://code.google.com/p/semicomplete/issues/detail?id=42
+  @ NEEDS DOC+TEST: Window move along one axis. (Requested by etnlIcarus via mailing
+    list)
   @ TODO: set_desktop relative movements (+N or -N to move relative) (Requested
     by Anthony Thyssen)
   @ TODO: Window relative movements (Requested by Anthony Thyssen via mailing list)
   @ TODO: Change cursor when in 'selectwindow' (Requested by Anthony Thyssen
     via mailing list)
-  @ TODO: Window move along one axis. (Requested by etnlIcarus via mailing
-    list)
   @ TODO: snapshot and restore window geometries? Maybe best as a script.
     (Requested by Joseph Krahn)
 

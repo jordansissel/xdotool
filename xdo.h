@@ -73,6 +73,10 @@ typedef struct charcodemap {
   int needs_binding;
 } charcodemap_t;
 
+typedef enum {
+  XDO_FEATURE_XTEST, /** Is XTest available? */
+} XDO_FEATURES;
+
 /**
  * The main context.
  */
@@ -113,6 +117,10 @@ typedef struct xdo {
 
   /** Enable debug output? */
   int debug;
+
+  /** Feature flags, such as XDO_FEATURE_XTEST, etc... */
+  int features_mask;
+
 } xdo_t;
 
 
@@ -865,4 +873,33 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
                         unsigned char **name_ret, int *name_len_ret,
                         int *name_type);
 
+/**
+ * Disable an xdo feature.
+ *
+ * This function is mainly used by libxdo itself, however, you may find it useful
+ * in your own applications.
+ * 
+ * @see XDO_FEATURES
+ */
+void xdo_disable_feature(xdo_t *xdo, int feature);
+
+/**
+ * Enable an xdo feature.
+ *
+ * This function is mainly used by libxdo itself, however, you may find it useful
+ * in your own applications.
+ * 
+ * @see XDO_FEATURES
+ */
+void xdo_enable_feature(xdo_t *xdo, int feature);
+
+/**
+ * Check if a feature is enabled.
+ *
+ * This function is mainly used by libxdo itself, however, you may find it useful
+ * in your own applications.
+ * 
+ * @see XDO_FEATURES
+ */
+int xdo_has_feature(xdo_t *xdo, int feature);
 #endif /* ifndef _XDO_H_ */
