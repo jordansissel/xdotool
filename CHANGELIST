@@ -25,10 +25,10 @@ KNOWN ISSUES:
   list)
   @ FEATURE: Build 'libxdo.a' for static library inclusion (Requested by psc on
     the mailing list) @ FIXED: bug: keymap changes unnecessarily
-  @ NEEDSTEST NEEDSFLAGHELP: Add search --desktop
+  @ NEEDS TEST,FLAG,DOC: Add search --desktop
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=38
-  @ NEEDSTEST NEEDSFLAGHELP: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
-  @ NEEDSTEST NEEDSFLAGHELP: New command 'getwindowgeometry' for fetching window
+  @ NEEDS TEST,FLAG,DOC: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
+  @ NEEDS TEST,FLAG,DOC: New command 'getwindowgeometry' for fetching window
     position and size (Requested by Anthony Thyssen via mailing list)
   @ NEEDSTEST: Search --sync (blocks until the search is successful)
   @ BUG: behave mouse-click doesn't work right. 

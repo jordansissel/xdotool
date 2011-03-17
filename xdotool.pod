@@ -1072,6 +1072,31 @@ C<getwindowpid>.
 
 =back
 
+=head1 SUPPORTED FEATURES
+
+xdotool (and libxdo) will try to function under all circumstances. However, there may
+be some cases where functionality is not provided by your X server or by your
+window manager. In these cases, xdotool will try to detect and tell you if an action
+requires a feature not currently supported by your system.
+
+For window-manager specific features, see L<EXTENDED WINDOW MANAGER HINTS>.
+
+=over
+
+=item XTEST
+
+If your X server does not support XTEST, then some typing and mouse movement
+features may not work. Specifically, typing and mouse actions that act on the
+"current window" (window 0 in libxdo) are unlikely to work.
+
+In most cases, XTEST is a feature you can enable on your X server if it is
+not enabled by default.
+
+You can see the list of supported X extensions by typing 'xdpyinfo' and looking
+the text 'number of extensions: ...'
+
+=back
+
 =head1 SEE ALSO
 
 L<xprop(1)>, L<xwininfo(1)>, 
