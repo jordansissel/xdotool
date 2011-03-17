@@ -1,7 +1,8 @@
 #include "xdo_cmd.h"
 
-#define WINDOWMOVE_X_CURRENT (0x01)
-#define WINDOWMOVE_Y_CURRENT (0x02)
+#define WINDOWMOVE_X_CURRENT (1 << 0)
+#define WINDOWMOVE_Y_CURRENT (1 << 1)
+#define WINDOWMOVE_RELATIVE (1 << 2)
 
 struct windowmove {
   Window window;
@@ -28,11 +29,12 @@ int cmd_windowmove(context_t *context) {
 
   int c;
   typedef enum {
-    opt_unused, opt_help, opt_sync
+    opt_unused, opt_help, opt_sync, opt_relative
   } optlist_t;
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { "sync", no_argument, NULL, opt_sync },
+    { "relative", no_argument, NULL, opt_relative },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
@@ -55,6 +57,9 @@ int cmd_windowmove(context_t *context) {
         break;
       case opt_sync:
         windowmove.opsync = 1;
+        break;
+      case opt_relative:
+        windowmove.flags |= WINDOWMOVE_RELATIVE;
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -99,7 +104,8 @@ static int _windowmove(context_t *context, struct windowmove *windowmove) {
 
   /* Grab the current position of the window if we are moving synchronously
    * or if we are moving along an axis. 
-   * That is, with --sync or x or y in args were literally 'x' or 'y' */
+   * That is, with --sync or x or y in args were literally 'x' or 'y'
+   * or if --relative is given*/
   if (windowmove->opsync || windowmove->flags != 0) {
     xdo_get_window_location(context->xdo, windowmove->window,
                             &orig_win_x, &orig_win_y, NULL);
@@ -107,6 +113,11 @@ static int _windowmove(context_t *context, struct windowmove *windowmove) {
     if (orig_win_x == windowmove->x && orig_win_y == windowmove->y) {
       return 0;
     }
+  }
+
+  if (windowmove->flags & WINDOWMOVE_RELATIVE) {
+    windowmove->x += orig_win_x;
+    windowmove->y += orig_win_y;
   }
 
   if (windowmove->flags & WINDOWMOVE_X_CURRENT) {
@@ -118,6 +129,7 @@ static int _windowmove(context_t *context, struct windowmove *windowmove) {
     windowmove->y = orig_win_y;
     xdotool_debug(context, "Using %d for y\n", windowmove->y);
   }
+
 
   ret = xdo_window_move(context->xdo, windowmove->window,
                         windowmove->x, windowmove->y);

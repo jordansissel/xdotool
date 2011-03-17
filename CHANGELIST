@@ -26,6 +26,7 @@ KNOWN ISSUES:
   - FIXED: bug: keymap changes unnecessarily 
   - Should now build cleanly in C++ environments (Reported by psc on the
     mailing list)
+  @ NEEDS TEST,FLAG,DOC: Window relative movements (Requested by Anthony Thyssen via mailing list)
   @ NEEDS TEST,FLAG,DOC: Add search --desktop
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=38
   @ NEEDS TEST,FLAG,DOC: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
@@ -38,7 +39,6 @@ KNOWN ISSUES:
     list)
   @ TODO: set_desktop relative movements (+N or -N to move relative) (Requested
     by Anthony Thyssen)
-  @ TODO: Window relative movements (Requested by Anthony Thyssen via mailing list)
   @ TODO: Change cursor when in 'selectwindow' (Requested by Anthony Thyssen
     via mailing list)
   @ TODO: snapshot and restore window geometries? Maybe best as a script.
