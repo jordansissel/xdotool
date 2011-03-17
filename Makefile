@@ -113,7 +113,7 @@ uninstall:
 .PHONY: clean
 clean:
 	rm -f *.o xdotool xdotool.static xdotool.1 xdotool.html \
-	      libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) || true
+	      libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) libxdo.a || true
 
 xdo.o: xdo.c xdo_version.h
 	$(CC) $(CFLAGS) -fPIC -c xdo.c
@@ -130,6 +130,9 @@ xdotool.c: xdo.h
 
 libxdo.$(LIBSUFFIX): xdo.o xdo_search.o
 	$(CC) $(LDFLAGS) $(DYNLIBFLAG) $(LIBNAMEFLAG) xdo.o xdo_search.o -o $@ $(LIBS)
+
+libxdo.a: xdo.o xdo_search.o
+	ar qv $@ xdo.o xdo_search.o
 
 libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 	ln -s $< $@

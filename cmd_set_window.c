@@ -10,7 +10,7 @@
 int cmd_set_window(context_t *context) {
   char *cmd = *context->argv;
   int c;
-  char *role = NULL, *icon = NULL, *name = NULL, *class = NULL,
+  char *role = NULL, *icon = NULL, *name = NULL, *_class = NULL,
        *classname = NULL;
   int override_redirect = -1;
   int urgency = -1;
@@ -53,7 +53,7 @@ int cmd_set_window(context_t *context) {
         role = strdup(optarg);
         break;
       case 'C':
-        class = strdup(optarg);
+        _class = strdup(optarg);
         break;
       case 'N':
         classname = strdup(optarg);
@@ -90,8 +90,8 @@ int cmd_set_window(context_t *context) {
       xdo_window_setprop(context->xdo, window, "WM_ICON_NAME", icon);
     if (role)
       xdo_window_setprop(context->xdo, window, "WM_WINDOW_ROLE", role);
-    if (classname || class)
-      xdo_window_setclass(context->xdo, window, classname, class);
+    if (classname || _class)
+      xdo_window_setclass(context->xdo, window, classname, _class);
     if (override_redirect != -1)
       xdo_window_set_override_redirect(context->xdo, window,
                                        override_redirect);

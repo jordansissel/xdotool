@@ -21,16 +21,17 @@ KNOWN ISSUES:
     by Andreas Wagner on the mailing list.
   - Make 'get_desktop_viewport' output usable with 'set_desktop_viewport'
     http://code.google.com/p/semicomplete/issues/detail?id=47
-  @ FEATURE: Build cleanly in C++ environments (Reported by psc on the mailing
-  list)
-  @ FEATURE: Build 'libxdo.a' for static library inclusion (Requested by psc on
-    the mailing list) @ FIXED: bug: keymap changes unnecessarily
+  - You can now make 'libxdo.a' for embedding libxdo into your binary
+    (Requested by psc on the mailing list).
+  - FIXED: bug: keymap changes unnecessarily 
+  - Should now build cleanly in C++ environments (Reported by psc on the
+    mailing list)
   @ NEEDS TEST,FLAG,DOC: Add search --desktop
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=38
   @ NEEDS TEST,FLAG,DOC: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
   @ NEEDS TEST,FLAG,DOC: New command 'getwindowgeometry' for fetching window
     position and size (Requested by Anthony Thyssen via mailing list)
-  @ NEEDSTEST: Search --sync (blocks until the search is successful)
+  @ NEEDS TEST,FLAG,DOC: Search --sync (blocks until the search is successful)
   @ BUG: behave mouse-click doesn't work right. 
     http://code.google.com/p/semicomplete/issues/detail?id=42
   @ NEEDS TEST: Window move along one axis. (Requested by etnlIcarus via mailing

@@ -324,15 +324,15 @@ int xdo_window_set_override_redirect(const xdo_t *xdo, Window wid,
 }
 
 int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name,
-                         const char *class) {
+                         const char *_class) {
   int ret = 0;
   XClassHint *hint = XAllocClassHint();
   XGetClassHint(xdo->xdpy, wid, hint);
   if (name != NULL)
     hint->res_name = (char*)name;
 
-  if(class != NULL)
-    hint->res_class = (char*)class;
+  if(_class != NULL)
+    hint->res_class = (char*)_class;
 
   ret = XSetClassHint(xdo->xdpy, wid, hint);
   XFree(hint);
