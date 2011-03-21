@@ -37,6 +37,10 @@ KNOWN ISSUES:
     http://code.google.com/p/semicomplete/issues/detail?id=42
   @ NEEDS TEST: Window move along one axis. (Requested by etnlIcarus via mailing
     list)
+  @ BUG: This types the wrong symbols:
+      setxkbmap -option grp:switch,grp:shifts_toggle se,us
+      xdotool "type" '`12345678990-=~!@#$%^&*()_+[]{}'
+      Result: ¶12345678990\=¾ !²#¼%⅝&«()¿+[]{}
   @ TODO: set_desktop relative movements (+N or -N to move relative) (Requested
     by Anthony Thyssen)
   @ TODO: Change cursor when in 'selectwindow' (Requested by Anthony Thyssen
