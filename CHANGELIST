@@ -47,6 +47,7 @@ KNOWN ISSUES:
     via mailing list)
   @ TODO: snapshot and restore window geometries? Maybe best as a script.
     (Requested by Joseph Krahn)
+  @ TODO: Want way to query desktop dimensions (Requested by @rrwo via twitter)
 
   Deferred:
   @ TODO: maximize, unmaximize windows (Requested by Joe Krahn via
