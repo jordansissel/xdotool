@@ -37,6 +37,7 @@ KNOWN ISSUES:
     http://code.google.com/p/semicomplete/issues/detail?id=42
   @ NEEDS TEST: Window move along one axis. (Requested by etnlIcarus via mailing
     list)
+  @ FEATURE: Add a 'sleep' command.
   @ BUG: This types the wrong symbols:
       setxkbmap -option grp:switch,grp:shifts_toggle se,us
       xdotool "type" '`12345678990-=~!@#$%^&*()_+[]{}'
