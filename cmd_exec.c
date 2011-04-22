@@ -5,14 +5,13 @@
 #include <sys/wait.h>
 
 int cmd_exec(context_t *context) {
-
   char *cmd = *context->argv;
-  char **command = (char **) calloc(1, sizeof(char *));
+  char **command = NULL;
   int command_count = 0;
   int ret = EXIT_SUCCESS;
   int opsync = 0;
   int arity = -1;
-  char *terminator = calloc(1, sizeof(char));
+  char *terminator = NULL;
   int c, i;
 
   typedef enum {
@@ -28,7 +27,16 @@ int cmd_exec(context_t *context) {
   static const char *usage = 
     "Usage: %s [options] command [arg1 arg2 ...] [terminator]\n"
     "--sync    - only exit when the command given finishes. The default\n"
-    "            is to fork a child process and continue.\n";
+    "            is to fork a child process and continue.\n"
+    "--args N  - how many arguments to expect in the exec command. This is\n"
+    "            useful for ending an exec and continuing with more xdotool\n"
+    "            commands\n"
+    "--terminator TERM - similar to --args, specifies a terminator that\n"
+    "                    marks the end of 'exec' arguments. This is useful\n"
+    "                    for continuing with more xdotool commands.\n"
+    "\n"
+    "Unless --args OR --terminator is specified, the exec command is assumed\n"
+    "to be the remainder of the command line.\n";
   
   int option_index;
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
@@ -47,9 +55,8 @@ int cmd_exec(context_t *context) {
         arity = atoi(optarg);
         break;
       case opt_terminator:
-	terminator = realloc(terminator, (strlen(optarg)+1) * sizeof(char));
-	strncpy(terminator, optarg, strlen(optarg));
-	break;
+        terminator = strdup(optarg);
+        break;
       default:
         fprintf(stderr, usage, cmd);
         return EXIT_FAILURE;
@@ -64,25 +71,28 @@ int cmd_exec(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  if(arity > 0 && strlen(terminator) > 0) {
+  if(arity > 0 && terminator != NULL) {
     fprintf(stderr, "Don't use both --terminator and --args.\n");
     return EXIT_FAILURE;
   }
 
-  for (i=0; i<context->argc; i++) {
-
-    if (arity > 0 && i == arity)
-      break;
-    
-    if (strlen(terminator) > 0 && strcmp(terminator, context->argv[i]) == 0) {
-      consume_args(context, 1);
+  command = calloc(context->argc, sizeof(char *));
+  for (i=0; i < context->argc; i++) {
+    if (arity > 0 && i == arity) {
+      command[i] = NULL;
       break;
     }
-    
-    command = realloc(command, (command_count+1) * sizeof(char *));
-    command[command_count] = (char *) calloc(strlen(context->argv[i])+1, sizeof(char));
-    strncpy(command[command_count], context->argv[i], strlen(context->argv[i])+1);      
-    command_count++;
+
+    /* if we have a terminator and the current argument matches it... */
+    if (terminator != NULL && strcmp(terminator, context->argv[i]) == 0) {
+      command[i] = NULL;
+      command_count++; /* Consume the terminator, too */
+      break;
+    }
+
+    command[i] = strdup(context->argv[i]);
+    command_count = i + 1;
+    xdotool_debug(context, "Exec arg[%d]: %s", i, command[i]);
   }
   
   pid_t child;
@@ -102,8 +112,11 @@ int cmd_exec(context_t *context) {
   }
 
   consume_args(context, command_count);
-  free(terminator);
-  for(i=0; i<command_count; i++) {
+  if (terminator != NULL) {
+    free(terminator);
+  }
+
+  for (i=0; i < command_count; i++) {
     free(command[i]);
   }
   free(command);
