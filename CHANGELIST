@@ -41,6 +41,7 @@ KNOWN ISSUES:
   @ FEATURE: Add '--args N' and '--terminator TERMINATOR' to the 'exec' command.
     Default terminator unless specified (or --args is) is ':'
     (Requested by Joseph Krahn and Henning Bekel via mailing list)
+  @ FEATURE: Add '--args N' and '--terminator TERMINATOR' to the 'type' command.
   @ BUG: This types the wrong symbols:
       setxkbmap -option grp:switch,grp:shifts_toggle se,us
       xdotool "type" '`12345678990-=~!@#$%^&*()_+[]{}'

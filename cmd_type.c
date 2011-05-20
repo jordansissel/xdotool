@@ -69,6 +69,7 @@ int cmd_type(context_t *context) {
     }
 
     for (i = 0; i < context->argc; i++) {
+      //printf("Typing: '%s'\n", context->argv[i]);
       int tmp = xdo_type(context->xdo, window, context->argv[i], delay);
 
       if (tmp) {
