@@ -26,6 +26,9 @@ KNOWN ISSUES:
   - FIXED: bug: keymap changes unnecessarily 
   - Should now build cleanly in C++ environments (Reported by psc on the
     mailing list)
+  - bugfix: xdotool should use command names first before trying file scripts. 
+    See https://bbs.archlinux.org/viewtopic.php?pid=938309 for original report.
+  - Add a 'sleep' command. (Requested by Joseph Krahn via mailing list)
   @ NEEDS TEST,FLAG,DOC: Window relative movements (Requested by Anthony Thyssen via mailing list)
   @ NEEDS TEST,FLAG,DOC: Add search --desktop
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=38
@@ -37,13 +40,10 @@ KNOWN ISSUES:
     http://code.google.com/p/semicomplete/issues/detail?id=42
   @ NEEDS TEST: Window move along one axis. (Requested by etnlIcarus via mailing
     list)
-  @ FEATURE: Add a 'sleep' command. (Requested by Joseph Krahn via mailing list)
   @ FEATURE: Add '--args N' and '--terminator TERMINATOR' to the 'exec' command.
     Default terminator unless specified (or --args is) is ':'
     (Requested by Joseph Krahn and Henning Bekel via mailing list)
   @ FEATURE: Add '--args N' and '--terminator TERMINATOR' to the 'type' command.
-  @ BUG: xdotool should use command names first before trying file scripts. 
-    See https://bbs.archlinux.org/viewtopic.php?pid=938309 for original report.
   @ BUG: This types the wrong symbols:
       setxkbmap -option grp:switch,grp:shifts_toggle se,us
       xdotool "type" '`12345678990-=~!@#$%^&*()_+[]{}'

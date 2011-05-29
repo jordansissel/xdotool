@@ -41,6 +41,7 @@ typedef struct context {
 
 int xdotool_main(int argc, char **argv);
 int cmd_exec(context_t *context);
+int cmd_sleep(context_t *context);
 int cmd_behave(context_t *context);
 int cmd_behave_screen_edge(context_t *context);
 int cmd_click(context_t *context);

@@ -267,6 +267,7 @@ struct dispatch {
   { "set_desktop_viewport", cmd_set_desktop_viewport, },
 
   { "exec", cmd_exec, },
+  { "sleep", cmd_sleep, },
 
   { NULL, NULL, },
 };

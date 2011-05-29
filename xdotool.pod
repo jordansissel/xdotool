@@ -855,6 +855,11 @@ Examples:
  # This succeeds, though, since we do not use --sync on the exec command.
  xdotool exec /bin/false mousemove 0 0
 
+=item B<sleep> I<seconds>
+
+Sleep for a specified period. Fractions of seconds (like 1.3, or 0.4) are
+valid, here.
+
 =head1 SCRIPTS
 
 xdotool can read a list of commands via stdin or a file if you want. A script
