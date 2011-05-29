@@ -8,10 +8,10 @@ xdotool - command-line X11 automation tool
 
 B<xdotool> I<cmd> I<args...>
 
-Notation: Some documentation uses I<[window=%1]> to denote an optional
-argument. This case means that the argument, if not present, will default to
-"%1".
-
+Notation: Some documentation uses I<[window]> to denote an optional
+window argument. This case means that the argument, if not present, will
+default to "%1". See L<WINDOW STACK> for what "%1" means.
+ 
 =head1 DESCRIPTION
 
 B<xdotool> lets you programatically (or manually) simulate keyboard input and
@@ -505,7 +505,7 @@ Examples:
  # Emulate focus-follows-mouse
  xdotool search . behave %@ mouse-enter windowfocus
 
-=item B<getwindowpid> I<[window=%1]>
+=item B<getwindowpid> I<[window]>
 
 Output the PID owning a given window. This requires effort from the application
 owning a window and may not work for all windows. This uses _NET_WM_PID
@@ -518,7 +518,7 @@ this is an error. See L<WINDOW STACK> for more details.
 Example: Find the PID for all xterms:
  xdotool search --class xterm getwindowpid %@
 
-=item B<getwindowname> I<[window=%1]>
+=item B<getwindowname> I<[window]>
 
 Output the name of a given window, also known as the title. This is the text
 displayed in the window's titlebar by your window manager.
@@ -526,7 +526,7 @@ displayed in the window's titlebar by your window manager.
 If no window is given, the default is '%1'. If no windows are on the stack, then
 this is an error. See L<WINDOW STACK> for more details.
 
-=item B<getwindowgeometry> [options] I<[window=%1]>
+=item B<getwindowgeometry> [options] I<[window]>
 
 Output the geometry (location and position) of a window. The values include: x,
 y, width, height, and screen number.
@@ -551,7 +551,7 @@ WM_CLASS set and return that window id.
 If you really want the window currently having focus and don't care if it has a
 WM_CLASS setting, then use 'getwindowfocus -f'
 
-=item B<windowsize> [options] [window=%1] width height
+=item B<windowsize> [options] [window] width height
 
 Set the window size of the given window. If no window is given, %1 is the
 default.  See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
@@ -590,7 +590,7 @@ necessary to the requested size.
 Example: To set a terminal to be 80x24 characters, you would use:
  xdotool windowsize --usehints I<some_windowid> 80 24
 
-=item B<windowmove> I<[options]> I<[window=%1]> I<x> I<y>
+=item B<windowmove> I<[options]> I<[window]> I<x> I<y>
 
 Move the window to the given position. If no window is given, %1 is the
 default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
@@ -616,7 +616,7 @@ scripts that depend on actions being completed before moving on.
 =back
 
 
-=item B<windowfocus> I<[options]> I<[window=%1]>
+=item B<windowfocus> I<[options]> I<[window]>
 
 Focus a window. If no window is given, %1 is the default. See L<WINDOW STACK>
 and L<COMMAND CHAINING> for more details.
@@ -633,7 +633,7 @@ before moving on.
 
 =back
 
-=item B<windowmap> I<[options]> I<[window=%1]>
+=item B<windowmap> I<[options]> I<[window]>
 
 Map a window. In X11 terminology, mapping a window means making it visible on
 the screen. If no window is given, %1 is the default. See L<WINDOW STACK> and
@@ -649,7 +649,7 @@ before moving on.
 
 =back
 
-=item B<windowminimize> I<[options]> I<[window=%1]>
+=item B<windowminimize> I<[options]> I<[window]>
 
 Minimize a window. In X11 terminology, this is called 'iconify.'
 If no window is given, %1 is the default. See L<WINDOW STACK> and
@@ -671,7 +671,7 @@ Raise the window to the top of the stack. This may not work on all window
 managers. If no window is given, %1 is the default. See L<WINDOW STACK> and
 L<COMMAND CHAINING> for more details.
 
-=item B<windowreparent> I<[source_window=%1]> I<destination_window>
+=item B<windowreparent> I<[source_window]> I<destination_window>
 
 Reparent a window. This moves the I<source_window> to be a child window of
 I<destination_window>. If no source is given, %1 is the default. 
@@ -679,7 +679,7 @@ L<WINDOW STACK> window references (like %1) are valid for both I<source_window>
 and I<destination_window> See L<WINDOW STACK> and L<COMMAND CHAINING> for more
 details.
 
-=item B<windowkill> I<[window=%1]>
+=item B<windowkill> I<[window]>
 
 Kill a window. This action will destroy the window and kill the client
 controlling it. If no window is given, %1 is the default. See L<WINDOW
@@ -752,7 +752,7 @@ MANAGER HINTS> for more information.
 
 =over 
 
-=item B<windowactivate> I<[options]> I<[window=%1]>
+=item B<windowactivate> I<[options]> I<[window]>
 
 Activate the window. This command is different from windowfocus:
 if the window is on another desktop, we will switch to that desktop. It also
@@ -811,12 +811,12 @@ Change the current view to the specified desktop.
 
 Output the current desktop in view.
 
-=item B<set_desktop_for_window> I<[window=%1]> I<desktop_number>
+=item B<set_desktop_for_window> I<[window]> I<desktop_number>
 
 Move a window to a different desktop. If no window is given, %1 is the
 default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
 
-=item B<get_desktop_for_window> I<[window=%1]>
+=item B<get_desktop_for_window> I<[window]>
 
 Output the desktop currently containing the given window. Move a window to a
 different desktop. If no window is given, %1 is the default. See L<WINDOW

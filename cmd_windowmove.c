@@ -39,11 +39,12 @@ int cmd_windowmove(context_t *context) {
   };
   static const char *usage = 
     "Usage: %s [options] [window=%1] x y\n"
-    "--sync    - only exit once the window has moved\n"
+    "--sync      - only exit once the window has moved\n"
+    "--relative  - make movements relative to the current window position"
     "\n"
     "If you use literal 'x' or 'y' for the x coordinates, then the current\n"
     "coordinate will be used. This is useful for moving the window along\n"
-    "only one axis\n";
+    "only one axis.\n";
 
   int option_index;
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
