@@ -18,8 +18,8 @@ int cmd_sleep(context_t *context) {
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-    "Usage: %s seconds" \
-    "Sleep a given number of seconds. Fractions of seconds are valid.";
+    "Usage: %s seconds\n" \
+    "Sleep a given number of seconds. Fractions of seconds are valid.\n";
   
   int option_index;
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
