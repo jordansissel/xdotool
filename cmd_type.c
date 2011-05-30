@@ -86,8 +86,14 @@ int cmd_type(context_t *context) {
     return 1;
   }
 
-  if(arity > 0 && terminator != NULL) {
+  if (arity > 0 && terminator != NULL) {
     fprintf(stderr, "Don't use both --terminator and --args.\n");
+    return EXIT_FAILURE;
+  }
+
+  if (context->argc < arity) {
+    fprintf(stderr, "You said '--args %d' but only gave %d arguments.\n",
+            arity, context->argc);
     return EXIT_FAILURE;
   }
 
@@ -117,9 +123,9 @@ int cmd_type(context_t *context) {
       xdo_clear_active_modifiers(context->xdo, window, active_mods);
     }
 
-    for (i = 0; i < context->argc; i++) {
+    for (i = 0; i < data_count; i++) {
       //printf("Typing: '%s'\n", context->argv[i]);
-      int tmp = xdo_type(context->xdo, window, context->argv[i], delay);
+      int tmp = xdo_type(context->xdo, window, data[i], delay);
 
       if (tmp) {
         fprintf(stderr, "xdo_type reported an error\n");

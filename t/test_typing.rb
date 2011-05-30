@@ -118,5 +118,23 @@ class XdotoolTypingTests < Test::Unit::TestCase
     _test_typing(SYMBOLS)
   end
 
+  def test_terminator
+    input = %w{hello world}
+    status, lines = xdotool "type --clearmodifiers --terminator FIZZLE #{input.join(" ")} FIZZLE"
+    xdotool "key ctrl+d ctrl+d"
+    Process.wait(@launchpid) rescue nil
+    data = readfile
+    assert_equal(input.join(""), data)
+  end # def test_terminator
+
+  def test_arity
+    input = %w{hello world}
+    status, lines = xdotool "type --clearmodifiers --args 2 #{input.join(" ")}"
+    xdotool "key ctrl+d ctrl+d"
+    Process.wait(@launchpid) rescue nil
+    data = readfile
+    assert_equal(input.join(""), data)
+  end # def test_terminator
+
 end # class XdotoolTypingTests
 
