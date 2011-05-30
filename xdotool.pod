@@ -806,9 +806,18 @@ the screen size.
 For example, if your screen is 1280x800, you can move to the 2nd workspace by doing:
  xdotool set_desktop_viewport 1280 0
 
-=item B<set_desktop> I<desktop_number>
+=item B<set_desktop> I<[options]> I<desktop_number>
 
 Change the current view to the specified desktop.
+
+=over
+
+=item B<--relative> 
+
+Use relative movements instead of absolute. This lets you move relative to the
+current desktop.
+
+=back
 
 =item B<get_desktop>
 
