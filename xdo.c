@@ -27,6 +27,7 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
 #include <X11/keysym.h>
+#include <X11/cursorfont.h>
 
 #include "xdo.h"
 #include "xdo_util.h"
@@ -713,20 +714,22 @@ int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
    * out what the client window is.
    * Also, everyone else who does 'select window' does it this way.
    */
+  Cursor cursor = XCreateFontCursor(xdo->xdpy, XC_target);
   int grab_ret = 0;
   grab_ret = XGrabPointer(xdo->xdpy, screen->root, False, ButtonReleaseMask,
-               GrabModeSync, GrabModeAsync, screen->root, None, CurrentTime);
+               GrabModeSync, GrabModeAsync, screen->root, cursor, CurrentTime);
   if (grab_ret == AlreadyGrabbed) {
     fprintf(stderr, "Attempt to grab the mouse failed. Something already has"
             " the mouse grabbed. This can happen if you are dragging something"
             " or if there is a popup currently shown\n");
     return XDO_ERROR;
   }
-  
+
   XEvent e;
   XAllowEvents(xdo->xdpy, SyncPointer, CurrentTime);
   XWindowEvent(xdo->xdpy, screen->root, ButtonReleaseMask, &e);
   XUngrabPointer(xdo->xdpy, CurrentTime);
+  XFreeCursor(xdo->xdpy, cursor);
 
   /* If there is no subwindow, then we clicked on the root window */
   if (e.xbutton.subwindow == 0) {
