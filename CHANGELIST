@@ -6,7 +6,7 @@ KNOWN ISSUES:
     (say, for the OS X menu bar), but OS X's default X11 wm does not do this.
     If this affects you, please let me know and I will attempt to fix it.
 
-2.2011????.*
+2.20110530.*
   - New set_window feature: --urgency. This lets you set the urgency flag on a
     window Window managers will interpret this as something about your window
     needing attention. It might flash in the taskbar, pop up, or other.
@@ -23,7 +23,7 @@ KNOWN ISSUES:
     http://code.google.com/p/semicomplete/issues/detail?id=47
   - You can now make 'libxdo.a' for embedding libxdo into your binary
     (Requested by psc on the mailing list).
-  - FIXED: bug: keymap changes unnecessarily 
+  - Fixed a typing bug where the keymap changes unnecessarily 
   - Should now build cleanly in C++ environments (Reported by psc on the
     mailing list)
   - bugfix: xdotool should use command names first before trying file scripts. 
