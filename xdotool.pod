@@ -838,6 +838,9 @@ STACK> and L<COMMAND CHAINING> for more details.
 
 =head1 MISCELLANEOUS COMMANDS
 
+ 
+=over 
+
 =item B<exec> I<[options]> I<command> I<[...]>
 
 Execute a program. This is often useful when combined with behave_screen_edge
@@ -871,6 +874,8 @@ Examples:
 
 Sleep for a specified period. Fractions of seconds (like 1.3, or 0.4) are
 valid, here.
+
+=back
 
 =head1 SCRIPTS
 
