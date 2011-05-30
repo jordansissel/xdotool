@@ -76,17 +76,13 @@ int cmd_exec(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  if (!(arity > 0 || terminator != NULL)) {
-    command_count = context->argc;
-  }
-
-  command = calloc(context->argc + 1, sizeof(char *));
-
   if (context->argc < arity) {
     fprintf(stderr, "You said '--args %d' but only gave %d arguments.\n",
             arity, context->argc);
     return EXIT_FAILURE;
   }
+
+  command = calloc(context->argc + 1, sizeof(char *));
 
   for (i=0; i < context->argc; i++) {
     if (arity > 0 && i == arity) {
