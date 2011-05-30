@@ -116,24 +116,27 @@ static int _windowmove(context_t *context, struct windowmove *windowmove) {
     }
   }
 
+  int target_x = windowmove->x;
+  int target_y = windowmove->y;
+
+
   if (windowmove->flags & WINDOWMOVE_RELATIVE) {
-    windowmove->x += orig_win_x;
-    windowmove->y += orig_win_y;
+    target_x = orig_win_x + windowmove->x;
+    target_y = orig_win_y + windowmove->y;
   }
 
   if (windowmove->flags & WINDOWMOVE_X_CURRENT) {
-    windowmove->x = orig_win_x;
+    target_x = orig_win_x;
     xdotool_debug(context, "Using %d for x\n", windowmove->x);
   }
 
   if (windowmove->flags & WINDOWMOVE_Y_CURRENT) {
-    windowmove->y = orig_win_y;
+    target_y = orig_win_y;
     xdotool_debug(context, "Using %d for y\n", windowmove->y);
   }
 
 
-  ret = xdo_window_move(context->xdo, windowmove->window,
-                        windowmove->x, windowmove->y);
+  ret = xdo_window_move(context->xdo, windowmove->window, target_x, target_y);
   if (ret) {
     fprintf(stderr,
             "xdo_window_move reported an error while moving window %ld\n",
