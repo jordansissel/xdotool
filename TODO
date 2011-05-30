@@ -1,3 +1,5 @@
+The following are todos not yet complete:
+
   @ BUG: behave mouse-click doesn't work right. 
     http://code.google.com/p/semicomplete/issues/detail?id=42
   @ BUG: This types the wrong symbols:
@@ -6,3 +8,8 @@
       Result: ¶12345678990\=¾ !²#¼%⅝&«()¿+[]{}
   @ FEATURE: snapshot and restore window geometries? Maybe best as a script.
     (Requested by Joseph Krahn)
+  @ TODO: maximize, unmaximize windows (Requested by Joe Krahn via
+    mailing list)
+    This is hard to implement. I read over how EWMH recommends this, but
+    none of my messages resulted in maximize, shading, etc.
+

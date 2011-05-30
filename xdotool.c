@@ -225,6 +225,7 @@ struct dispatch {
   { "getwindowname", cmd_getwindowname, },
   { "getwindowpid", cmd_getwindowpid, },
   { "getwindowgeometry", cmd_getwindowgeometry, },
+  { "getdisplaygeometry", cmd_get_display_geometry, },
   { "search", cmd_search, },
   { "selectwindow", cmd_window_select, },
 

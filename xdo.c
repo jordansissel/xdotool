@@ -26,6 +26,7 @@
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
+#include <X11/extensions/Xinerama.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
 
@@ -2057,4 +2058,30 @@ void xdo_disable_feature(xdo_t *xdo, int feature) {
 
 int xdo_has_feature(xdo_t *xdo, int feature) {
   return (xdo->features_mask & (1 << feature));
+}
+
+int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
+                                unsigned int *height, int screen) {
+  int dummy;
+
+  if (XineramaQueryExtension(xdo->xdpy, &dummy, &dummy) \
+      && XineramaIsActive(xdo->xdpy)) {
+    XineramaScreenInfo *info;
+    int screens;
+
+    info = XineramaQueryScreens(xdo->xdpy, &screens);
+    if (screen < 0 || screen >= screens) {
+      fprintf(stderr, "Invalid screen number %d outside range 0 - %d\n",
+              screen, screens - 1);
+      return XDO_ERROR;
+    }
+    *width = (unsigned int) info[screen].width;
+    *height = (unsigned int) info[screen].height;
+    XFree(info);
+    return XDO_SUCCESS;
+  } else {
+    /* Use the root window size if no zinerama */
+    Window root = RootWindow(xdo->xdpy, screen);
+    return xdo_get_window_size(xdo, root, width, height);
+  }
 }

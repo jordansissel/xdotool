@@ -52,14 +52,10 @@ KNOWN ISSUES:
   - The mouse cursor now changes during 'xdotool selectwindow' (Requested by
     Anthony Thyssen via mailing list)
   - Added '--args N' and '--terminator TERMINATOR' to the 'type' command.
-  @ TODO: Want way to query desktop dimensions (Requested by @rrwo via twitter)
+  - Add 'getdisplayviewport' command for querying the size of your screen.
+    (Requested by @rrwo via twitter)
+  - Add xdo_get_viewport_dimensions function.
  
-Deferred:
-  @ TODO: maximize, unmaximize windows (Requested by Joe Krahn via
-    mailing list)
-    This is hard to implement. I read over how EWMH recommends this, but
-    none of my messages resulted in maximize, shading, etc.
-
 2.20101012.*
   - New command: 'windowminimize' for minimizing windows. If you want to
     unminimize a window, use 'windowactivate'.

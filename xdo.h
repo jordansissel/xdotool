@@ -902,4 +902,10 @@ void xdo_enable_feature(xdo_t *xdo, int feature);
  * @see XDO_FEATURES
  */
 int xdo_has_feature(xdo_t *xdo, int feature);
+
+/**
+ * Query the viewport (your display) dimensions
+ */
+int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
+                                unsigned int *height, int screen);
 #endif /* ifndef _XDO_H_ */
