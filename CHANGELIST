@@ -1,10 +1,10 @@
 KNOWN ISSUES:
-  - OSX: windowmove in OSX/X11 default WM incorrectly reports or accepts window position.
-    The coordinates of a window's current position cannot be used to correctly place
-    the window. Normally, window managers are supposed to report reserved window extents
-    in the property list of the root window (say, for the OS X menu bar), but OS X's 
-    default X11 wm does not do this. If this affects you, please let me know and
-    I will attempt to fix it.
+  - OSX: windowmove in OSX/X11 default WM incorrectly reports or accepts window
+    position.  The coordinates of a window's current position cannot be used to
+    correctly place the window. Normally, window managers are supposed to
+    report reserved window extents in the property list of the root window
+    (say, for the OS X menu bar), but OS X's default X11 wm does not do this.
+    If this affects you, please let me know and I will attempt to fix it.
 
 2.2011????.*
   - New set_window feature: --urgency. This lets you set the urgency flag on a
@@ -29,39 +29,37 @@ KNOWN ISSUES:
   - bugfix: xdotool should use command names first before trying file scripts. 
     See https://bbs.archlinux.org/viewtopic.php?pid=938309 for original report.
   - Add a 'sleep' command. (Requested by Joseph Krahn via mailing list)
-  @ NEEDS TEST,FLAG,DOC: Window relative movements (Requested by Anthony Thyssen via mailing list)
-  @ NEEDS TEST,FLAG,DOC: Add search --desktop
+  - Add --relative flag to windowmve. (Requested by Anthony Thyssen via mailing
+  - Add --desktop flag to the search command. This lets you search for windows
+    on specific desktop. Requires a window manager that supports multiple
+    desktops in a way that EWMH supports.
     Fixes http://code.google.com/p/semicomplete/issues/detail?id=38
-  @ NEEDS TEST,FLAG,DOC: Search shortcutting (break after N matches) (Requested by Anthony Thyssen)
-  @ NEEDS TEST,FLAG,DOC: New command 'getwindowgeometry' for fetching window
-    position and size (Requested by Anthony Thyssen via mailing list)
-  @ NEEDS TEST,FLAG,DOC: Search --sync (blocks until the search is successful)
-  @ BUG: behave mouse-click doesn't work right. 
+  - Add --limit flag to search. This allows you to break the search early after
+    a certain number of matches. (Requested by Anthony Thyssen)
+  - New command 'getwindowgeometry' for fetching window position and size
+    (Requested by Anthony Thyssen via mailing list)
+  - Add --sync flag to search command; blocks until results are found.
+    xdotool will search every 0.5 seconds for results.
     http://code.google.com/p/semicomplete/issues/detail?id=42
-  @ NEEDS TEST: Window move along one axis. (Requested by etnlIcarus via mailing
-    list)
-  @ FEATURE: Add '--args N' and '--terminator TERMINATOR' to the 'exec' command.
-    Default terminator unless specified (or --args is) is ':'
-    (Requested by Joseph Krahn and Henning Bekel via mailing list)
-  @ FEATURE: Add '--args N' and '--terminator TERMINATOR' to the 'type' command.
-  @ BUG: This types the wrong symbols:
-      setxkbmap -option grp:switch,grp:shifts_toggle se,us
-      xdotool "type" '`12345678990-=~!@#$%^&*()_+[]{}'
-      Result: ¶12345678990\=¾ !²#¼%⅝&«()¿+[]{}
-  @ TODO: set_desktop relative movements (+N or -N to move relative) (Requested
-    by Anthony Thyssen)
-  @ TODO: Change cursor when in 'selectwindow' (Requested by Anthony Thyssen
-    via mailing list)
-  @ TODO: snapshot and restore window geometries? Maybe best as a script.
-    (Requested by Joseph Krahn)
+  - windowmove can now move windows along an axis. Give literal 'x' or 'y'
+    instead of a coordinate and it uses the current position. (Requested by
+    etnlIcarus via mailing list)
+  - Add '--args N' and '--terminator TERMINATOR' to the 'exec' command.
+    Default terminator unless specified (or --args is) is ':' (Requested by
+    Joseph Krahn and Henning Bekel via mailing list)
+  - set_desktop now supports --relative flag (+N or -N to move relative)
+    (Requested by Anthony Thyssen)
+  - The mouse cursor now changes during 'xdotool selectwindow' (Requested by
+    Anthony Thyssen via mailing list)
+  - Added '--args N' and '--terminator TERMINATOR' to the 'type' command.
   @ TODO: Want way to query desktop dimensions (Requested by @rrwo via twitter)
-
-  Deferred:
+ 
+Deferred:
   @ TODO: maximize, unmaximize windows (Requested by Joe Krahn via
     mailing list)
     This is hard to implement. I read over how EWMH recommends this, but
     none of my messages resulted in maximize, shading, etc.
- 
+
 2.20101012.*
   - New command: 'windowminimize' for minimizing windows. If you want to
     unminimize a window, use 'windowactivate'.
