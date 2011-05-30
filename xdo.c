@@ -738,6 +738,7 @@ int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
      /* Random testing showed that that 'root' always is the same as 'window'
       * while 'subwindow' is the actual window we clicked on. Confusing... */
      *window_ret = e.xbutton.subwindow;
+    _xdo_debug(xdo, "Click on window %lu foo", *window_ret);
     xdo_window_find_client(xdo, *window_ret, window_ret, XDO_FIND_CHILDREN);
   }
   return XDO_SUCCESS;
@@ -1204,7 +1205,6 @@ int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret) {
 
 int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
                            int direction) {
-  //printf("call findclient: %ld\n", window);
   /* for XQueryTree */
   Window dummy, parent, *children = NULL;
   unsigned int nchildren;
@@ -1217,22 +1217,26 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
     }
 
     long items;
+    _xdo_debug(xdo, "getwinprop on %lu", window);
     xdo_getwinprop(xdo, window, atom_wmstate, &items, NULL, NULL);
 
     if (items == 0) {
       /* This window doesn't have WM_STATE property, keep searching. */
+      _xdo_debug(xdo, "window %lu has no WM_STATE property, digging more.", window);
       XQueryTree(xdo->xdpy, window, &dummy, &parent, &children, &nchildren);
 
       if (direction == XDO_FIND_PARENTS) {
+        _xdo_debug(xdo, "searching parents");
         /* Don't care about the children, but we still need to free them */
         if (children != NULL)
           XFree(children);
         window = parent;
       } else if (direction == XDO_FIND_CHILDREN) {
+        _xdo_debug(xdo, "searching %d children", nchildren);
         unsigned int i = 0;
         int ret;
         done = True; /* recursion should end us */
-        for (i = 0; i < nchildren && !done; i++) {
+        for (i = 0; i < nchildren; i++) {
           ret = xdo_window_find_client(xdo, children[i], &window, direction);
           fprintf(stderr, "findclient: %ld\n", window);
           if (ret == XDO_SUCCESS) {
