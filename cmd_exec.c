@@ -71,29 +71,39 @@ int cmd_exec(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  if(arity > 0 && terminator != NULL) {
+  if (arity > 0 && terminator != NULL) {
     fprintf(stderr, "Don't use both --terminator and --args.\n");
     return EXIT_FAILURE;
   }
 
-  command = calloc(context->argc, sizeof(char *));
+  if (!(arity > 0 || terminator != NULL)) {
+    command_count = context->argc;
+  }
+
+  command = calloc(context->argc + 1, sizeof(char *));
+
+  if (context->argc < arity) {
+    fprintf(stderr, "You said '--args %d' but only gave %d arguments.\n",
+            arity, context->argc);
+    return EXIT_FAILURE;
+  }
+
   for (i=0; i < context->argc; i++) {
     if (arity > 0 && i == arity) {
-      command[i] = NULL;
       break;
     }
 
     /* if we have a terminator and the current argument matches it... */
     if (terminator != NULL && strcmp(terminator, context->argv[i]) == 0) {
-      command[i] = NULL;
       command_count++; /* Consume the terminator, too */
       break;
     }
 
     command[i] = strdup(context->argv[i]);
-    command_count = i + 1;
+    command_count = i + 1; /* i starts at 0 */
     xdotool_debug(context, "Exec arg[%d]: %s", i, command[i]);
   }
+  command[i] = NULL;
   
   pid_t child;
   child = fork();
