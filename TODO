@@ -12,4 +12,4 @@ The following are todos not yet complete:
     mailing list)
     This is hard to implement. I read over how EWMH recommends this, but
     none of my messages resulted in maximize, shading, etc.
-
+  @ document getdisplaygeometry

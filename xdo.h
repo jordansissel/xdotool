@@ -905,6 +905,10 @@ int xdo_has_feature(xdo_t *xdo, int feature);
 
 /**
  * Query the viewport (your display) dimensions
+ *
+ * If Xinerama is active and supported, that api internally is used.
+ * If Xineram is disabled, we will report the root window's dimensions
+ * for the given screen.
  */
 int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
                                 unsigned int *height, int screen);

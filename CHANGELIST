@@ -6,6 +6,8 @@ KNOWN ISSUES:
     (say, for the OS X menu bar), but OS X's default X11 wm does not do this.
     If this affects you, please let me know and I will attempt to fix it.
 
+FOR TODO LIST, SEE TODO FILE :)
+
 2.20110530.*
   - New set_window feature: --urgency. This lets you set the urgency flag on a
     window Window managers will interpret this as something about your window
@@ -52,7 +54,7 @@ KNOWN ISSUES:
   - The mouse cursor now changes during 'xdotool selectwindow' (Requested by
     Anthony Thyssen via mailing list)
   - Added '--args N' and '--terminator TERMINATOR' to the 'type' command.
-  - Add 'getdisplayviewport' command for querying the size of your screen.
+  - Add 'getdisplaygeometry' command for querying the size of your screen.
     (Requested by @rrwo via twitter)
   - Add xdo_get_viewport_dimensions function.
  
