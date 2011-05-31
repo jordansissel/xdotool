@@ -987,6 +987,7 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
 
     if (key.code > 0) {
       key.index = _xdo_get_key_index(xdo, key.key);
+      _xdo_debug(xdo, "key index: %d", key.index);
     } else {
       key.needs_binding = 1;
     }
@@ -1012,6 +1013,7 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
           key.modmask |= Mod5Mask; /* Set AltG/Mode_Shift */
         }
       } 
+      _xdo_debug(xdo, "modmask: %x", key.modmask);
     }
 
     //printf(stderr,
