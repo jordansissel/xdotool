@@ -980,9 +980,9 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
         continue;
       }
     } else {
-      //printf("Found key for %c\n", key.key);
-      //printf("code: %d\n", key.code);
-      //printf("sym: %s\n", XKeysymToString(key.symbol));
+      _xdo_debug(xdo, "Found key for %c", key.key);
+      _xdo_debug(xdo, "code: %d", key.code);
+      _xdo_debug(xdo, "sym: %s", XKeysymToString(key.symbol));
     }
 
     if (key.code > 0) {
