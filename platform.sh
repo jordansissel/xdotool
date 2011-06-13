@@ -39,7 +39,7 @@ libnameflag() {
 
 extralibs() {
   case $uname in
-    Linux) echo "-lrt" ;;
+    Linux|GNU/kFreeBSD) echo "-lrt" ;;
   esac
 }
 
