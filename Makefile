@@ -165,8 +165,16 @@ package: test-package-build create-package create-package-deb
 package-deb: test-package-build create-package-deb
 
 .PHONY: test
+test: WITH_SHELL=/bin/bash
 test: xdotool libxdo.$(VERLIBSUFFIX)
-	$(MAKE) -C t
+	echo $(WITH_SHELL)
+	if [ "$(WITH_SHELL)" = "/bin/sh" ] ; then \
+		echo "Shell '$(WITH_SHELL)' fails on some Linux distros because it could"; \
+		echo "be 'dash', a poorly implemented shell with bugs that break the"; \
+		echo "tests. You need to use bash, zsh, or ksh to run the tests."; \
+		exit 1; \
+	fi
+	SHELL=$(WITH_SHELL) $(MAKE) -C t
 
 xdo_version.h:
 	sh version.sh --header > $@
