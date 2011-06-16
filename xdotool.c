@@ -334,7 +334,7 @@ int script_main(int argc, char **argv) {
   strcpy(script_argv[0], argv[0]);
 
   /* determine whether reading from a file or from stdin */
-  if (!strcmp(path, "-") || !isatty(0)) {
+  if (!strcmp(path, "-")) {
     input = fdopen(0, "r");
   } else {
     input = fopen(path, "r");
