@@ -141,6 +141,8 @@ libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 # xdotool the binary requires libX11 now for XSelectInput and friends.
 # This requirement will go away once more things are refactored into
 # libxdo.
+# TODO(sissel): only do this linker hack if we're using GCC?
+xdotool: LDFLAGS+=-Xlinker -rpath=$(INSTALLLIB)
 xdotool: xdotool.o $(CMDOBJS) libxdo.$(LIBSUFFIX)
 	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS)  -lm $(LIBS)
 
