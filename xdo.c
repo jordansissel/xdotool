@@ -1239,7 +1239,7 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
         done = True; /* recursion should end us */
         for (i = 0; i < nchildren; i++) {
           ret = xdo_window_find_client(xdo, children[i], &window, direction);
-          fprintf(stderr, "findclient: %ld\n", window);
+          //fprintf(stderr, "findclient: %ld\n", window);
           if (ret == XDO_SUCCESS) {
             *window_ret = window;
             break;
