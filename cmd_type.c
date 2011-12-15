@@ -1,5 +1,7 @@
 #include "xdo_cmd.h"
+#include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 int cmd_type(context_t *context) {
   int ret = 0;
@@ -9,9 +11,16 @@ int cmd_type(context_t *context) {
   char *window_arg = NULL;
   int arity = -1;
   char *terminator = NULL;
+  char *file = NULL;
+
+  FILE *input = NULL;
+  char *buffer = NULL;
+  char *marker = NULL;
+  size_t bytes_read = 0;
 
   char **data = NULL; /* stuff to type */
   int data_count = 0;
+  int args_count = 0;
   xdo_active_mods_t *active_mods = NULL;
 
   /* Options */
@@ -20,7 +29,7 @@ int cmd_type(context_t *context) {
 
   typedef enum {
     opt_unused, opt_clearmodifiers, opt_delay, opt_help, opt_window, opt_args,
-    opt_terminator
+    opt_terminator, opt_file
   } optlist_t;
 
   struct option longopts[] = {
@@ -30,6 +39,7 @@ int cmd_type(context_t *context) {
     { "window", required_argument, NULL, opt_window },
     { "args", required_argument, NULL, opt_args },
     { "terminator", required_argument, NULL, opt_terminator },
+    { "file", required_argument, NULL, opt_file },
     { 0, 0, 0, 0 },
   };
 
@@ -45,6 +55,9 @@ int cmd_type(context_t *context) {
     "--terminator TERM - similar to --args, specifies a terminator that\n"
     "                    marks the end of 'exec' arguments. This is useful\n"
     "                    for continuing with more xdotool commands.\n"
+    "--file <filepath> - specify a file, the contents of which will be\n"
+    "                    be typed as if passed as an argument. The filepath\n"
+    "                    may also be '-' to read from stdin.\n"
             "-h, --help             - show this help output\n";
   int option_index;
 
@@ -72,6 +85,9 @@ int cmd_type(context_t *context) {
       case opt_terminator:
         terminator = strdup(optarg);
         break;
+      case opt_file:
+	file = strdup(optarg);
+	break;
       default:
         fprintf(stderr, usage, cmd);
         return EXIT_FAILURE;
@@ -80,7 +96,7 @@ int cmd_type(context_t *context) {
 
   consume_args(context, optind);
 
-  if (context->argc == 0) {
+  if (context->argc == 0 && file == NULL) {
     fprintf(stderr, "You specified the wrong number of args.\n");
     fprintf(stderr, usage, cmd);
     return 1;
@@ -97,24 +113,66 @@ int cmd_type(context_t *context) {
     return EXIT_FAILURE;
   }
 
+  if (file != NULL) {
+    data = calloc(1 + context->argc, sizeof(char *));
+
+    /* determine whether reading from a file or from stdin */
+    if (!strcmp(file, "-")) {
+      input = fdopen(0, "r");
+    } else {
+      input = fopen(file, "r");
+      if (input == NULL) {
+        fprintf(stderr, "Failure opening '%s': %s\n", file, strerror(errno));
+        return EXIT_FAILURE;
+      }
+    }
+
+    while (feof(input) == 0) {
+      marker = realloc(buffer, bytes_read + 4096);
+      if (marker == NULL) {
+        fprintf(stderr, "Failure allocating for '%s': %s\n", file, strerror(errno));
+        return EXIT_FAILURE;
+      }
+
+      buffer = marker;
+      marker = buffer + bytes_read;
+      if (fgets(marker, 4096, input) != NULL) {
+        bytes_read = (marker - buffer) + strlen(marker);
+      }
+
+      if (ferror(input) != 0) {
+        fprintf(stderr, "Failure reading '%s': %s\n", file, strerror(errno));
+        return EXIT_FAILURE;
+      }
+    }
+
+    data[0] = buffer;
+    data_count++;
+
+    fclose(input);
+  }
+  else {
+    data = calloc(context->argc, sizeof(char *));
+  }
+
   /* Apply any --arity or --terminator */
-  data = calloc(context->argc, sizeof(char *));
   for (i=0; i < context->argc; i++) {
     if (arity > 0 && i == arity) {
-      data[i] = NULL;
+      data[data_count] = NULL;
       break;
     }
 
     /* if we have a terminator and the current argument matches it... */
     if (terminator != NULL && strcmp(terminator, context->argv[i]) == 0) {
-      data[i] = NULL;
-      data_count++; /* Consume the terminator, too */
+      data[data_count] = NULL;
+      args_count++; /* Consume the terminator, too */
       break;
     }
 
-    data[i] = strdup(context->argv[i]);
-    data_count = i + 1;
-    xdotool_debug(context, "Exec arg[%d]: %s", i, data[i]);
+    data[data_count] = strdup(context->argv[i]);
+    xdotool_debug(context, "Exec arg[%d]: %s", i, data[data_count]);
+    data_count++;
+    args_count++;
   }
 
   window_each(context, window_arg, {
@@ -144,7 +202,7 @@ int cmd_type(context_t *context) {
     free(window_arg);
   }
 
-  consume_args(context, data_count);
+  consume_args(context, args_count);
   return ret > 0;
 }
 
