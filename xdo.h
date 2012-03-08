@@ -524,10 +524,10 @@ int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property,
  * Change the window's classname and or class.
  *
  * @param name The new class name. If NULL, no change.
- * @param class The new class. If NULL, no change.
+ * @param _class The new class. If NULL, no change.
  */
 int xdo_window_setclass(const xdo_t *xdo, Window wid, const char *name,
-                        const char *class);
+                        const char *_class);
 
 /**
  * Sets the urgency hint for a window.
