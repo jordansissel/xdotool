@@ -581,6 +581,7 @@ void xdotool_debug(context_t *context, const char *format, ...) {
 } /* xdotool_debug */
 
 void xdotool_output(context_t *context, const char *format, ...) {
+  context = context; /* Do something with context to avoid warnings */
   va_list args;
 
   va_start(args, format);

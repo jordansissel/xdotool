@@ -470,8 +470,8 @@ int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y);
  * @param height_ret the return locatino of the translated height
  */
 int xdo_window_translate_with_sizehint(const xdo_t *xdo, Window window,
-                                       int width, int height, int *width_ret,
-                                       int *height_ret);
+                                       unsigned int width, unsigned int height,
+                                       unsigned int *width_ret, unsigned int *height_ret);
 
 /**
  * Change the window size.
@@ -732,7 +732,7 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop);
  * @see xdo_search_t
  */
 int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
-                      Window **windowlist_ret, int *nwindows_ret);
+                      Window **windowlist_ret, unsigned int *nwindows_ret);
 
 /**
  * Generic property fetch.
@@ -848,7 +848,7 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
  * TODO(sissel): Document
  */
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
-                        char **name_ret, int *name_len_ret,
+                        unsigned char **name_ret, int *name_len_ret,
                         int *name_type);
 
 /**

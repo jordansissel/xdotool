@@ -250,8 +250,8 @@ int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y) {
 }
 
 int xdo_window_translate_with_sizehint(const xdo_t *xdo, Window window,
-                                       int width, int height, int *width_ret,
-                                       int *height_ret) {
+                                       unsigned int width, unsigned int height, 
+                                       unsigned int *width_ret, unsigned int *height_ret) {
   XSizeHints hints;
   long supplied_return;
   XGetWMNormalHints(xdo->xdpy, window, &hints, &supplied_return);
@@ -293,13 +293,13 @@ int xdo_window_setsize(const xdo_t *xdo, Window window, int width, int height, i
   wc.height = height;
 
   if (flags & SIZE_USEHINTS_X) {
-    xdo_window_translate_with_sizehint(xdo, window, width, height, &wc.width,
+    xdo_window_translate_with_sizehint(xdo, window, width, height, (unsigned int*)&wc.width,
                                        NULL);
   }
 
   if (flags & SIZE_USEHINTS_Y) {
     xdo_window_translate_with_sizehint(xdo, window, width, height, NULL,
-                                       &wc.height);
+                                       (unsigned int*)&wc.height);
   }
 
   if (width > 0) {
@@ -397,9 +397,9 @@ int xdo_window_wait_for_size(const xdo_t *xdo, Window window,
   //printf("Want: %udx%ud\n", width, height);
   if (flags & SIZE_USEHINTS) {
     xdo_window_translate_with_sizehint(xdo, window, width, height,
-                                       (int *)&width, (int *)&height);
+                                       &width, &height);
   } else {
-    int hint_width, hint_height;
+    unsigned int hint_width, hint_height;
     /* TODO(sissel): fix compiler warning here, but it will require
      * an ABI breakage by changing types... */
     xdo_window_translate_with_sizehint(xdo, window, 1, 1,
@@ -1965,7 +1965,7 @@ int xdo_window_kill(const xdo_t *xdo, Window window) {
 }
 
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
-                        char **name_ret, int *name_len_ret,
+                        unsigned char **name_ret, int *name_len_ret,
                         int *name_type) {
   if (atom_NET_WM_NAME == (Atom)-1) {
     atom_NET_WM_NAME = XInternAtom(xdo->xdpy, "_NET_WM_NAME", False);
