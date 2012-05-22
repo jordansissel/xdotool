@@ -22,6 +22,7 @@
 #include <stdarg.h>
 
 #include <X11/Xlib.h>
+#include <X11/XKBlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
@@ -1474,8 +1475,8 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
         offset = 2;
       }
 
-      if (XKeycodeToKeysym(xdo->xdpy, key, 0 + offset) != sym
-          && XKeycodeToKeysym(xdo->xdpy, key, 1 + offset) != sym) {
+      if (XkbKeycodeToKeysym(xdo->xdpy, key, 0, 0 + offset) != sym
+          && XkbKeycodeToKeysym(xdo->xdpy, key, 0, 1 + offset) != sym) {
         key = 0;
       }
     }
@@ -1489,7 +1490,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
       /* Inject a shift key if we need to press shift to reach this keysym */
       //if (xdo->keymap[key * xdo->keysyms_per_keycode] == sym
           //|| sym == NoSymbol) {
-      if ((XKeycodeToKeysym(xdo->xdpy, key, 0) == sym)
+      if ((XkbKeycodeToKeysym(xdo->xdpy, key, 0, 0) == sym)
           || sym == NoSymbol) {
         /* sym is NoSymbol if we give a keycode to type */
         (*keys)[*nkeys].index = 0;
