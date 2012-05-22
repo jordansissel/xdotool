@@ -390,29 +390,29 @@ int xdo_window_focus(const xdo_t *xdo, Window wid) {
 int xdo_window_wait_for_size(const xdo_t *xdo, Window window,
                              unsigned int width, unsigned int height,
                              int flags, int to_or_from) {
-  unsigned int cur_width = 0, cur_height = 0;
-  unsigned int alt_width = 0, alt_height = 0;
+  unsigned int cur_width, cur_height;
+  /*unsigned int alt_width, alt_height;*/
 
   //printf("Want: %udx%ud\n", width, height);
   if (flags & SIZE_USEHINTS) {
     xdo_window_translate_with_sizehint(xdo, window, width, height,
                                        (int *)&width, (int *)&height);
   } else {
-    unsigned int hint_width, hint_height;
+    int hint_width, hint_height;
     /* TODO(sissel): fix compiler warning here, but it will require
      * an ABI breakage by changing types... */
     xdo_window_translate_with_sizehint(xdo, window, 1, 1,
                                        &hint_width, &hint_height);
     //printf("Hint: %dx%d\n", hint_width, hint_height);
     /* Find the nearest multiple (rounded down) of the hint height. */
-    alt_width = (width - (width % hint_width));
-    alt_height = (height - (height % hint_height));
+    /*alt_width = (width - (width % hint_width));*/
+    /*alt_height = (height - (height % hint_height));*/
     //printf("Alt: %udx%ud\n", alt_width, alt_height);
   }
 
   int tries = MAX_TRIES;
-  xdo_get_window_size(xdo, window, (unsigned int *)&cur_width,
-                      (unsigned int *)&cur_height);
+  xdo_get_window_size(xdo, window, &cur_width,
+                      &cur_height);
   //printf("Want: %udx%ud\n", width, height);
   //printf("Alt: %udx%ud\n", alt_width, alt_height);
   while (tries > 0 && (to_or_from == SIZE_TO
@@ -1070,9 +1070,9 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
     int j = 0;
     int key_is_empty = 1;
     for (j = 0; j < keysyms_per_keycode; j++) {
-      char *symname;
+      /*char *symname;*/
       int symindex = (i - xdo->keycode_low) * keysyms_per_keycode + j;
-      symname = XKeysymToString(keysyms[symindex]);
+      /*symname = XKeysymToString(keysyms[symindex]);*/
       if (keysyms[symindex] != 0) {
         key_is_empty = 0;
       } else {
@@ -1318,7 +1318,7 @@ static int _xdo_has_xtest(const xdo_t *xdo) {
 static void _xdo_populate_charcode_map(xdo_t *xdo) {
   /* assert xdo->display is valid */
   int keycodes_length = 0;
-  int shift_keycode = 0;
+  /*int shift_keycode;*/
   int i, j;
 
   XDisplayKeycodes(xdo->xdpy, &(xdo->keycode_low), &(xdo->keycode_high));
@@ -1337,7 +1337,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
 
   /* Fetch the keycode for Shift_L */
   /* XXX: Make 'Shift_L' configurable? */
-  shift_keycode = XKeysymToKeycode(xdo->xdpy, XK_Shift_L);
+  /*shift_keycode = XKeysymToKeycode(xdo->xdpy, XK_Shift_L);*/
 
   int idx = 0;
   for (i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
@@ -1541,7 +1541,7 @@ unsigned char *xdo_getwinprop(const xdo_t *xdo, Window window, Atom atom,
   Atom actual_type;
   int actual_format;
   unsigned long _nitems;
-  unsigned long nbytes;
+  /*unsigned long nbytes;*/
   unsigned long bytes_after; /* unused */
   unsigned char *prop;
   int status;
@@ -1558,14 +1558,16 @@ unsigned char *xdo_getwinprop(const xdo_t *xdo, Window window, Atom atom,
     return NULL;
   }
 
-  if (actual_format == 32)
-    nbytes = sizeof(long);
-  else if (actual_format == 16)
-    nbytes = sizeof(short);
-  else if (actual_format == 8)
-    nbytes = 1;
-  else if (actual_format == 0)
-    nbytes = 0;
+  /*
+   *if (actual_format == 32)
+   *  nbytes = sizeof(long);
+   *else if (actual_format == 16)
+   *  nbytes = sizeof(short);
+   *else if (actual_format == 8)
+   *  nbytes = 1;
+   *else if (actual_format == 0)
+   *  nbytes = 0;
+   */
 
   if (nitems != NULL) {
     *nitems = _nitems;
@@ -1630,14 +1632,16 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
       for (i = 0; i < masks_len; i++) { /* length of masks array above */
         if (mask & masks[i]) {
           KeyCode modkey;
-          const char *maskname = "unknown";
-          switch(masks[i]) {
-            case ShiftMask:  maskname = "shift"; break;
-            case ControlMask: maskname = "control"; break;
-            case Mod1Mask: maskname = "mod1/alt"; break;
-            case Mod3Mask: maskname = "mod3"; break;
-            case Mod4Mask: maskname = "mod4/super"; break;
-          }
+          /*
+           *const char *maskname = "unknown";
+           *switch(masks[i]) {
+           *  case ShiftMask:  maskname = "shift"; break;
+           *  case ControlMask: maskname = "control"; break;
+           *  case Mod1Mask: maskname = "mod1/alt"; break;
+           *  case Mod3Mask: maskname = "mod3"; break;
+           *  case Mod4Mask: maskname = "mod4/super"; break;
+           *}
+           */
           modkey = _xdo_cached_modifier_to_keycode(xdo, masks[i]);
           //printf("XTEST: Sending modifier key for mod %d, %s, (keycode %d) %s\n",
                  //masks[i], maskname, modkey, is_press ? "down" : "up");
@@ -1714,12 +1718,14 @@ int _xdo_cached_modifier_to_keycode(const xdo_t *xdo, int modmask) {
     if (xdo->charcodes[i].modmask == modmask)
       return xdo->charcodes[i].code;
 
-  const char *modname = "unknown";
-  switch (modmask) {
-    case ShiftMask:
-      modname = "ShiftMask";
-      break;
-  }
+  /*
+   *const char *modname = "unknown";
+   *switch (modmask) {
+   *  case ShiftMask:
+   *    modname = "ShiftMask";
+   *    break;
+   *}
+   */
   //fprintf(stderr, "No keycode found for modifier %d (%s)\n", modmask, modname);
 
   return 0;
@@ -1958,7 +1964,7 @@ int xdo_window_kill(const xdo_t *xdo, Window window) {
 }
 
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
-                        unsigned char **name_ret, int *name_len_ret,
+                        char **name_ret, int *name_len_ret,
                         int *name_type) {
   if (atom_NET_WM_NAME == (Atom)-1) {
     atom_NET_WM_NAME = XInternAtom(xdo->xdpy, "_NET_WM_NAME", False);

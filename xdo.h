@@ -848,7 +848,7 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
  * TODO(sissel): Document
  */
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
-                        unsigned char **name_ret, int *name_len_ret,
+                        char **name_ret, int *name_len_ret,
                         int *name_type);
 
 /**
