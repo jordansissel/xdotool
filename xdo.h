@@ -745,8 +745,8 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
  * @return data consisting of 'nitems' items of size 'size' and type 'type'
  *   will need to be cast to the type before using.
  */
-unsigned char *xdo_getwinprop(const xdo_t *xdo, Window window, Atom atom,
-                              long *nitems, Atom *type, int *size);
+unsigned char *xdo_window_get_property(const xdo_t *xdo, Window window, Atom atom,
+                                       long *nitems, Atom *type, int *size);
 
 /**
  * Get the current input state. This is a mask value containing any of the
