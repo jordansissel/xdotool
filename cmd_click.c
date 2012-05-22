@@ -6,7 +6,8 @@ int cmd_click(context_t *context) {
   char *cmd = context->argv[0];
   int ret = 0;
   int clear_modifiers = 0;
-  xdo_active_mods_t *active_mods = NULL;
+  charcodemap_t *active_mods = NULL;
+  int active_mods_n;
   char *window_arg = NULL;
   useconds_t delay = 100000; /* 100ms */
   int repeat = 1;
@@ -86,8 +87,8 @@ int cmd_click(context_t *context) {
 
   window_each(context, window_arg, {
     if (clear_modifiers) {
-      active_mods = xdo_get_active_modifiers(context->xdo);
-      xdo_clear_active_modifiers(context->xdo, window, active_mods);
+      xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
+      xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);
     }
 
     ret = xdo_click_multiple(context->xdo, window, button, repeat, delay);
@@ -97,8 +98,8 @@ int cmd_click(context_t *context) {
     }
 
     if (clear_modifiers) {
-      xdo_set_active_modifiers(context->xdo, window, active_mods);
-      xdo_free_active_modifiers(active_mods);
+      xdo_set_active_modifiers(context->xdo, window, active_mods, active_mods_n);
+      free(active_mods);
     }
   }); /* window_each(...) */
 

@@ -796,10 +796,11 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     /* Send to specific window */
     int screen = 0;
     XButtonEvent xbpe;
-    xdo_active_mods_t *active_mods;
+    charcodemap_t *active_mod;
+    int active_mod_n;
 
     xdo_mouselocation(xdo, &xbpe.x_root, &xbpe.y_root, &screen);
-    active_mods = xdo_get_active_modifiers(xdo);
+    xdo_get_active_modifiers(xdo, &active_mod, &active_mod_n);
 
     xbpe.window = window;
     xbpe.button = button;
@@ -807,7 +808,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     xbpe.root = RootWindow(xdo->xdpy, screen);
     xbpe.same_screen = True; /* Should we detect if window is on the same
                                  screen as cursor? */
-    xbpe.state = active_mods->input_state;
+    xbpe.state = xdo_get_input_state(xdo);
 
     xbpe.subwindow = None;
     xbpe.time = CurrentTime;
@@ -832,7 +833,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     }
     ret = XSendEvent(xdo->xdpy, window, True, ButtonPressMask, (XEvent *)&xbpe);
     XFlush(xdo->xdpy);
-    xdo_free_active_modifiers(active_mods);
+    free(active_mod);
     return _is_success("XSendEvent(mousedown)", ret == 0, xdo);
   }
 }
@@ -946,7 +947,6 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
    * divide by two. */
   delay /= 2;
 
-  xdo_active_mods_t *current_mods = xdo_get_active_modifiers(xdo);
   /* XXX: Add error handling */
   //int nkeys = strlen(string);
   //charcodemap_t *keys = calloc(nkeys, sizeof(charcodemap_t));
@@ -1006,7 +1006,7 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
       }
       /* Keys with index 2 and 3 are accessed with Mode_switch key, which is 
        * defaults to Mod5Mask */
-      if ((current_mods->input_state & ModeSwitchMask) == 0) {
+      if ((xdo_get_input_state(xdo) & ModeSwitchMask) == 0) {
         if (key.index == 2 || key.index == 3) {
           //printf("Using Mod5Mask\n");
           key.modmask |= Mod5Mask; /* Set AltG/Mode_Shift */
@@ -1030,7 +1030,6 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
   } /* walk string generating a keysequence */
 
   //free(keys);
-  xdo_free_active_modifiers(current_mods);
   return XDO_SUCCESS;
 }
 
@@ -1726,7 +1725,27 @@ int _xdo_cached_modifier_to_keycode(const xdo_t *xdo, int modmask) {
   return 0;
 }
 
-int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
+unsigned int xdo_get_input_state(const xdo_t *xdo) {
+  Window root, dummy;
+  int root_x, root_y, win_x, win_y;
+  unsigned int mask;
+  root = DefaultRootWindow(xdo->xdpy);
+
+  XQueryPointer(xdo->xdpy, root, &dummy, &dummy,
+                &root_x, &root_y, &win_x, &win_y, &mask);
+
+  return mask;
+}
+
+const keysym_charmap_t *xdo_keysym_charmap(void) {
+  return keysym_charmap;
+}
+
+const char **xdo_symbol_map(void) {
+  return symbol_map;
+}
+
+int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
                                     int *nkeys) {
   /* For each keyboard device, if an active key is a modifier,
    * then add the keycode to the keycode list */
@@ -1764,52 +1783,23 @@ int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
   return XDO_SUCCESS;
 }
 
-unsigned int xdo_get_input_state(const xdo_t *xdo) {
-  Window root, dummy;
-  int root_x, root_y, win_x, win_y;
-  unsigned int mask;
-  root = DefaultRootWindow(xdo->xdpy);
-
-  XQueryPointer(xdo->xdpy, root, &dummy, &dummy,
-                &root_x, &root_y, &win_x, &win_y, &mask);
-
-  return mask;
-}
-
-const keysym_charmap_t *xdo_keysym_charmap(void) {
-  return keysym_charmap;
-}
-
-const char **xdo_symbol_map(void) {
-  return symbol_map;
-}
-
-xdo_active_mods_t *xdo_get_active_modifiers(const xdo_t *xdo) {
-  xdo_active_mods_t *active_mods = NULL;
-
-  active_mods = calloc(sizeof(xdo_active_mods_t), 1);
-  xdo_active_keys_to_keycode_list(xdo, &(active_mods->keymods),
-                                  &(active_mods->nkeymods));
-  active_mods->input_state = xdo_get_input_state(xdo);
-  return active_mods;
-}
-
-int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, xdo_active_mods_t *active_mods) {
+int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, charcodemap_t *active_mods, int active_mods_n) {
   int ret = 0;
-  xdo_keysequence_list_do(xdo, window, active_mods->keymods,
-                          active_mods->nkeymods, False, NULL, DEFAULT_DELAY);
+  unsigned int input_state = xdo_get_input_state(xdo);
+  xdo_keysequence_list_do(xdo, window, active_mods,
+                          active_mods_n, False, NULL, DEFAULT_DELAY);
 
-  if (active_mods->input_state & Button1MotionMask)
+  if (input_state & Button1MotionMask)
     ret = xdo_mouseup(xdo, window, 1);
-  if (!ret && active_mods->input_state & Button2MotionMask)
+  if (!ret && input_state & Button2MotionMask)
     ret = xdo_mouseup(xdo, window, 2);
-  if (!ret && active_mods->input_state & Button3MotionMask)
+  if (!ret && input_state & Button3MotionMask)
     ret = xdo_mouseup(xdo, window, 3);
-  if (!ret && active_mods->input_state & Button4MotionMask)
+  if (!ret && input_state & Button4MotionMask)
     ret = xdo_mouseup(xdo, window, 4);
-  if (!ret && active_mods->input_state & Button5MotionMask)
+  if (!ret && input_state & Button5MotionMask)
     ret = xdo_mouseup(xdo, window, 5);
-  if (!ret && active_mods->input_state & LockMask) {
+  if (!ret && input_state & LockMask) {
     /* explicitly use down+up here since xdo_keysequence alone will track the modifiers
      * incurred by a key (like shift, or caps) and send them on the 'up' sequence.
      * That seems to break things with Caps_Lock only, so let's be explicit here. */
@@ -1821,22 +1811,22 @@ int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, xdo_active_mods_
   return ret;
 }
 
-int xdo_set_active_modifiers(const xdo_t *xdo, Window window, const
-                             xdo_active_mods_t *active_mods) {
+int xdo_set_active_modifiers(const xdo_t *xdo, Window window, charcodemap_t *active_mods, int active_mods_n) {
   int ret = 0;
-  xdo_keysequence_list_do(xdo, window, active_mods->keymods,
-                          active_mods->nkeymods, True, NULL, DEFAULT_DELAY);
-  if (active_mods->input_state & Button1MotionMask)
+  unsigned int input_state = xdo_get_input_state(xdo);
+  xdo_keysequence_list_do(xdo, window, active_mods,
+                          active_mods_n, True, NULL, DEFAULT_DELAY);
+  if (input_state & Button1MotionMask)
     ret = xdo_mousedown(xdo, window, 1);
-  if (!ret && active_mods->input_state & Button2MotionMask)
+  if (!ret && input_state & Button2MotionMask)
     ret = xdo_mousedown(xdo, window, 2);
-  if (!ret && active_mods->input_state & Button3MotionMask)
+  if (!ret && input_state & Button3MotionMask)
     ret = xdo_mousedown(xdo, window, 3);
-  if (!ret && active_mods->input_state & Button4MotionMask)
+  if (!ret && input_state & Button4MotionMask)
     ret = xdo_mousedown(xdo, window, 4);
-  if (!ret && active_mods->input_state & Button5MotionMask)
+  if (!ret && input_state & Button5MotionMask)
     ret = xdo_mousedown(xdo, window, 5);
-  if (!ret && active_mods->input_state & LockMask) {
+  if (!ret && input_state & LockMask) {
     /* explicitly use down+up here since xdo_keysequence alone will track the modifiers
      * incurred by a key (like shift, or caps) and send them on the 'up' sequence.
      * That seems to break things with Caps_Lock only, so let's be explicit here. */
@@ -1847,12 +1837,6 @@ int xdo_set_active_modifiers(const xdo_t *xdo, Window window, const
   XSync(xdo->xdpy, False);
   return ret;
 }
-
-void xdo_free_active_modifiers(xdo_active_mods_t *active_mods) {
-  free(active_mods->keymods);
-  free(active_mods);
-}
-
 
 int xdo_window_get_pid(const xdo_t *xdo, Window window) {
   Atom type;

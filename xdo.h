@@ -125,20 +125,6 @@ typedef struct xdo {
 
 
 /**
- * Represents the list of active modifier keys at the time of an
- * xdo_get_active_modifiers call.
- *
- * @see xdo_get_active_modifiers
- * @see xdo_free_active_modifiers
- */
-typedef struct xdo_active_mods {
-  charcodemap_t *keymods;
-  int nkeymods;
-  unsigned int input_state;
-} xdo_active_mods_t;
-
-
-/**
  * Search only window title. DEPRECATED - Use SEARCH_NAME
  * @see xdo_window_search
  */
@@ -439,16 +425,6 @@ int xdo_keysequence_down(const xdo_t *xdo, Window window,
 int xdo_keysequence_list_do(const xdo_t *xdo, Window window,
                             charcodemap_t *keys, int nkeys,
                             int pressed, int *modifier, useconds_t delay);
-
-/**
- * Get a list of active keys. Uses XQueryKeymap.
- *
- * @param keys Pointer to the array of charcodemap_t that will be allocated
- *    by this function.
- * @param nkeys Pointer to integer where the number of keys will be stored.
- */
-int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
-                                         int *nkeys);
 
 /**
  * Wait for a window to have a specific map state.
@@ -800,9 +776,14 @@ const char **xdo_symbol_map(void);
 /* active modifiers stuff */
 
 /**
- * Get the currently-active modifiers
+ * Get a list of active keys. Uses XQueryKeymap.
+ *
+ * @param keys Pointer to the array of charcodemap_t that will be allocated
+ *    by this function.
+ * @param nkeys Pointer to integer where the number of keys will be stored.
  */
-xdo_active_mods_t *xdo_get_active_modifiers(const xdo_t *xdo);
+int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
+                             int *nkeys);
 
 /**
  * Send any events necesary to clear the the active modifiers.
@@ -810,7 +791,8 @@ xdo_active_mods_t *xdo_get_active_modifiers(const xdo_t *xdo);
  * called, then this method will send a key-up for 'alt'
  */
 int xdo_clear_active_modifiers(const xdo_t *xdo, Window window,
-                               xdo_active_mods_t *active_mods);
+                               charcodemap_t *active_mods,
+                               int active_mods_n);
 
 /**
  * Send any events necessary to make these modifiers active.
@@ -818,12 +800,8 @@ int xdo_clear_active_modifiers(const xdo_t *xdo, Window window,
  * to restore them after.
  */
 int xdo_set_active_modifiers(const xdo_t *xdo, Window window,
-                             const xdo_active_mods_t *active_mods);
-
-/**
- * Free the data allocated by xdo_get_active_modifiers.
- */
-void xdo_free_active_modifiers(xdo_active_mods_t *active_mods);
+                             charcodemap_t *active_mods,
+                             int active_mods_n);
 
 /**
  * Get the position of the current viewport.

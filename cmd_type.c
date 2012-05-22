@@ -21,7 +21,8 @@ int cmd_type(context_t *context) {
   char **data = NULL; /* stuff to type */
   int data_count = 0;
   int args_count = 0;
-  xdo_active_mods_t *active_mods = NULL;
+  charcodemap_t *active_mods = NULL;
+  int active_mods_n;
 
   /* Options */
   int clear_modifiers = 0;
@@ -177,8 +178,8 @@ int cmd_type(context_t *context) {
 
   window_each(context, window_arg, {
     if (clear_modifiers) {
-      active_mods = xdo_get_active_modifiers(context->xdo);
-      xdo_clear_active_modifiers(context->xdo, window, active_mods);
+      xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
+      xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);
     }
 
     for (i = 0; i < data_count; i++) {
@@ -193,8 +194,8 @@ int cmd_type(context_t *context) {
     }
 
     if (clear_modifiers) {
-      xdo_set_active_modifiers(context->xdo, window, active_mods);
-      xdo_free_active_modifiers(active_mods);
+      xdo_set_active_modifiers(context->xdo, window, active_mods, active_mods_n);
+      free(active_mods);
     }
   }); /* window_each(...) */
 
