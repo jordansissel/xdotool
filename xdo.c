@@ -250,7 +250,7 @@ int xdo_move_window(const xdo_t *xdo, Window wid, int x, int y) {
 }
 
 int xdo_translate_window_with_sizehint(const xdo_t *xdo, Window window,
-                                       unsigned int width, unsigned int height,
+                                       unsigned int width, unsigned int height, 
                                        unsigned int *width_ret, unsigned int *height_ret) {
   XSizeHints hints;
   long supplied_return;
