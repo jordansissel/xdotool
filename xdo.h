@@ -40,7 +40,7 @@
 
 /**
  * CURRENTWINDOW is a special identify for xdo input faking (mouse and
- * keyboard) functions like xdo_keysequence that indicate we should target the
+ * keyboard) functions like xdo_send_keysequence_window that indicate we should target the
  * current window, not a specific window.
  *
  * Generally, this means we will use XTEST instead of XSendEvent when sending
@@ -126,38 +126,38 @@ typedef struct xdo {
 
 /**
  * Search only window title. DEPRECATED - Use SEARCH_NAME
- * @see xdo_window_search
+ * @see xdo_search_windows
  */
 #define SEARCH_TITLE (1UL << 0)
 
 /**
  * Search only window class.
- * @see xdo_window_search
+ * @see xdo_search_windows
  */
 #define SEARCH_CLASS (1UL << 1)
 
 /**
  * Search only window name.
- * @see xdo_window_search
+ * @see xdo_search_windows
  */
 #define SEARCH_NAME (1UL << 2)
 
 /**
  * Search only window pid.
- * @see xdo_window_search
+ * @see xdo_search_windows
  */
 #define SEARCH_PID  (1UL << 3)
 
 /**
  * Search only visible windows.
- * @see xdo_window_search
+ * @see xdo_search_windows
  */
 #define SEARCH_ONLYVISIBLE  (1UL << 4)
 
 /**
  * Search only a specific screen. 
  * @see xdo_search.screen
- * @see xdo_window_search
+ * @see xdo_search_windows
  */
 #define SEARCH_SCREEN  (1UL << 5)
 
@@ -170,7 +170,7 @@ typedef struct xdo {
 /**
  * Search a specific desktop
  * @see xdo_search.screen
- * @see xdo_window_search
+ * @see xdo_search_windows
  */
 #define SEARCH_DESKTOP (1UL << 7)
 
@@ -178,7 +178,7 @@ typedef struct xdo {
 /**
  * The window search query structure.
  *
- * @see xdo_window_search
+ * @see xdo_search_windows
  */
 typedef struct xdo_search {
   const char *title;        /** pattern to test against a window title */
@@ -250,7 +250,7 @@ void xdo_free(xdo_t *xdo);
  * @param y the target Y coordinate on the screen in pixels.
  * @param screen the screen (number) you want to move on.
  */
-int xdo_mousemove(const xdo_t *xdo, int x, int y, int screen);
+int xdo_move_mouse(const xdo_t *xdo, int x, int y, int screen);
 
 /**
  * Move the mouse to a specific location relative to the top-left corner
@@ -259,7 +259,7 @@ int xdo_mousemove(const xdo_t *xdo, int x, int y, int screen);
  * @param x the target X coordinate on the screen in pixels.
  * @param y the target Y coordinate on the screen in pixels.
  */
-int xdo_mousemove_relative_to_window(const xdo_t *xdo, Window window, int x, int y);
+int xdo_move_mouse_relative_to_window(const xdo_t *xdo, Window window, int x, int y);
 
 /**
  * Move the mouse relative to it's current position.
@@ -267,7 +267,7 @@ int xdo_mousemove_relative_to_window(const xdo_t *xdo, Window window, int x, int
  * @param x the distance in pixels to move on the X axis.
  * @param y the distance in pixels to move on the Y axis.
  */
-int xdo_mousemove_relative(const xdo_t *xdo, int x, int y);
+int xdo_move_mouse_relative(const xdo_t *xdo, int x, int y);
 
 /**
  * Send a mouse press (aka mouse down) for a given button at the current mouse
@@ -277,7 +277,7 @@ int xdo_mousemove_relative(const xdo_t *xdo, int x, int y);
  * @param button The mouse button. Generally, 1 is left, 2 is middle, 3 is
  *    right, 4 is wheel up, 5 is wheel down.
  */
-int xdo_mousedown(const xdo_t *xdo, Window window, int button);
+int xdo_mouse_down(const xdo_t *xdo, Window window, int button);
 
 /**
  * Send a mouse release (aka mouse up) for a given button at the current mouse
@@ -287,7 +287,7 @@ int xdo_mousedown(const xdo_t *xdo, Window window, int button);
  * @param button The mouse button. Generally, 1 is left, 2 is middle, 3 is
  *    right, 4 is wheel up, 5 is wheel down.
  */
-int xdo_mouseup(const xdo_t *xdo, Window window, int button);
+int xdo_mouse_up(const xdo_t *xdo, Window window, int button);
 
 /**
  * Get the current mouse location (coordinates and screen number).
@@ -296,14 +296,14 @@ int xdo_mouseup(const xdo_t *xdo, Window window, int button);
  * @param y integer pointer where the Y coordinate will be stored
  * @param screen_num integer pointer where the screen number will be stored
  */
-int xdo_mouselocation(const xdo_t *xdo, int *x, int *y, int *screen_num);
+int xdo_get_mouse_location(const xdo_t *xdo, int *x, int *y, int *screen_num);
 
 /**
  * Get the window the mouse is currently over
  *
  * @param window_ret Winter pointer where the window will be stored.
  */
-int xdo_mousewindow(const xdo_t *xdo, Window *window_ret);
+int xdo_get_window_at_mouse(const xdo_t *xdo, Window *window_ret);
 
 /**
  * Get all mouse location-related data.
@@ -317,8 +317,8 @@ int xdo_mousewindow(const xdo_t *xdo, Window *window_ret);
  * @param window Window pointer where the window/client the mouse is over
  *   will be stored.
  */
-int xdo_mouselocation2(const xdo_t *xdo, int *x_ret, int *y_ret,
-                       int *screen_num_ret, Window *window_ret);
+int xdo_get_mouse_location2(const xdo_t *xdo, int *x_ret, int *y_ret,
+                            int *screen_num_ret, Window *window_ret);
 
 /**
  * Wait for the mouse to move from a location. This function will block
@@ -327,7 +327,7 @@ int xdo_mouselocation2(const xdo_t *xdo, int *x_ret, int *y_ret,
  * @param origin_x the X position you expect the mouse to move from
  * @param origin_y the Y position you expect the mouse to move from
  */
-int xdo_mouse_wait_for_move_from(const xdo_t *xdo, int origin_x, int origin_y);
+int xdo_wait_for_mouse_move_from(const xdo_t *xdo, int origin_x, int origin_y);
 
 /**
  * Wait for the mouse to move to a location. This function will block
@@ -336,7 +336,7 @@ int xdo_mouse_wait_for_move_from(const xdo_t *xdo, int origin_x, int origin_y);
  * @param dest_x the X position you expect the mouse to move to
  * @param dest_y the Y position you expect the mouse to move to
  */
-int xdo_mouse_wait_for_move_to(const xdo_t *xdo, int dest_x, int dest_y);
+int xdo_wait_for_mouse_move_to(const xdo_t *xdo, int dest_x, int dest_y);
 
 /**
  * Send a click for a specific mouse button at the current mouse location.
@@ -345,7 +345,7 @@ int xdo_mouse_wait_for_move_to(const xdo_t *xdo, int dest_x, int dest_y);
  * @param button The mouse button. Generally, 1 is left, 2 is middle, 3 is
  *    right, 4 is wheel up, 5 is wheel down.
  */
-int xdo_click(const xdo_t *xdo, Window window, int button);
+int xdo_click_window(const xdo_t *xdo, Window window, int button);
 
 /**
  * Send a one or more clicks for a specific mouse button at the current mouse
@@ -355,21 +355,21 @@ int xdo_click(const xdo_t *xdo, Window window, int button);
  * @param button The mouse button. Generally, 1 is left, 2 is middle, 3 is
  *    right, 4 is wheel up, 5 is wheel down.
  */
-int xdo_click_multiple(const xdo_t *xdo, Window window, int button,
+int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button,
                        int repeat, useconds_t delay);
 
 /**
  * Type a string to the specified window.
  *
  * If you want to send a specific key or key sequence, such as "alt+l", you
- * want instead xdo_keysequence(...).
+ * want instead xdo_send_keysequence_window(...).
  *
  * @param window The window you want to send keystrokes to or CURRENTWINDOW
  * @param string The string to type, like "Hello world!"
  * @param delay The delay between keystrokes in microseconds. 12000 is a decent
  *    choice if you don't have other plans.
  */
-int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t delay);
+int xdo_enter_text_window(const xdo_t *xdo, Window window, const char *string, useconds_t delay);
 
 /**
  * Send a keysequence to the specified window.
@@ -385,30 +385,30 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
  *   "Alt_L+Tab"
  *
  * If you want to type a string, such as "Hello world." you want to instead
- * use xdo_type.
+ * use xdo_enter_text_window.
  *
  * @param window The window you want to send the keysequence to or
  *   CURRENTWINDOW
  * @param keysequence The string keysequence to send.
  * @param delay The delay between keystrokes in microseconds.
  */
-int xdo_keysequence(const xdo_t *xdo, Window window,
+int xdo_send_keysequence_window(const xdo_t *xdo, Window window,
                     const char *keysequence, useconds_t delay);
 
 /**
  * Send key release (up) events for the given key sequence.
  *
- * @see xdo_keysequence
+ * @see xdo_send_keysequence_window
  */
-int xdo_keysequence_up(const xdo_t *xdo, Window window,
+int xdo_send_keysequence_window_up(const xdo_t *xdo, Window window,
                        const char *keysequence, useconds_t delay);
 
 /**
  * Send key press (down) events for the given key sequence.
  *
- * @see xdo_keysequence
+ * @see xdo_send_keysequence_window
  */
-int xdo_keysequence_down(const xdo_t *xdo, Window window,
+int xdo_send_keysequence_window_down(const xdo_t *xdo, Window window,
                          const char *keysequence, useconds_t delay);
                          
 /**
@@ -422,7 +422,7 @@ int xdo_keysequence_down(const xdo_t *xdo, Window window,
  *   the keys being pressed. If NULL, we don't save the modifiers.
  * @param delay The delay between keystrokes in microseconds.
  */
-int xdo_keysequence_list_do(const xdo_t *xdo, Window window,
+int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window,
                             charcodemap_t *keys, int nkeys,
                             int pressed, int *modifier, useconds_t delay);
 
@@ -438,11 +438,11 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window,
  * @param wid the window you want to wait for.
  * @param map_state the state to wait for.
  */
-int xdo_window_wait_for_map_state(const xdo_t *xdo, Window wid, int map_state);
+int xdo_wait_for_window_map_state(const xdo_t *xdo, Window wid, int map_state);
 
 #define SIZE_TO 0
 #define SIZE_FROM 1
-int xdo_window_wait_for_size(const xdo_t *xdo, Window window, unsigned int width,
+int xdo_wait_for_window_size(const xdo_t *xdo, Window window, unsigned int width,
                              unsigned int height, int flags, int to_or_from);
 
 
@@ -455,7 +455,7 @@ int xdo_window_wait_for_size(const xdo_t *xdo, Window window, unsigned int width
  * @param x the X coordinate to move to.
  * @param y the Y coordinate to move to.
  */
-int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y);
+int xdo_move_window(const xdo_t *xdo, Window wid, int x, int y);
 
 /**
  * Apply a window's sizing hints (if any) to a given width and height.
@@ -469,9 +469,9 @@ int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y);
  * @param width_ret the return location of the translated width
  * @param height_ret the return locatino of the translated height
  */
-int xdo_window_translate_with_sizehint(const xdo_t *xdo, Window window,
-                                       unsigned int width, unsigned int height,
-                                       unsigned int *width_ret, unsigned int *height_ret);
+int xdo_translate_window_with_sizehint(const xdo_t *xdo, Window window,
+                                       unsigned int width, unsigned int height, unsigned int *width_ret,
+                                       unsigned int *height_ret);
 
 /**
  * Change the window size.
@@ -482,7 +482,7 @@ int xdo_window_translate_with_sizehint(const xdo_t *xdo, Window window,
  * @param flags if 0, use pixels for units. If SIZE_USEHINTS, then
  *   the units will be relative to the window size hints.
  */
-int xdo_window_setsize(const xdo_t *xdo, Window wid, int w, int h, int flags);
+int xdo_set_window_size(const xdo_t *xdo, Window wid, int w, int h, int flags);
 
 /**
  * Change a window property.
@@ -493,7 +493,7 @@ int xdo_window_setsize(const xdo_t *xdo, Window wid, int w, int h, int flags);
  * @param property the string name of the property.
  * @param value the string value of the property.
  */
-int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property,
+int xdo_set_window_property(const xdo_t *xdo, Window wid, const char *property,
                         const char *value);
 
 /**
@@ -502,13 +502,13 @@ int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property,
  * @param name The new class name. If NULL, no change.
  * @param _class The new class. If NULL, no change.
  */
-int xdo_window_setclass(const xdo_t *xdo, Window wid, const char *name,
+int xdo_set_window_class(const xdo_t *xdo, Window wid, const char *name,
                         const char *_class);
 
 /**
  * Sets the urgency hint for a window.
  */
-int xdo_window_seturgency (const xdo_t *xdo, Window wid, int urgency);
+int xdo_set_window_urgency (const xdo_t *xdo, Window wid, int urgency);
 
 /**
  * Set the override_redirect value for a window. This generally means
@@ -519,16 +519,16 @@ int xdo_window_seturgency (const xdo_t *xdo, Window wid, int urgency);
  * normal application window.
  *
  */
-int xdo_window_set_override_redirect(const xdo_t *xdo, Window wid,
+int xdo_set_window_override_redirect(const xdo_t *xdo, Window wid,
                                      int override_redirect);
 
 /**
  * Focus a window.
  *
- * @see xdo_window_activate
+ * @see xdo_activate_window
  * @param wid the window to focus.
  */
-int xdo_window_focus(const xdo_t *xdo, Window wid);
+int xdo_focus_window(const xdo_t *xdo, Window wid);
 
 /**
  * Raise a window to the top of the window stack. This is also sometimes
@@ -536,7 +536,7 @@ int xdo_window_focus(const xdo_t *xdo, Window wid);
  *
  * @param wid The window to raise.
  */
-int xdo_window_raise(const xdo_t *xdo, Window wid);
+int xdo_raise_window(const xdo_t *xdo, Window wid);
 
 /**
  * Get the window currently having focus.
@@ -544,7 +544,7 @@ int xdo_window_raise(const xdo_t *xdo, Window wid);
  * @param window_ret Pointer to a window where the currently-focused window
  *   will be stored.
  */
-int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret);
+int xdo_get_focused_window(const xdo_t *xdo, Window *window_ret);
 
 /**
  * Wait for a window to have or lose focus.
@@ -552,7 +552,7 @@ int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret);
  * @param window The window to wait on
  * @param want_focus If 1, wait for focus. If 0, wait for loss of focus.
  */
-int xdo_window_wait_for_focus(const xdo_t *xdo, Window window, int want_focus);
+int xdo_wait_for_window_focus(const xdo_t *xdo, Window window, int want_focus);
 
 /**
  * Get the PID owning a window. Not all applications support this.
@@ -561,10 +561,10 @@ int xdo_window_wait_for_focus(const xdo_t *xdo, Window window, int want_focus);
  * @param window the window to query.
  * @return the process id or 0 if no pid found.
  */
-int xdo_window_get_pid(const xdo_t *xdo, Window window);
+int xdo_get_pid_window(const xdo_t *xdo, Window window);
 
 /**
- * Like xdo_window_get_focus, but return the first ancestor-or-self window *
+ * Like xdo_get_focused_window, but return the first ancestor-or-self window *
  * having a property of WM_CLASS. This allows you to get the "real" or
  * top-level-ish window having focus rather than something you may not expect
  * to be the window having focused.
@@ -572,10 +572,10 @@ int xdo_window_get_pid(const xdo_t *xdo, Window window);
  * @param window_ret Pointer to a window where the currently-focused window
  *   will be stored.
  */
-int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret);
+int xdo_get_focused_window_sane(const xdo_t *xdo, Window *window_ret);
 
 /**
- * Activate a window. This is generally a better choice than xdo_window_focus
+ * Activate a window. This is generally a better choice than xdo_focus_window
  * for a variety of reasons, but it requires window manager support:
  *   - If the window is on another desktop, that desktop is switched to.
  *   - It moves the window forward rather than simply focusing it
@@ -585,7 +585,7 @@ int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret);
  *
  * @param wid the window to activate
  */
-int xdo_window_activate(const xdo_t *xdo, Window wid);
+int xdo_activate_window(const xdo_t *xdo, Window wid);
 
 /**
  * Wait for a window to be active or not active.
@@ -596,7 +596,7 @@ int xdo_window_activate(const xdo_t *xdo, Window wid);
  * @param window the window to wait on
  * @param active If 1, wait for active. If 0, wait for inactive.
  */
-int xdo_window_wait_for_active(const xdo_t *xdo, Window window, int active);
+int xdo_wait_for_window_active(const xdo_t *xdo, Window window, int active);
 
 /**
  * Map a window. This mostly means to make the window visible if it is
@@ -604,19 +604,19 @@ int xdo_window_wait_for_active(const xdo_t *xdo, Window window, int active);
  *
  * @param wid the window to map.
  */
-int xdo_window_map(const xdo_t *xdo, Window wid);
+int xdo_map_window(const xdo_t *xdo, Window wid);
 
 /**
  * Unmap a window
  *
  * @param wid the window to unmap
  */
-int xdo_window_unmap(const xdo_t *xdo, Window wid);
+int xdo_unmap_window(const xdo_t *xdo, Window wid);
 
 /**
  * Minimize a window.
  */
-int xdo_window_minimize(const xdo_t *xdo, Window wid);
+int xdo_minimize_window(const xdo_t *xdo, Window wid);
 
 /** 
  * Reparents a window
@@ -624,7 +624,7 @@ int xdo_window_minimize(const xdo_t *xdo, Window wid);
  * @param wid_source the window to reparent
  * @param wid_target the new parent window
  */
-int xdo_window_reparent(const xdo_t *xdo, Window wid_source, Window wid_target);
+int xdo_reparent_window(const xdo_t *xdo, Window wid_source, Window wid_target);
 
 /**
  * Get a window's location.
@@ -659,7 +659,7 @@ int xdo_get_window_size(const xdo_t *xdo, Window wid, unsigned int *width_ret,
  *
  * @param window_ret Pointer to Window where the active window is stored.
  */
-int xdo_window_get_active(const xdo_t *xdo, Window *window_ret);
+int xdo_get_active_window(const xdo_t *xdo, Window *window_ret);
 
 /**
  * Get a window ID by clicking on it. This function blocks until a selection
@@ -667,7 +667,7 @@ int xdo_window_get_active(const xdo_t *xdo, Window *window_ret);
  *
  * @param window_ret Pointer to Window where the selected window is stored.
  */
-int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret);
+int xdo_select_window_with_click(const xdo_t *xdo, Window *window_ret);
 
 /**
  * Set the number of desktops.
@@ -731,7 +731,7 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop);
  * @param nwindows_ret the number of windows (length of windowlist_ret)
  * @see xdo_search_t
  */
-int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
+int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
                       Window **windowlist_ret, unsigned int *nwindows_ret);
 
 /**
@@ -745,8 +745,8 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
  * @return data consisting of 'nitems' items of size 'size' and type 'type'
  *   will need to be cast to the type before using.
  */
-unsigned char *xdo_window_get_property(const xdo_t *xdo, Window window, Atom atom,
-                                       long *nitems, Atom *type, int *size);
+unsigned char *xdo_get_window_property(const xdo_t *xdo, Window window, Atom atom,
+                              long *nitems, Atom *type, int *size);
 
 /**
  * Get the current input state. This is a mask value containing any of the
@@ -761,7 +761,7 @@ unsigned int xdo_get_input_state(const xdo_t *xdo);
  * If you need the keysym-to-character map, you can fetch it using this method.
  * @see keysym_charmap_t
  */
-const keysym_charmap_t *xdo_keysym_charmap(void);
+const keysym_charmap_t *xdo_get_keysym_to_charmap(void);
 
 /**
  * If you need the symbol map, use this method.
@@ -771,7 +771,7 @@ const keysym_charmap_t *xdo_keysym_charmap(void);
  *
  * @returns array of strings.
  */
-const char **xdo_symbol_map(void);
+const char **xdo_get_symbol_map(void);
 
 /* active modifiers stuff */
 
@@ -823,7 +823,7 @@ int xdo_set_desktop_viewport(const xdo_t *xdo, int x, int y);
  * Kill a window and the client owning it.
  *
  */
-int xdo_window_kill(const xdo_t *xdo, Window window);
+int xdo_kill_window(const xdo_t *xdo, Window window);
 
 /**
  * Find a client window that is a parent of the window given
@@ -839,7 +839,7 @@ int xdo_window_kill(const xdo_t *xdo, Window window);
  * Find a client window (child) in a given window. Useful if you get the
  * window manager's decorator window rather than the client window.
  */
-int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
+int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
                            int direction);
 
 /**

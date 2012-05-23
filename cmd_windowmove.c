@@ -136,10 +136,10 @@ static int _windowmove(context_t *context, struct windowmove *windowmove) {
   }
 
 
-  ret = xdo_window_move(context->xdo, windowmove->window, target_x, target_y);
+  ret = xdo_move_window(context->xdo, windowmove->window, target_x, target_y);
   if (ret) {
     fprintf(stderr,
-            "xdo_window_move reported an error while moving window %ld\n",
+            "xdo_move_window reported an error while moving window %ld\n",
             windowmove->window);
   } else {
     if (windowmove->opsync) {
