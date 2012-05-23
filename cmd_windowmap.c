@@ -47,12 +47,12 @@ int cmd_windowmap(context_t *context) {
   }
 
   window_each(context, window_arg, {
-    ret = xdo_window_map(context->xdo, window);
+    ret = xdo_map_window(context->xdo, window);
     if (ret) {
-      fprintf(stderr, "xdo_window_map reported an error\n");
+      fprintf(stderr, "xdo_map_window reported an error\n");
     } else {
       if (opsync) {
-        xdo_window_wait_for_map_state(context->xdo, window, IsViewable);
+        xdo_wait_for_window_map_state(context->xdo, window, IsViewable);
       }
     }
   }); /* window_each(...) */

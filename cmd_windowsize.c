@@ -108,10 +108,10 @@ int cmd_windowsize(context_t *context) {
       unsigned int h = height;
       xdo_get_window_size(context->xdo, window, &original_w, &original_h);
       if (size_flags & SIZE_USEHINTS_X) {
-        xdo_window_translate_with_sizehint(context->xdo, window, w, h, &w, NULL);
+        xdo_translate_window_with_sizehint(context->xdo, window, w, h, &w, NULL);
       }
       if (size_flags & SIZE_USEHINTS_Y) {
-        xdo_window_translate_with_sizehint(context->xdo, window, w, h, NULL, &h);
+        xdo_translate_window_with_sizehint(context->xdo, window, w, h, NULL, &h);
       }
 
       if (original_w == w && original_h == h) {
@@ -120,16 +120,16 @@ int cmd_windowsize(context_t *context) {
       }
     }
 
-    ret = xdo_window_setsize(context->xdo, window, width, height, size_flags);
+    ret = xdo_set_window_size(context->xdo, window, width, height, size_flags);
     if (ret) {
-      fprintf(stderr, "xdo_window_setsize on window:%ld reported an error\n",
+      fprintf(stderr, "xdo_set_window_size on window:%ld reported an error\n",
               window);
       return ret;
     }
     if (opsync) {
-      //xdo_window_wait_for_size(context->xdo, window, width, height, 0,
+      //xdo_wait_for_window_size(context->xdo, window, width, height, 0,
                                //SIZE_TO);
-      xdo_window_wait_for_size(context->xdo, window, original_w, original_h, 0,
+      xdo_wait_for_window_size(context->xdo, window, original_w, original_h, 0,
                                SIZE_FROM);
     }
   }); /* window_each(...) */

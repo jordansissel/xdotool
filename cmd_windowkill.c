@@ -37,9 +37,9 @@ int cmd_windowkill(context_t *context) {
   }
 
   window_each(context, window_arg, {
-    ret = xdo_window_kill(context->xdo, window);
+    ret = xdo_kill_window(context->xdo, window);
     if (ret) {
-      fprintf(stderr, "xdo_window_kill reported an error on window %ld\n",
+      fprintf(stderr, "xdo_kill_window reported an error on window %ld\n",
               window);
     }
   }); /* window_each(...) */

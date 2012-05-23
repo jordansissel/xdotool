@@ -58,7 +58,7 @@ int cmd_mousedown(context_t *context) {
       xdo_clear_active_modifiers(context->xdo, window, active_mods);
     }
 
-    ret = xdo_mousedown(context->xdo, window, button);
+    ret = xdo_mouse_down(context->xdo, window, button);
 
     if (clear_modifiers) {
       xdo_set_active_modifiers(context->xdo, window, active_mods);
@@ -66,7 +66,7 @@ int cmd_mousedown(context_t *context) {
     }
 
     if (ret) {
-      fprintf(stderr, "xdo_mousedown reported an error on window %ld\n", window);
+      fprintf(stderr, "xdo_mouse_down reported an error on window %ld\n", window);
       return ret;
     }
   }); /* window_each(...) */

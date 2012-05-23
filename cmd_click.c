@@ -90,9 +90,9 @@ int cmd_click(context_t *context) {
       xdo_clear_active_modifiers(context->xdo, window, active_mods);
     }
 
-    ret = xdo_click_multiple(context->xdo, window, button, repeat, delay);
+    ret = xdo_click_window_multiple(context->xdo, window, button, repeat, delay);
     if (ret != XDO_SUCCESS) {
-      fprintf(stderr, "xdo_click failed on window %ld\n", window);
+      fprintf(stderr, "xdo_click_window failed on window %ld\n", window);
       return ret;
     }
 
