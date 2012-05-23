@@ -249,7 +249,9 @@ int xdo_move_window(const xdo_t *xdo, Window wid, int x, int y) {
   return _is_success("XConfigureWindow", ret == 0, xdo);
 }
 
-int xdo_translate_window_with_sizehint(const xdo_t *xdo, Window window, unsigned int width, unsigned int height, unsigned int *width_ret, unsigned int *height_ret) {
+int xdo_translate_window_with_sizehint(const xdo_t *xdo, Window window,
+                                       unsigned int width, unsigned int height, 
+                                       unsigned int *width_ret, unsigned int *height_ret) {
   XSizeHints hints;
   long supplied_return;
   XGetWMNormalHints(xdo->xdpy, window, &hints, &supplied_return);
@@ -291,13 +293,13 @@ int xdo_set_window_size(const xdo_t *xdo, Window window, int width, int height, 
   wc.height = height;
 
   if (flags & SIZE_USEHINTS_X) {
-    xdo_translate_window_with_sizehint(xdo, window, width, height, (unsigned int)&wc.width,
+    xdo_translate_window_with_sizehint(xdo, window, width, height, (unsigned int*)&wc.width,
                                        NULL);
   }
 
   if (flags & SIZE_USEHINTS_Y) {
     xdo_translate_window_with_sizehint(xdo, window, width, height, NULL,
-                                       &wc.height);
+                                       (unsigned int*)&wc.height);
   }
 
   if (width > 0) {
@@ -389,8 +391,8 @@ int xdo_focus_window(const xdo_t *xdo, Window wid) {
 int xdo_wait_for_window_size(const xdo_t *xdo, Window window,
                              unsigned int width, unsigned int height,
                              int flags, int to_or_from) {
-  unsigned int cur_width = 0, cur_height = 0;
-  unsigned int alt_width = 0, alt_height = 0;
+  unsigned int cur_width, cur_height;
+  /*unsigned int alt_width, alt_height;*/
 
   //printf("Want: %udx%ud\n", width, height);
   if (flags & SIZE_USEHINTS) {
@@ -1799,6 +1801,7 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
 
 int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, charcodemap_t *active_mods, int active_mods_n) {
   int ret = 0;
+  unsigned int input_state = xdo_get_input_state(xdo);
   xdo_send_keysequence_window_list_do(xdo, window, active_mods,
                           active_mods_n, False, NULL, DEFAULT_DELAY);
 
