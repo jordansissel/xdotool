@@ -100,17 +100,17 @@ int cmd_mousemove_relative(context_t *context) {
   }
 
   if (opsync) {
-    xdo_mouselocation(context->xdo, &origin_x, &origin_y, NULL);
+    xdo_get_mouse_location(context->xdo, &origin_x, &origin_y, NULL);
   }
 
-  ret = xdo_mousemove_relative(context->xdo, x, y);
+  ret = xdo_move_mouse_relative(context->xdo, x, y);
 
   if (ret) {
-    fprintf(stderr, "xdo_mousemove_relative reported an error\n");
+    fprintf(stderr, "xdo_move_mouse_relative reported an error\n");
   } else {
     if (opsync) {
       /* Wait until the mouse moves away from its current position */
-      xdo_mouse_wait_for_move_from(context->xdo, origin_x, origin_y);
+      xdo_wait_for_mouse_move_from(context->xdo, origin_x, origin_y);
     }
   }
 

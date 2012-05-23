@@ -46,13 +46,13 @@ int cmd_windowfocus(context_t *context) {
   }
 
   window_each(context, window_arg, {
-    ret = xdo_window_focus(context->xdo, window);
+    ret = xdo_focus_window(context->xdo, window);
     if (ret) {
-      fprintf(stderr, "xdo_window_focus reported an error\n");
+      fprintf(stderr, "xdo_focus_windofocus_window reported an error\n");
       return ret;
     } else {
       if (opsync) {
-        xdo_window_wait_for_focus(context->xdo, window, 1);
+        xdo_wait_for_window_focus(context->xdo, window, 1);
       }
     }
   }); /* window_each(...) */

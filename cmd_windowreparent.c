@@ -54,15 +54,15 @@ int cmd_windowreparent(context_t *context) {
 
   window_each(context, window_arg, {
     //printf("Reparenting %ld -> %ld\n", window, destination);
-    ret = xdo_window_reparent(context->xdo, window, destination);
+    ret = xdo_reparent_window(context->xdo, window, destination);
     if (ret) {
-      fprintf(stderr, "xdo_window_reparent reported an error on for "
+      fprintf(stderr, "xdo_reparent_window reported an error on for "
               "src=%ld, dest=%ld\n", window, destination);
     }
   }); /* window_each(...) */
 
   if (ret)
-    fprintf(stderr, "xdo_window_reparent reported an error\n");
+    fprintf(stderr, "xdo_reparent_window reported an error\n");
 
   return ret;
 }

@@ -85,18 +85,18 @@ int cmd_set_window(context_t *context) {
   /* TODO(sissel): error handling needed... */
   window_each(context, window_arg, {
     if (name)
-      xdo_window_setprop(context->xdo, window, "WM_NAME", name);
+      xdo_set_window_property(context->xdo, window, "WM_NAME", name);
     if (icon)
-      xdo_window_setprop(context->xdo, window, "WM_ICON_NAME", icon);
+      xdo_set_window_property(context->xdo, window, "WM_ICON_NAME", icon);
     if (role)
-      xdo_window_setprop(context->xdo, window, "WM_WINDOW_ROLE", role);
+      xdo_set_window_property(context->xdo, window, "WM_WINDOW_ROLE", role);
     if (classname || _class)
-      xdo_window_setclass(context->xdo, window, classname, _class);
+      xdo_set_window_class(context->xdo, window, classname, _class);
     if (override_redirect != -1)
-      xdo_window_set_override_redirect(context->xdo, window,
+      xdo_set_window_override_redirect(context->xdo, window,
                                        override_redirect);
     if (urgency != -1)
-      xdo_window_seturgency(context->xdo, window, urgency);
+      xdo_set_window_urgency(context->xdo, window, urgency);
   }); /* window_each(...) */
 
   return 0;

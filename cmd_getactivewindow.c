@@ -29,7 +29,7 @@ int cmd_getactivewindow(context_t *context) {
 
   consume_args(context, optind);
 
-  ret = xdo_window_get_active(context->xdo, &window);
+  ret = xdo_get_active_window(context->xdo, &window);
 
   if (ret) {
     fprintf(stderr, "xdo_get_active_window reported an error\n");

@@ -165,7 +165,7 @@ int cmd_search(context_t *context) {
   consume_args(context, 1);
 
   do {
-    xdo_window_search(context->xdo, &search, &list, &nwindows);
+    xdo_search_windows(context->xdo, &search, &list, &nwindows);
 
     if (context->argc == 0) {
       /* only print if we're the last command */
@@ -182,7 +182,7 @@ int cmd_search(context_t *context) {
     }
   } while (op_sync && nwindows == 0);
 
-  /* Free old list as it's malloc'd by xdo_window_search */
+  /* Free old list as it's malloc'd by xdo_search_windows */
   if (context->windows != NULL) {
     free(context->windows);
   }

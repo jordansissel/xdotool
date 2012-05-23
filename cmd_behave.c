@@ -122,7 +122,7 @@ int cmd_behave(context_t *context) {
         /* allow some time to pass to let the mouse really leave if we are on our way out */
         /* TODO(sissel): allow this delay to be tunable */
         usleep(100000); /* 100ms */
-        xdo_mousewindow(context->xdo, &hover);
+        xdo_get_window_at_mouse(context->xdo, &hover);
         if (hover == e.xcrossing.window) {
           //printf("Ignoring Leave, we're still in the window\n");
           break;
