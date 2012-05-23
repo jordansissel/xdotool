@@ -29,10 +29,10 @@ int cmd_window_select(context_t *context) {
 
   consume_args(context, optind);
 
-  ret = xdo_window_select_with_click(context->xdo, &window);
+  ret = xdo_select_window_with_click(context->xdo, &window);
 
   if (ret) {
-    fprintf(stderr, "xdo_window_select_with_click reported an error\n");
+    fprintf(stderr, "xdo_select_window_with_click reported an error\n");
   } else {
     /* only print if we're the last command */
     if (context->argc == 0) {

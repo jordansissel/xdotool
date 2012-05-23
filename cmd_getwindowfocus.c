@@ -45,13 +45,13 @@ int cmd_getwindowfocus(context_t *context) {
   //}
 
   if (get_toplevel_focus) {
-    ret = xdo_window_sane_get_focus(context->xdo, &window);
+    ret = xdo_get_focused_window_sane(context->xdo, &window);
   } else {
-    ret = xdo_window_get_focus(context->xdo, &window);
+    ret = xdo_get_focused_window(context->xdo, &window);
   }
 
   if (ret) {
-    fprintf(stderr, "xdo_window_focus reported an error\n");
+    fprintf(stderr, "xdo_focus_window reported an error\n");
   } else { 
     /* only print if we're the last command */
     if (context->argc == 0) {

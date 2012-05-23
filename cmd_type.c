@@ -184,10 +184,10 @@ int cmd_type(context_t *context) {
 
     for (i = 0; i < data_count; i++) {
       //printf("Typing: '%s'\n", context->argv[i]);
-      int tmp = xdo_type(context->xdo, window, data[i], delay);
+      int tmp = xdo_enter_text_window(context->xdo, window, data[i], delay);
 
       if (tmp) {
-        fprintf(stderr, "xdo_type reported an error\n");
+        fprintf(stderr, "xdo_enter_text_window reported an error\n");
       }
 
       ret += tmp;

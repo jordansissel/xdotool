@@ -147,7 +147,7 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
   /* Save the mouse position if the window is CURRENTWINDOW */
   if (window == CURRENTWINDOW) {
     context->have_last_mouse = True;
-    xdo_mouselocation(context->xdo, &(context->last_mouse_x),
+    xdo_get_mouse_location(context->xdo, &(context->last_mouse_x),
                       &(context->last_mouse_y), &(context->last_mouse_screen));
   }
   
@@ -183,7 +183,7 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
   }
 
   int mx, my, mscreen;
-  xdo_mouselocation(context->xdo, &mx, &my, &mscreen);
+  xdo_get_mouse_location(context->xdo, &mx, &my, &mscreen);
 
   /* Break early if we don't need to move */
   if (mx == x && my == y && mscreen == screen) {
@@ -197,9 +197,9 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
 
   if (mousemove->step == 0) {
     if (window != CURRENTWINDOW && !mousemove->polar_coordinates) {
-      ret = xdo_mousemove_relative_to_window(context->xdo, window, x, y);
+      ret = xdo_move_mouse_relative_to_window(context->xdo, window, x, y);
     } else {
-      ret = xdo_mousemove(context->xdo, x, y, screen);
+      ret = xdo_move_mouse(context->xdo, x, y, screen);
     }
   } else {
     if (mx == x && my == y && mscreen == screen) {
@@ -210,18 +210,18 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
     fprintf(stderr, "--step support not yet implemented\n");
 
     if (window > 0) {
-      ret = xdo_mousemove_relative_to_window(context->xdo, window, x, y);
+      ret = xdo_move_mouse_relative_to_window(context->xdo, window, x, y);
     } else {
-      ret = xdo_mousemove(context->xdo, x, y, screen);
+      ret = xdo_move_mouse(context->xdo, x, y, screen);
     }
   }
 
   if (ret) {
-    fprintf(stderr, "xdo_mousemove reported an error\n");
+    fprintf(stderr, "xdo_move_mouse reported an error\n");
   } else {
     if (mousemove->opsync) {
       /* Wait until the mouse moves away from its current position */
-      xdo_mouse_wait_for_move_from(context->xdo, mx, my);
+      xdo_wait_for_mouse_move_from(context->xdo, mx, my);
     }
   }
 

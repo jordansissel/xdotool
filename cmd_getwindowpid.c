@@ -37,7 +37,7 @@ int cmd_getwindowpid(context_t *context) {
   }
 
   window_each(context, window_arg, {
-    pid = xdo_window_get_pid(context->xdo, window);
+    pid = xdo_get_pid_window(context->xdo, window);
     if (pid == 0) {
       /* TODO(sissel): probably shouldn't exit failure when iterating over
        * a list of windows. What should we do? */

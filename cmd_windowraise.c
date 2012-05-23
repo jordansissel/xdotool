@@ -37,9 +37,9 @@ int cmd_windowraise(context_t *context) {
   }
 
   window_each(context, window_arg, {
-    ret = xdo_window_raise(context->xdo, window);
+    ret = xdo_raise_window(context->xdo, window);
     if (ret) {
-      fprintf(stderr, "xdo_window_raise reported an error on window %ld\n",
+      fprintf(stderr, "xdo_raise_window reported an error on window %ld\n",
               window);
     }
   }); /* window_each(...) */
