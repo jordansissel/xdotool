@@ -136,7 +136,8 @@ int cmd_mousemove(context_t *context) {
 
 static int _mousemove(context_t *context, struct mousemove *mousemove) {
   int ret;
-  xdo_active_mods_t *active_mods = NULL;
+  charcodemap_t *active_mods = NULL;
+  int active_mods_n;
 
   int x = mousemove->x;
   int y = mousemove->y;
@@ -190,8 +191,8 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
   }
 
   if (mousemove->clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(context->xdo);
-    xdo_clear_active_modifiers(context->xdo, window, active_mods);
+    xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
+    xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);
   }
 
   if (mousemove->step == 0) {
@@ -225,8 +226,8 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
   }
 
   if (mousemove->clear_modifiers) {
-    xdo_set_active_modifiers(context->xdo, window, active_mods);
-    xdo_free_active_modifiers(active_mods);
+    xdo_set_active_modifiers(context->xdo, window, active_mods, active_mods_n);
+    free(active_mods);
   }
 
   return 0;

@@ -12,7 +12,8 @@ int cmd_key(context_t *context) {
   int i;
   int c;
   char *cmd = *context->argv;
-  xdo_active_mods_t *active_mods = NULL;
+  charcodemap_t *active_mods = NULL;
+  int active_mods_n;
   useconds_t delay = 12000;
   const char *window_arg = NULL;
   int free_arg = 0;
@@ -98,8 +99,8 @@ int cmd_key(context_t *context) {
   int max_arg = context->argc;
   window_each(context, window_arg, {
     if (clear_modifiers) {
-      active_mods = xdo_get_active_modifiers(context->xdo);
-      xdo_clear_active_modifiers(context->xdo, window, active_mods);
+      xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
+      xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);
     }
 
     for (i = 0; i < context->argc; i++) {
@@ -117,8 +118,8 @@ int cmd_key(context_t *context) {
     }
 
     if (clear_modifiers) {
-      xdo_set_active_modifiers(context->xdo, window, active_mods);
-      xdo_free_active_modifiers(active_mods);
+      xdo_set_active_modifiers(context->xdo, window, active_mods, active_mods_n);
+      free(active_mods);
     }
   }); /* window_each(...) */
 

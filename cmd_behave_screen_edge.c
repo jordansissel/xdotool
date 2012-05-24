@@ -42,7 +42,7 @@ int cmd_behave_screen_edge(context_t *context) {
   char *cmd = *context->argv;
   xdo_search_t search;
   Window *windowlist;
-  int nwindows;
+  unsigned int nwindows;
   useconds_t delay = 0;
   useconds_t quiesce = 2000000 /* 2 second default quiesce */;
   enum { quiesce_start, quiesce_ing, quiesce_done } quiesce_state = quiesce_start;
@@ -119,7 +119,7 @@ int cmd_behave_screen_edge(context_t *context) {
   search.searchmask = SEARCH_NAME;
   search.winname = "^"; /* Match anything */
   xdo_window_search(context->xdo, &search, &windowlist, &nwindows);
-  int i;
+  unsigned int i;
   for (i = 0; i < nwindows; i++) {
     XSelectInput(context->xdo->xdpy, windowlist[i], PointerMotionMask | SubstructureNotifyMask);
   }
@@ -339,6 +339,8 @@ int is_edge_or_corner(const xdo_t *xdo, const edge_or_corner what,
 } /* int is_edge_or_corner */
 
 int ignore_error(Display *dpy, XErrorEvent *xerr) {
+  dpy = dpy; /* Just use these to avoid warnings. */
+  xerr = xerr;
   return 0;
 }
 

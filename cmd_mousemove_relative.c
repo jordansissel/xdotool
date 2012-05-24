@@ -10,7 +10,8 @@ int cmd_mousemove_relative(context_t *context) {
   int opsync = 0;
   int origin_x = -1, origin_y = -1;
 
-  xdo_active_mods_t *active_mods = NULL;
+  charcodemap_t *active_mods = NULL;
+  int active_mods_n;
   int c;
   typedef enum {
     opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_polar
@@ -95,8 +96,8 @@ int cmd_mousemove_relative(context_t *context) {
   }
  
   if (clear_modifiers) {
-    active_mods = xdo_get_active_modifiers(context->xdo);
-    xdo_clear_active_modifiers(context->xdo, CURRENTWINDOW, active_mods);
+    xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
+    xdo_clear_active_modifiers(context->xdo, CURRENTWINDOW, active_mods, active_mods_n);
   }
 
   if (opsync) {
@@ -115,8 +116,8 @@ int cmd_mousemove_relative(context_t *context) {
   }
 
   if (clear_modifiers) {
-    xdo_set_active_modifiers(context->xdo, CURRENTWINDOW, active_mods);
-    xdo_free_active_modifiers(active_mods);
+    xdo_set_active_modifiers(context->xdo, CURRENTWINDOW, active_mods, active_mods_n);
+    free(active_mods);
   }
 
   return ret;
