@@ -537,7 +537,7 @@ int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops) {
   request = XInternAtom(xdo->xdpy, "_NET_NUMBER_OF_DESKTOPS", False);
   root = XDefaultRootWindow(xdo->xdpy);
 
-  data = xdo_get_window_property(xdo, root, request, &nitems, &type, &size);
+  data = xdo_get_window_property_by_atom(xdo, root, request, &nitems, &type, &size);
 
   if (nitems > 0) {
     *ndesktops = *((long*)data);
@@ -601,7 +601,7 @@ int xdo_get_current_desktop(const xdo_t *xdo, long *desktop) {
   request = XInternAtom(xdo->xdpy, "_NET_CURRENT_DESKTOP", False);
   root = XDefaultRootWindow(xdo->xdpy);
 
-  data = xdo_get_window_property(xdo, root, request, &nitems, &type, &size);
+  data = xdo_get_window_property_by_atom(xdo, root, request, &nitems, &type, &size);
 
   if (nitems > 0) {
     *desktop = *((long*)data);
@@ -662,7 +662,7 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
 
   request = XInternAtom(xdo->xdpy, "_NET_WM_DESKTOP", False);
 
-  data = xdo_get_window_property(xdo, wid, request, &nitems, &type, &size);
+  data = xdo_get_window_property_by_atom(xdo, wid, request, &nitems, &type, &size);
 
   if (nitems > 0) {
     *desktop = *((long*)data);
@@ -692,7 +692,7 @@ int xdo_get_active_window(const xdo_t *xdo, Window *window_ret) {
 
   request = XInternAtom(xdo->xdpy, "_NET_ACTIVE_WINDOW", False);
   root = XDefaultRootWindow(xdo->xdpy);
-  data = xdo_get_window_property(xdo, root, request, &nitems, &type, &size);
+  data = xdo_get_window_property_by_atom(xdo, root, request, &nitems, &type, &size);
 
   if (nitems > 0) {
     *window_ret = *((Window*)data);
@@ -1219,7 +1219,7 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
 
     long items;
     _xdo_debug(xdo, "get_window_property on %lu", window);
-    xdo_get_window_property(xdo, window, atom_wmstate, &items, NULL, NULL);
+    xdo_get_window_property_by_atom(xdo, window, atom_wmstate, &items, NULL, NULL);
 
     if (items == 0) {
       /* This window doesn't have WM_STATE property, keep searching. */
@@ -1535,10 +1535,19 @@ int _is_success(const char *funcname, int code, const xdo_t *xdo) {
   return code;
 }
 
+int xdo_get_window_property(const xdo_t *xdo, Window window, const char *property,
+                            unsigned char *value, long *nitems, Atom *type, int *size) {
+    value = xdo_get_window_property_by_atom(xdo, window, XInternAtom(xdo->xdpy, property, False), nitems, type, size);
+    if (value == NULL) {
+        return XDO_ERROR;
+    }
+    return XDO_SUCCESS;
+}
+
 /* Arbitrary window property retrieval
  * slightly modified version from xprop.c from Xorg */
-unsigned char *xdo_get_window_property(const xdo_t *xdo, Window window, Atom atom,
-                              long *nitems, Atom *type, int *size) {
+unsigned char *xdo_get_window_property_by_atom(const xdo_t *xdo, Window window, Atom atom,
+                                            long *nitems, Atom *type, int *size) {
   Atom actual_type;
   int actual_format;
   unsigned long _nitems;
@@ -1599,7 +1608,7 @@ int _xdo_ewmh_is_supported(const xdo_t *xdo, const char *feature) {
   feature_atom = XInternAtom(xdo->xdpy, feature, False);
   root = XDefaultRootWindow(xdo->xdpy);
 
-  results = (Atom *) xdo_get_window_property(xdo, root, request, &nitems, &type, &size);
+  results = (Atom *) xdo_get_window_property_by_atom(xdo, root, request, &nitems, &type, &size);
   for (i = 0L; i < nitems; i++) {
     if (results[i] == feature_atom)
       return True;
@@ -1856,7 +1865,7 @@ int xdo_get_pid_window(const xdo_t *xdo, Window window) {
     atom_NET_WM_PID = XInternAtom(xdo->xdpy, "_NET_WM_PID", False);
   }
 
-  data = xdo_get_window_property(xdo, window, atom_NET_WM_PID, &nitems, &type, &size);
+  data = xdo_get_window_property_by_atom(xdo, window, atom_NET_WM_PID, &nitems, &type, &size);
 
   if (nitems > 0) {
     /* The data itself is unsigned long, but everyone uses int as pid values */
@@ -1912,7 +1921,7 @@ int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret) {
   unsigned char *data;
   Atom request = XInternAtom(xdo->xdpy, "_NET_DESKTOP_VIEWPORT", False);
   Window root = RootWindow(xdo->xdpy, 0);
-  data = xdo_get_window_property(xdo, root, request, &nitems, &type, &size);
+  data = xdo_get_window_property_by_atom(xdo, root, request, &nitems, &type, &size);
 
   if (type != XA_CARDINAL) {
     fprintf(stderr, 
@@ -1990,10 +1999,10 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
    * If no WM_NAME, set name_ret to NULL and set len to 0
    */
 
-  *name_ret = xdo_get_window_property(xdo, window, atom_NET_WM_NAME, &nitems,
+  *name_ret = xdo_get_window_property_by_atom(xdo, window, atom_NET_WM_NAME, &nitems,
                              &type, &size);
   if (nitems == 0) {
-    *name_ret = xdo_get_window_property(xdo, window, atom_WM_NAME, &nitems,
+    *name_ret = xdo_get_window_property_by_atom(xdo, window, atom_WM_NAME, &nitems,
                                &type, &size);
   }
   *name_len_ret = nitems;
