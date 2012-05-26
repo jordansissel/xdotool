@@ -1536,9 +1536,9 @@ int _is_success(const char *funcname, int code, const xdo_t *xdo) {
 }
 
 int xdo_get_window_property(const xdo_t *xdo, Window window, const char *property,
-                            unsigned char *value, long *nitems, Atom *type, int *size) {
-    value = xdo_get_window_property_by_atom(xdo, window, XInternAtom(xdo->xdpy, property, False), nitems, type, size);
-    if (value == NULL) {
+                            unsigned char **value, long *nitems, Atom *type, int *size) {
+    *value = xdo_get_window_property_by_atom(xdo, window, XInternAtom(xdo->xdpy, property, False), nitems, type, size);
+    if (*value == NULL) {
         return XDO_ERROR;
     }
     return XDO_SUCCESS;

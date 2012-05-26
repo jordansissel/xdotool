@@ -770,7 +770,7 @@ unsigned char *xdo_get_window_property_by_atom(const xdo_t *xdo, Window window, 
  *   will need to be cast to the type before using.
  */
 int xdo_get_window_property(const xdo_t *xdo, Window window, const char *property,
-                            unsigned char *value, long *nitems, Atom *type, int *size);
+                            unsigned char **value, long *nitems, Atom *type, int *size);
 
 /**
  * Get the current input state. This is a mask value containing any of the
