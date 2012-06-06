@@ -4,8 +4,8 @@
 int cmd_search(context_t *context) {
   Window *list;
   xdo_search_t search;
-  int nwindows;
-  int i;
+  unsigned int nwindows;
+  unsigned int i;
   int c;
   int op_sync = False;
 

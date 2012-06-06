@@ -24,15 +24,15 @@ static int _xdo_is_window_visible(const xdo_t *xdo, Window wid);
 static void find_matching_windows(const xdo_t *xdo, Window window, 
                                   const xdo_search_t *search,
                                   Window **windowlist_ret,
-                                  int *nwindows_ret,
-                                  int *windowlist_size,
+                                  unsigned int *nwindows_ret,
+                                  unsigned int *windowlist_size,
                                   int current_depth);
 
 int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
-                      Window **windowlist_ret, int *nwindows_ret) {
+                      Window **windowlist_ret, unsigned int *nwindows_ret) {
   int i = 0;
 
-  int windowlist_size = 100;
+  unsigned int windowlist_size = 100;
   *nwindows_ret = 0;
   *windowlist_ret = calloc(sizeof(Window), windowlist_size);
 
@@ -320,8 +320,8 @@ static int check_window_match(const xdo_t *xdo, Window wid,
 static void find_matching_windows(const xdo_t *xdo, Window window, 
                                   const xdo_search_t *search,
                                   Window **windowlist_ret,
-                                  int *nwindows_ret,
-                                  int *windowlist_size,
+                                  unsigned int *nwindows_ret,
+                                  unsigned int *windowlist_size,
                                   int current_depth) {
   /* Query for children of 'wid'. For each child, check match.
    * We want to do a breadth-first search.

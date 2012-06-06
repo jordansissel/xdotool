@@ -33,8 +33,8 @@ typedef struct context {
   Window window_placeholder[1];
 
   /* Last known mouse position */
-  unsigned int last_mouse_x;
-  unsigned int last_mouse_y;
+  int last_mouse_x;
+  int last_mouse_y;
   int last_mouse_screen;
   int have_last_mouse;
 } context_t;

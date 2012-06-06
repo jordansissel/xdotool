@@ -22,6 +22,7 @@
 #include <stdarg.h>
 
 #include <X11/Xlib.h>
+#include <X11/XKBlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
@@ -249,8 +250,8 @@ int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y) {
 }
 
 int xdo_window_translate_with_sizehint(const xdo_t *xdo, Window window,
-                                       int width, int height, int *width_ret,
-                                       int *height_ret) {
+                                       unsigned int width, unsigned int height, 
+                                       unsigned int *width_ret, unsigned int *height_ret) {
   XSizeHints hints;
   long supplied_return;
   XGetWMNormalHints(xdo->xdpy, window, &hints, &supplied_return);
@@ -292,13 +293,13 @@ int xdo_window_setsize(const xdo_t *xdo, Window window, int width, int height, i
   wc.height = height;
 
   if (flags & SIZE_USEHINTS_X) {
-    xdo_window_translate_with_sizehint(xdo, window, width, height, &wc.width,
+    xdo_window_translate_with_sizehint(xdo, window, width, height, (unsigned int*)&wc.width,
                                        NULL);
   }
 
   if (flags & SIZE_USEHINTS_Y) {
     xdo_window_translate_with_sizehint(xdo, window, width, height, NULL,
-                                       &wc.height);
+                                       (unsigned int*)&wc.height);
   }
 
   if (width > 0) {
@@ -390,13 +391,13 @@ int xdo_window_focus(const xdo_t *xdo, Window wid) {
 int xdo_window_wait_for_size(const xdo_t *xdo, Window window,
                              unsigned int width, unsigned int height,
                              int flags, int to_or_from) {
-  unsigned int cur_width = 0, cur_height = 0;
-  unsigned int alt_width = 0, alt_height = 0;
+  unsigned int cur_width, cur_height;
+  /*unsigned int alt_width, alt_height;*/
 
   //printf("Want: %udx%ud\n", width, height);
   if (flags & SIZE_USEHINTS) {
     xdo_window_translate_with_sizehint(xdo, window, width, height,
-                                       (int *)&width, (int *)&height);
+                                       &width, &height);
   } else {
     unsigned int hint_width, hint_height;
     /* TODO(sissel): fix compiler warning here, but it will require
@@ -405,14 +406,14 @@ int xdo_window_wait_for_size(const xdo_t *xdo, Window window,
                                        &hint_width, &hint_height);
     //printf("Hint: %dx%d\n", hint_width, hint_height);
     /* Find the nearest multiple (rounded down) of the hint height. */
-    alt_width = (width - (width % hint_width));
-    alt_height = (height - (height % hint_height));
+    /*alt_width = (width - (width % hint_width));*/
+    /*alt_height = (height - (height % hint_height));*/
     //printf("Alt: %udx%ud\n", alt_width, alt_height);
   }
 
   int tries = MAX_TRIES;
-  xdo_get_window_size(xdo, window, (unsigned int *)&cur_width,
-                      (unsigned int *)&cur_height);
+  xdo_get_window_size(xdo, window, &cur_width,
+                      &cur_height);
   //printf("Want: %udx%ud\n", width, height);
   //printf("Alt: %udx%ud\n", alt_width, alt_height);
   while (tries > 0 && (to_or_from == SIZE_TO
@@ -536,7 +537,7 @@ int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops) {
   request = XInternAtom(xdo->xdpy, "_NET_NUMBER_OF_DESKTOPS", False);
   root = XDefaultRootWindow(xdo->xdpy);
 
-  data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+  data = xdo_window_get_property(xdo, root, request, &nitems, &type, &size);
 
   if (nitems > 0) {
     *ndesktops = *((long*)data);
@@ -600,7 +601,7 @@ int xdo_get_current_desktop(const xdo_t *xdo, long *desktop) {
   request = XInternAtom(xdo->xdpy, "_NET_CURRENT_DESKTOP", False);
   root = XDefaultRootWindow(xdo->xdpy);
 
-  data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+  data = xdo_window_get_property(xdo, root, request, &nitems, &type, &size);
 
   if (nitems > 0) {
     *desktop = *((long*)data);
@@ -661,7 +662,7 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
 
   request = XInternAtom(xdo->xdpy, "_NET_WM_DESKTOP", False);
 
-  data = xdo_getwinprop(xdo, wid, request, &nitems, &type, &size);
+  data = xdo_window_get_property(xdo, wid, request, &nitems, &type, &size);
 
   if (nitems > 0) {
     *desktop = *((long*)data);
@@ -691,7 +692,7 @@ int xdo_window_get_active(const xdo_t *xdo, Window *window_ret) {
 
   request = XInternAtom(xdo->xdpy, "_NET_ACTIVE_WINDOW", False);
   root = XDefaultRootWindow(xdo->xdpy);
-  data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+  data = xdo_window_get_property(xdo, root, request, &nitems, &type, &size);
 
   if (nitems > 0) {
     *window_ret = *((Window*)data);
@@ -796,10 +797,11 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     /* Send to specific window */
     int screen = 0;
     XButtonEvent xbpe;
-    xdo_active_mods_t *active_mods;
+    charcodemap_t *active_mod;
+    int active_mod_n;
 
     xdo_mouselocation(xdo, &xbpe.x_root, &xbpe.y_root, &screen);
-    active_mods = xdo_get_active_modifiers(xdo);
+    xdo_get_active_modifiers(xdo, &active_mod, &active_mod_n);
 
     xbpe.window = window;
     xbpe.button = button;
@@ -807,7 +809,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     xbpe.root = RootWindow(xdo->xdpy, screen);
     xbpe.same_screen = True; /* Should we detect if window is on the same
                                  screen as cursor? */
-    xbpe.state = active_mods->input_state;
+    xbpe.state = xdo_get_input_state(xdo);
 
     xbpe.subwindow = None;
     xbpe.time = CurrentTime;
@@ -832,7 +834,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     }
     ret = XSendEvent(xdo->xdpy, window, True, ButtonPressMask, (XEvent *)&xbpe);
     XFlush(xdo->xdpy);
-    xdo_free_active_modifiers(active_mods);
+    free(active_mod);
     return _is_success("XSendEvent(mousedown)", ret == 0, xdo);
   }
 }
@@ -946,7 +948,6 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
    * divide by two. */
   delay /= 2;
 
-  xdo_active_mods_t *current_mods = xdo_get_active_modifiers(xdo);
   /* XXX: Add error handling */
   //int nkeys = strlen(string);
   //charcodemap_t *keys = calloc(nkeys, sizeof(charcodemap_t));
@@ -1006,7 +1007,7 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
       }
       /* Keys with index 2 and 3 are accessed with Mode_switch key, which is 
        * defaults to Mod5Mask */
-      if ((current_mods->input_state & ModeSwitchMask) == 0) {
+      if ((xdo_get_input_state(xdo) & ModeSwitchMask) == 0) {
         if (key.index == 2 || key.index == 3) {
           //printf("Using Mod5Mask\n");
           key.modmask |= Mod5Mask; /* Set AltG/Mode_Shift */
@@ -1030,7 +1031,6 @@ int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t del
   } /* walk string generating a keysequence */
 
   //free(keys);
-  xdo_free_active_modifiers(current_mods);
   return XDO_SUCCESS;
 }
 
@@ -1071,9 +1071,9 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
     int j = 0;
     int key_is_empty = 1;
     for (j = 0; j < keysyms_per_keycode; j++) {
-      char *symname;
+      /*char *symname;*/
       int symindex = (i - xdo->keycode_low) * keysyms_per_keycode + j;
-      symname = XKeysymToString(keysyms[symindex]);
+      /*symname = XKeysymToString(keysyms[symindex]);*/
       if (keysyms[symindex] != 0) {
         key_is_empty = 0;
       } else {
@@ -1218,8 +1218,8 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
     }
 
     long items;
-    _xdo_debug(xdo, "getwinprop on %lu", window);
-    xdo_getwinprop(xdo, window, atom_wmstate, &items, NULL, NULL);
+    _xdo_debug(xdo, "window_get_property on %lu", window);
+    xdo_window_get_property(xdo, window, atom_wmstate, &items, NULL, NULL);
 
     if (items == 0) {
       /* This window doesn't have WM_STATE property, keep searching. */
@@ -1319,7 +1319,7 @@ static int _xdo_has_xtest(const xdo_t *xdo) {
 static void _xdo_populate_charcode_map(xdo_t *xdo) {
   /* assert xdo->display is valid */
   int keycodes_length = 0;
-  int shift_keycode = 0;
+  /*int shift_keycode;*/
   int i, j;
 
   XDisplayKeycodes(xdo->xdpy, &(xdo->keycode_low), &(xdo->keycode_high));
@@ -1338,7 +1338,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
 
   /* Fetch the keycode for Shift_L */
   /* XXX: Make 'Shift_L' configurable? */
-  shift_keycode = XKeysymToKeycode(xdo->xdpy, XK_Shift_L);
+  /*shift_keycode = XKeysymToKeycode(xdo->xdpy, XK_Shift_L);*/
 
   int idx = 0;
   for (i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
@@ -1475,8 +1475,8 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
         offset = 2;
       }
 
-      if (XKeycodeToKeysym(xdo->xdpy, key, 0 + offset) != sym
-          && XKeycodeToKeysym(xdo->xdpy, key, 1 + offset) != sym) {
+      if (XkbKeycodeToKeysym(xdo->xdpy, key, 0, 0 + offset) != sym
+          && XkbKeycodeToKeysym(xdo->xdpy, key, 0, 1 + offset) != sym) {
         key = 0;
       }
     }
@@ -1490,7 +1490,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
       /* Inject a shift key if we need to press shift to reach this keysym */
       //if (xdo->keymap[key * xdo->keysyms_per_keycode] == sym
           //|| sym == NoSymbol) {
-      if ((XKeycodeToKeysym(xdo->xdpy, key, 0) == sym)
+      if ((XkbKeycodeToKeysym(xdo->xdpy, key, 0, 0) == sym)
           || sym == NoSymbol) {
         /* sym is NoSymbol if we give a keycode to type */
         (*keys)[*nkeys].index = 0;
@@ -1537,12 +1537,12 @@ int _is_success(const char *funcname, int code, const xdo_t *xdo) {
 
 /* Arbitrary window property retrieval
  * slightly modified version from xprop.c from Xorg */
-unsigned char *xdo_getwinprop(const xdo_t *xdo, Window window, Atom atom,
-                              long *nitems, Atom *type, int *size) {
+unsigned char *xdo_window_get_property(const xdo_t *xdo, Window window, Atom atom,
+                                       long *nitems, Atom *type, int *size) {
   Atom actual_type;
   int actual_format;
   unsigned long _nitems;
-  unsigned long nbytes;
+  /*unsigned long nbytes;*/
   unsigned long bytes_after; /* unused */
   unsigned char *prop;
   int status;
@@ -1559,14 +1559,16 @@ unsigned char *xdo_getwinprop(const xdo_t *xdo, Window window, Atom atom,
     return NULL;
   }
 
-  if (actual_format == 32)
-    nbytes = sizeof(long);
-  else if (actual_format == 16)
-    nbytes = sizeof(short);
-  else if (actual_format == 8)
-    nbytes = 1;
-  else if (actual_format == 0)
-    nbytes = 0;
+  /*
+   *if (actual_format == 32)
+   *  nbytes = sizeof(long);
+   *else if (actual_format == 16)
+   *  nbytes = sizeof(short);
+   *else if (actual_format == 8)
+   *  nbytes = 1;
+   *else if (actual_format == 0)
+   *  nbytes = 0;
+   */
 
   if (nitems != NULL) {
     *nitems = _nitems;
@@ -1597,7 +1599,7 @@ int _xdo_ewmh_is_supported(const xdo_t *xdo, const char *feature) {
   feature_atom = XInternAtom(xdo->xdpy, feature, False);
   root = XDefaultRootWindow(xdo->xdpy);
 
-  results = (Atom *) xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+  results = (Atom *) xdo_window_get_property(xdo, root, request, &nitems, &type, &size);
   for (i = 0L; i < nitems; i++) {
     if (results[i] == feature_atom)
       return True;
@@ -1631,14 +1633,16 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
       for (i = 0; i < masks_len; i++) { /* length of masks array above */
         if (mask & masks[i]) {
           KeyCode modkey;
-          const char *maskname = "unknown";
-          switch(masks[i]) {
-            case ShiftMask:  maskname = "shift"; break;
-            case ControlMask: maskname = "control"; break;
-            case Mod1Mask: maskname = "mod1/alt"; break;
-            case Mod3Mask: maskname = "mod3"; break;
-            case Mod4Mask: maskname = "mod4/super"; break;
-          }
+          /*
+           *const char *maskname = "unknown";
+           *switch(masks[i]) {
+           *  case ShiftMask:  maskname = "shift"; break;
+           *  case ControlMask: maskname = "control"; break;
+           *  case Mod1Mask: maskname = "mod1/alt"; break;
+           *  case Mod3Mask: maskname = "mod3"; break;
+           *  case Mod4Mask: maskname = "mod4/super"; break;
+           *}
+           */
           modkey = _xdo_cached_modifier_to_keycode(xdo, masks[i]);
           //printf("XTEST: Sending modifier key for mod %d, %s, (keycode %d) %s\n",
                  //masks[i], maskname, modkey, is_press ? "down" : "up");
@@ -1715,18 +1719,40 @@ int _xdo_cached_modifier_to_keycode(const xdo_t *xdo, int modmask) {
     if (xdo->charcodes[i].modmask == modmask)
       return xdo->charcodes[i].code;
 
-  const char *modname = "unknown";
-  switch (modmask) {
-    case ShiftMask:
-      modname = "ShiftMask";
-      break;
-  }
+  /*
+   *const char *modname = "unknown";
+   *switch (modmask) {
+   *  case ShiftMask:
+   *    modname = "ShiftMask";
+   *    break;
+   *}
+   */
   //fprintf(stderr, "No keycode found for modifier %d (%s)\n", modmask, modname);
 
   return 0;
 }
 
-int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
+unsigned int xdo_get_input_state(const xdo_t *xdo) {
+  Window root, dummy;
+  int root_x, root_y, win_x, win_y;
+  unsigned int mask;
+  root = DefaultRootWindow(xdo->xdpy);
+
+  XQueryPointer(xdo->xdpy, root, &dummy, &dummy,
+                &root_x, &root_y, &win_x, &win_y, &mask);
+
+  return mask;
+}
+
+const keysym_charmap_t *xdo_keysym_charmap(void) {
+  return keysym_charmap;
+}
+
+const char **xdo_symbol_map(void) {
+  return symbol_map;
+}
+
+int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
                                     int *nkeys) {
   /* For each keyboard device, if an active key is a modifier,
    * then add the keycode to the keycode list */
@@ -1764,52 +1790,23 @@ int xdo_active_keys_to_keycode_list(const xdo_t *xdo, charcodemap_t **keys,
   return XDO_SUCCESS;
 }
 
-unsigned int xdo_get_input_state(const xdo_t *xdo) {
-  Window root, dummy;
-  int root_x, root_y, win_x, win_y;
-  unsigned int mask;
-  root = DefaultRootWindow(xdo->xdpy);
-
-  XQueryPointer(xdo->xdpy, root, &dummy, &dummy,
-                &root_x, &root_y, &win_x, &win_y, &mask);
-
-  return mask;
-}
-
-const keysym_charmap_t *xdo_keysym_charmap(void) {
-  return keysym_charmap;
-}
-
-const char **xdo_symbol_map(void) {
-  return symbol_map;
-}
-
-xdo_active_mods_t *xdo_get_active_modifiers(const xdo_t *xdo) {
-  xdo_active_mods_t *active_mods = NULL;
-
-  active_mods = calloc(sizeof(xdo_active_mods_t), 1);
-  xdo_active_keys_to_keycode_list(xdo, &(active_mods->keymods),
-                                  &(active_mods->nkeymods));
-  active_mods->input_state = xdo_get_input_state(xdo);
-  return active_mods;
-}
-
-int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, xdo_active_mods_t *active_mods) {
+int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, charcodemap_t *active_mods, int active_mods_n) {
   int ret = 0;
-  xdo_keysequence_list_do(xdo, window, active_mods->keymods,
-                          active_mods->nkeymods, False, NULL, DEFAULT_DELAY);
+  unsigned int input_state = xdo_get_input_state(xdo);
+  xdo_keysequence_list_do(xdo, window, active_mods,
+                          active_mods_n, False, NULL, DEFAULT_DELAY);
 
-  if (active_mods->input_state & Button1MotionMask)
+  if (input_state & Button1MotionMask)
     ret = xdo_mouseup(xdo, window, 1);
-  if (!ret && active_mods->input_state & Button2MotionMask)
+  if (!ret && input_state & Button2MotionMask)
     ret = xdo_mouseup(xdo, window, 2);
-  if (!ret && active_mods->input_state & Button3MotionMask)
+  if (!ret && input_state & Button3MotionMask)
     ret = xdo_mouseup(xdo, window, 3);
-  if (!ret && active_mods->input_state & Button4MotionMask)
+  if (!ret && input_state & Button4MotionMask)
     ret = xdo_mouseup(xdo, window, 4);
-  if (!ret && active_mods->input_state & Button5MotionMask)
+  if (!ret && input_state & Button5MotionMask)
     ret = xdo_mouseup(xdo, window, 5);
-  if (!ret && active_mods->input_state & LockMask) {
+  if (!ret && input_state & LockMask) {
     /* explicitly use down+up here since xdo_keysequence alone will track the modifiers
      * incurred by a key (like shift, or caps) and send them on the 'up' sequence.
      * That seems to break things with Caps_Lock only, so let's be explicit here. */
@@ -1821,22 +1818,22 @@ int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, xdo_active_mods_
   return ret;
 }
 
-int xdo_set_active_modifiers(const xdo_t *xdo, Window window, const
-                             xdo_active_mods_t *active_mods) {
+int xdo_set_active_modifiers(const xdo_t *xdo, Window window, charcodemap_t *active_mods, int active_mods_n) {
   int ret = 0;
-  xdo_keysequence_list_do(xdo, window, active_mods->keymods,
-                          active_mods->nkeymods, True, NULL, DEFAULT_DELAY);
-  if (active_mods->input_state & Button1MotionMask)
+  unsigned int input_state = xdo_get_input_state(xdo);
+  xdo_keysequence_list_do(xdo, window, active_mods,
+                          active_mods_n, True, NULL, DEFAULT_DELAY);
+  if (input_state & Button1MotionMask)
     ret = xdo_mousedown(xdo, window, 1);
-  if (!ret && active_mods->input_state & Button2MotionMask)
+  if (!ret && input_state & Button2MotionMask)
     ret = xdo_mousedown(xdo, window, 2);
-  if (!ret && active_mods->input_state & Button3MotionMask)
+  if (!ret && input_state & Button3MotionMask)
     ret = xdo_mousedown(xdo, window, 3);
-  if (!ret && active_mods->input_state & Button4MotionMask)
+  if (!ret && input_state & Button4MotionMask)
     ret = xdo_mousedown(xdo, window, 4);
-  if (!ret && active_mods->input_state & Button5MotionMask)
+  if (!ret && input_state & Button5MotionMask)
     ret = xdo_mousedown(xdo, window, 5);
-  if (!ret && active_mods->input_state & LockMask) {
+  if (!ret && input_state & LockMask) {
     /* explicitly use down+up here since xdo_keysequence alone will track the modifiers
      * incurred by a key (like shift, or caps) and send them on the 'up' sequence.
      * That seems to break things with Caps_Lock only, so let's be explicit here. */
@@ -1847,12 +1844,6 @@ int xdo_set_active_modifiers(const xdo_t *xdo, Window window, const
   XSync(xdo->xdpy, False);
   return ret;
 }
-
-void xdo_free_active_modifiers(xdo_active_mods_t *active_mods) {
-  free(active_mods->keymods);
-  free(active_mods);
-}
-
 
 int xdo_window_get_pid(const xdo_t *xdo, Window window) {
   Atom type;
@@ -1865,7 +1856,7 @@ int xdo_window_get_pid(const xdo_t *xdo, Window window) {
     atom_NET_WM_PID = XInternAtom(xdo->xdpy, "_NET_WM_PID", False);
   }
 
-  data = xdo_getwinprop(xdo, window, atom_NET_WM_PID, &nitems, &type, &size);
+  data = xdo_window_get_property(xdo, window, atom_NET_WM_PID, &nitems, &type, &size);
 
   if (nitems > 0) {
     /* The data itself is unsigned long, but everyone uses int as pid values */
@@ -1921,7 +1912,7 @@ int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret) {
   unsigned char *data;
   Atom request = XInternAtom(xdo->xdpy, "_NET_DESKTOP_VIEWPORT", False);
   Window root = RootWindow(xdo->xdpy, 0);
-  data = xdo_getwinprop(xdo, root, request, &nitems, &type, &size);
+  data = xdo_window_get_property(xdo, root, request, &nitems, &type, &size);
 
   if (type != XA_CARDINAL) {
     fprintf(stderr, 
@@ -1999,11 +1990,11 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
    * If no WM_NAME, set name_ret to NULL and set len to 0
    */
 
-  *name_ret = xdo_getwinprop(xdo, window, atom_NET_WM_NAME, &nitems,
-                             &type, &size);
+  *name_ret = xdo_window_get_property(xdo, window, atom_NET_WM_NAME, &nitems,
+                                      &type, &size);
   if (nitems == 0) {
-    *name_ret = xdo_getwinprop(xdo, window, atom_WM_NAME, &nitems,
-                               &type, &size);
+    *name_ret = xdo_window_get_property(xdo, window, atom_WM_NAME, &nitems,
+                                        &type, &size);
   }
   *name_len_ret = nitems;
   *name_type = type;

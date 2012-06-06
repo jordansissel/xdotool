@@ -35,7 +35,7 @@ int cmd_getwindowname(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  char *name;
+  unsigned char *name;
   int name_len;
   int name_type;
 
