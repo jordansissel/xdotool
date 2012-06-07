@@ -1753,11 +1753,11 @@ unsigned int xdo_get_input_state(const xdo_t *xdo) {
   return mask;
 }
 
-const keysym_charmap_t *xdo_keysym_charmap(void) {
+const keysym_charmap_t *xdo_get_keysym_charmap(void) {
   return keysym_charmap;
 }
 
-const char **xdo_symbol_map(void) {
+const char **xdo_get_symbol_map(void) {
   return symbol_map;
 }
 

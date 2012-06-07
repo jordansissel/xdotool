@@ -742,7 +742,7 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop);
  * @see xdo_search_t
  */
 int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
-                      Window **windowlist_ret, int *nwindows_ret);
+                      Window **windowlist_ret, unsigned int *nwindows_ret);
 
 /**
  * Generic property fetch.
@@ -785,7 +785,7 @@ unsigned int xdo_get_input_state(const xdo_t *xdo);
  * If you need the keysym-to-character map, you can fetch it using this method.
  * @see keysym_charmap_t
  */
-const keysym_charmap_t *xdo_get_keysym_to_charmap(void);
+const keysym_charmap_t *xdo_get_keysym_charmap(void);
 
 /**
  * If you need the symbol map, use this method.
