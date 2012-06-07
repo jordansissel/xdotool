@@ -1741,26 +1741,6 @@ int _xdo_cached_modifier_to_keycode(const xdo_t *xdo, int modmask) {
   return 0;
 }
 
-unsigned int xdo_get_input_state(const xdo_t *xdo) {
-  Window root, dummy;
-  int root_x, root_y, win_x, win_y;
-  unsigned int mask;
-  root = DefaultRootWindow(xdo->xdpy);
-
-  XQueryPointer(xdo->xdpy, root, &dummy, &dummy,
-                &root_x, &root_y, &win_x, &win_y, &mask);
-
-  return mask;
-}
-
-const keysym_charmap_t *xdo_get_keysym_charmap(void) {
-  return keysym_charmap;
-}
-
-const char **xdo_get_symbol_map(void) {
-  return symbol_map;
-}
-
 int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
                                     int *nkeys) {
   /* For each keyboard device, if an active key is a modifier,
@@ -1797,6 +1777,26 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
   } 
 
   return XDO_SUCCESS;
+}
+
+unsigned int xdo_get_input_state(const xdo_t *xdo) {
+  Window root, dummy;
+  int root_x, root_y, win_x, win_y;
+  unsigned int mask;
+  root = DefaultRootWindow(xdo->xdpy);
+
+  XQueryPointer(xdo->xdpy, root, &dummy, &dummy,
+                &root_x, &root_y, &win_x, &win_y, &mask);
+
+  return mask;
+}
+
+const keysym_charmap_t *xdo_get_keysym_charmap(void) {
+  return keysym_charmap;
+}
+
+const char **xdo_get_symbol_map(void) {
+  return symbol_map;
 }
 
 int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, charcodemap_t *active_mods, int active_mods_n) {
