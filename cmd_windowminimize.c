@@ -48,12 +48,12 @@ int cmd_windowminimize(context_t *context) {
   }
 
   window_each(context, window_arg, {
-    ret = xdo_window_minimize(context->xdo, window);
+    ret = xdo_minimize_window(context->xdo, window);
     if (ret) {
-      fprintf(stderr, "xdo_window_minimize reported an error\n");
+      fprintf(stderr, "xdo_minimize_window reported an error\n");
     } else {
       if (opsync) {
-        xdo_window_wait_for_map_state(context->xdo, window, IsUnmapped);
+        xdo_wait_for_window_map_state(context->xdo, window, IsUnmapped);
       }
     }
   }); /* window_each(...) */

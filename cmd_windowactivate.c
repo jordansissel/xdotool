@@ -47,14 +47,14 @@ int cmd_windowactivate(context_t *context) {
   }
 
   window_each(context, window_arg, {
-    ret = xdo_window_activate(context->xdo, window);
+    ret = xdo_activate_window(context->xdo, window);
     if (ret) {
-      fprintf(stderr, "xdo_window_activate on window:%ld reported an error\n",
+      fprintf(stderr, "xdo_activate_window on window:%ld reported an error\n",
               window);
       return ret;
     } else {
       if (opsync) {
-        xdo_window_wait_for_active(context->xdo, window, 1);
+        xdo_wait_for_window_active(context->xdo, window, 1);
       }
     }
   }); /* window_each(...) */
