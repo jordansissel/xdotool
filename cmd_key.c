@@ -86,11 +86,11 @@ int cmd_key(context_t *context) {
   int (*keyfunc)(const xdo_t *, Window, const char *, useconds_t) = NULL;
 
   if (!strcmp(cmd, "key")) {
-    keyfunc = xdo_keysequence;
+    keyfunc = xdo_send_keysequence_window;
   } else if (!strcmp(cmd, "keyup")) {
-    keyfunc = xdo_keysequence_up;
+    keyfunc = xdo_send_keysequence_window_up;
   } else if (!strcmp(cmd, "keydown")) {
-    keyfunc = xdo_keysequence_down;
+    keyfunc = xdo_send_keysequence_window_down;
   } else {
     fprintf(stderr, "Unknown command '%s'\n", cmd);
     return 1;
@@ -111,7 +111,7 @@ int cmd_key(context_t *context) {
       int tmp = keyfunc(context->xdo, window, context->argv[i], delay);
       if (tmp != 0) {
         fprintf(stderr,
-                "xdo_keysequence reported an error for string '%s'\n",
+                "xdo_send_keysequence_window reported an error for string '%s'\n",
                 context->argv[i]);
       }
       ret += tmp;

@@ -15,11 +15,11 @@
 
 static int compile_re(const char *pattern, regex_t *re);
 static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *search);
-static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re);
-static int _xdo_window_match_classname(const xdo_t *xdo, Window window, regex_t *re);
-static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re);
-static int _xdo_window_match_title(const xdo_t *xdo, Window window, regex_t *re);
-static int _xdo_window_match_pid(const xdo_t *xdo, Window window, int pid);
+static int _xdo_match_window_class(const xdo_t *xdo, Window window, regex_t *re);
+static int _xdo_match_window_classname(const xdo_t *xdo, Window window, regex_t *re);
+static int _xdo_match_window_name(const xdo_t *xdo, Window window, regex_t *re);
+static int _xdo_match_window_title(const xdo_t *xdo, Window window, regex_t *re);
+static int _xdo_match_window_pid(const xdo_t *xdo, Window window, int pid);
 static int _xdo_is_window_visible(const xdo_t *xdo, Window wid);
 static void find_matching_windows(const xdo_t *xdo, Window window, 
                                   const xdo_search_t *search,
@@ -28,7 +28,7 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
                                   unsigned int *windowlist_size,
                                   int current_depth);
 
-int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
+int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
                       Window **windowlist_ret, unsigned int *nwindows_ret) {
   int i = 0;
 
@@ -77,17 +77,17 @@ int xdo_window_search(const xdo_t *xdo, const xdo_search_t *search,
   //printf("//Search\n");
 
   return XDO_SUCCESS;
-} /* int xdo_window_search */
+} /* int xdo_search_windows */
 
-static int _xdo_window_match_title(const xdo_t *xdo, Window window, regex_t *re) {
+static int _xdo_match_window_title(const xdo_t *xdo, Window window, regex_t *re) {
   fprintf(stderr, "This function (match window by title) is deprecated."
           " You want probably want to match by the window name.\n");
-  return _xdo_window_match_name(xdo, window, re);
-} /* int _xdo_window_match_title */
+  return _xdo_match_window_name(xdo, window, re);
+} /* int _xdo_match_window_title */
 
-static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re) {
+static int _xdo_match_window_name(const xdo_t *xdo, Window window, regex_t *re) {
   /* historically in xdo, 'match_name' matched the classhint 'name' which we
-   * match in _xdo_window_match_classname. But really, most of the time 'name'
+   * match in _xdo_match_window_classname. But really, most of the time 'name'
    * refers to the window manager name for the window, which is displayed in
    * the titlebar */
   int i;
@@ -118,9 +118,9 @@ static int _xdo_window_match_name(const xdo_t *xdo, Window window, regex_t *re) 
   XFreeStringList(list);
   XFree(tp.value);
   return False;
-} /* int _xdo_window_match_name */
+} /* int _xdo_match_window_name */
 
-static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re) {
+static int _xdo_match_window_class(const xdo_t *xdo, Window window, regex_t *re) {
   XWindowAttributes attr;
   XClassHint classhint;
   XGetWindowAttributes(xdo->xdpy, window, &attr);
@@ -141,9 +141,9 @@ static int _xdo_window_match_class(const xdo_t *xdo, Window window, regex_t *re)
     }
   }
   return False;
-} /* int _xdo_window_match_class */
+} /* int _xdo_match_window_class */
 
-static int _xdo_window_match_classname(const xdo_t *xdo, Window window, regex_t *re) {
+static int _xdo_match_window_classname(const xdo_t *xdo, Window window, regex_t *re) {
   XWindowAttributes attr;
   XClassHint classhint;
   XGetWindowAttributes(xdo->xdpy, window, &attr);
@@ -163,18 +163,18 @@ static int _xdo_window_match_classname(const xdo_t *xdo, Window window, regex_t 
     }
   }
   return False;
-} /* int _xdo_window_match_classname */
+} /* int _xdo_match_window_classname */
 
-static int _xdo_window_match_pid(const xdo_t *xdo, Window window, const int pid) {
+static int _xdo_match_window_pid(const xdo_t *xdo, Window window, const int pid) {
   int window_pid;
 
-  window_pid = xdo_window_get_pid(xdo, window);
+  window_pid = xdo_get_pid_window(xdo, window);
   if (pid == window_pid) {
     return True;
   } else {
     return False;
   }
-} /* int _xdo_window_match_pid */
+} /* int _xdo_match_window_pid */
 
 static int compile_re(const char *pattern, regex_t *re) {
   int ret;
@@ -257,27 +257,27 @@ static int check_window_match(const xdo_t *xdo, Window wid,
       break;
     }
 
-    if (pid_want && !_xdo_window_match_pid(xdo, wid, search->pid)) {
+    if (pid_want && !_xdo_match_window_pid(xdo, wid, search->pid)) {
       if (debug) fprintf(stderr, "skip %ld pid\n", wid); 
       pid_ok = False;
     }
 
-    if (title_want && !_xdo_window_match_title(xdo, wid, &title_re)) {
+    if (title_want && !_xdo_match_window_title(xdo, wid, &title_re)) {
       if (debug) fprintf(stderr, "skip %ld title\n", wid);
       title_ok = False;
     }
 
-    if (name_want && !_xdo_window_match_name(xdo, wid, &name_re)) {
+    if (name_want && !_xdo_match_window_name(xdo, wid, &name_re)) {
       if (debug) fprintf(stderr, "skip %ld winname\n", wid);
       name_ok = False;
     }
 
-    if (class_want && !_xdo_window_match_class(xdo, wid, &class_re)) {
+    if (class_want && !_xdo_match_window_class(xdo, wid, &class_re)) {
       if (debug) fprintf(stderr, "skip %ld winclass\n", wid);
       class_ok = False;
     }
 
-    if (classname_want && !_xdo_window_match_classname(xdo, wid, &classname_re)) {
+    if (classname_want && !_xdo_match_window_classname(xdo, wid, &classname_re)) {
       if (debug) fprintf(stderr, "skip %ld winclassname\n", wid);
       classname_ok = False;
     }

@@ -47,13 +47,13 @@ int cmd_windowunmap(context_t *context) {
   }
 
   window_each(context, window_arg, {
-    ret = xdo_window_unmap(context->xdo, window);
+    ret = xdo_unmap_window(context->xdo, window);
     if (ret) {
-      fprintf(stderr, "xdo_window_unmap reported an error\n");
+      fprintf(stderr, "xdo_unmap_window reported an error\n");
     }
 
     if (opsync) {
-      xdo_window_wait_for_map_state(context->xdo, window, IsUnmapped);
+      xdo_wait_for_window_map_state(context->xdo, window, IsUnmapped);
     }
   }); /* window_each(...) */
 
