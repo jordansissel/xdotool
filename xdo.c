@@ -203,10 +203,26 @@ int xdo_get_window_location(const xdo_t *xdo, Window wid,
     int x, y;
     Window unused_child;
 
-    /* The coordinates in attr are relative to the parent window which isn't
-     * likely to be the root window (screen), translate them. */
-    XTranslateCoordinates(xdo->xdpy, wid, attr.root,
-                          attr.x, attr.y, &x, &y, &unused_child);
+    /* The coordinates in attr are relative to the parent window.  If
+     * the parent window is the root window, then the coordinates are
+     * correct.  If the parent window isn't the root window --- which
+     * is likely --- then we translate them. */
+    Window parent;
+    Window root;
+    Window* children;
+    unsigned int nchildren;
+    XQueryTree(xdo->xdpy, wid, &root, &parent, &children, &nchildren);
+    if (children != NULL) {
+      XFree(children);
+    }
+    if (parent == attr.root) {
+      x = attr.x;
+      y = attr.y;
+    } else {
+      XTranslateCoordinates(xdo->xdpy, wid, attr.root,
+                            attr.x, attr.y, &x, &y, &unused_child);
+    }
+
     if (x_ret != NULL) {
       *x_ret = x;
     }
