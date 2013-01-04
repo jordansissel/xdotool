@@ -23,15 +23,15 @@ LIBSUFFIX=$(shell sh platform.sh libsuffix)
 VERLIBSUFFIX=$(shell sh platform.sh libsuffix $(MAJOR))
 DYNLIBFLAG=$(shell sh platform.sh dynlibflag)
 LIBNAMEFLAG=$(shell sh platform.sh libnameflag $(MAJOR) $(INSTALLLIB))
-LIBS=$(shell sh platform.sh extralibs)
- 
+
 CFLAGS?=-pipe -O2 $(WARNFLAGS)
 CFLAGS+=-g # TODO(sissel): Comment before release
 
 DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst -lXinerama
 DEFAULT_INC=-I/usr/X11R6/include -I/usr/local/include
 
-LIBS+=$(shell pkg-config --libs x11 xtst xinerama 2> /dev/null || echo "$(DEFAULT_LIBS)")
+XDOTOOL_LIBS=$(shell pkg-config --libs x11 2> /dev/null || echo "$(DEFAULT_LIBS)")  $(shell sh platform.sh extralibs)
+LIBXDO_LIBS=$(shell pkg-config --libs xtst xinerama 2> /dev/null || echo "$(DEFAULT_LIBS)")
 INC=$(shell pkg-config --cflags x11 xtst xinerama 2> /dev/null || echo "$(DEFAULT_INC)")
 CFLAGS+=-std=c99 $(INC)
 
@@ -62,7 +62,7 @@ install-static: xdotool.static
 	install -m 755 xdotool.static $(DINSTALLBIN)/xdotool
 
 xdotool.static: xdotool.o $(CMDOBJS) xdo.o xdo_search.o
-	$(CC) -o xdotool.static xdotool.o xdo.o xdo_search.o $(CMDOBJS) $(LDFLAGS)  -lm $(LIBS)
+	$(CC) -o xdotool.static xdotool.o xdo.o xdo_search.o $(CMDOBJS) $(LDFLAGS)  -lm $(XDOTOOL_LIBS) $(LIBXDO_LIBS)
 
 .PHONY: install
 install: pre-install installlib installprog installman installheader post-install
@@ -130,7 +130,7 @@ xdo.c: xdo.h
 xdotool.c: xdo.h
 
 libxdo.$(LIBSUFFIX): xdo.o xdo_search.o
-	$(CC) $(LDFLAGS) $(DYNLIBFLAG) $(LIBNAMEFLAG) xdo.o xdo_search.o -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $(DYNLIBFLAG) $(LIBNAMEFLAG) xdo.o xdo_search.o -o $@ $(LIBXDO_LIBS)
 
 libxdo.a: xdo.o xdo_search.o
 	ar qv $@ xdo.o xdo_search.o
@@ -144,7 +144,7 @@ libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 # TODO(sissel): only do this linker hack if we're using GCC?
 xdotool: LDFLAGS+=-Xlinker -rpath=$(INSTALLLIB)
 xdotool: xdotool.o $(CMDOBJS) libxdo.$(LIBSUFFIX)
-	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS)  -lm $(LIBS)
+	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS)  -lm $(XDOTOOL_LIBS)
 
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@
