@@ -143,6 +143,9 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
 }
 
 void xdo_free(xdo_t *xdo) {
+  if (xdo == NULL)
+    return;
+
   if (xdo->display_name)
     free(xdo->display_name);
   if (xdo->charcodes)
