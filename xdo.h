@@ -218,7 +218,7 @@ typedef struct xdo_search {
  *
  * @return Pointer to a new xdo_t or NULL on failure
  */
-xdo_t* xdo_new(char *display);
+xdo_t* xdo_new(const char *display);
 
 /**
  * Create a new xdo_t instance with an existing X11 Display instance.

@@ -87,7 +87,7 @@ static Atom atom_WM_NAME = -1;
 static Atom atom_STRING = -1;
 static Atom atom_UTF8_STRING = -1;
 
-xdo_t* xdo_new(char *display_name) {
+xdo_t* xdo_new(const char *display_name) {
   Display *xdpy;
 
   if ((xdpy = XOpenDisplay(display_name)) == NULL) {
