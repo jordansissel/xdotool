@@ -5,7 +5,7 @@ if [ -r "VERSION" ] ; then
 fi
 
 if [ -z "$MAJOR" -o -z "$RELEASE" -o -z "$REVISION" ] ; then
-  MAJOR="2"
+  MAJOR="3"
   RELEASE="$(date +%Y%m%d)"
   REVISION=1
   #$([ -d .svn ] && svn info . | awk '/Revision:/ {print $2}')
