@@ -143,7 +143,10 @@ libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 # This requirement will go away once more things are refactored into
 # libxdo.
 # TODO(sissel): only do this linker hack if we're using GCC?
-xdotool: LDFLAGS+=-Xlinker -rpath=$(INSTALLLIB)
+xdotool: LDFLAGS+=-Xlinker
+ifneq ($(WITHOUT_RPATH_FIX),1)
+xdotool: LDFLAGS+=-rpath=$(INSTALLLIB)
+endif
 xdotool: xdotool.o $(CMDOBJS) libxdo.$(LIBSUFFIX)
 	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS)  -lm $(XDOTOOL_LIBS)
 
