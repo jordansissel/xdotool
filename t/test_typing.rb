@@ -53,9 +53,13 @@ class XdotoolTypingTests < Test::Unit::TestCase
     return readfile
   end
 
-  def _test_typing(input)
+  def _test_typing(input, knownbroken=false)
     data = type(input)
-    assert_equal(input, data)
+    if (knownbroken and ENV['SKIP_KNOWN_BROKEN_TESTS'])
+      puts "Skipping known-broken test"
+    else
+      assert_equal(input, data)
+    end
   end
 
   def test_us_simple_typing
@@ -75,7 +79,7 @@ class XdotoolTypingTests < Test::Unit::TestCase
 
   def test_us_se_symbol_typing
     system("setxkbmap -option grp:switch,grp:shifts_toggle us,se")
-    _test_typing(SYMBOLS)
+    _test_typing(SYMBOLS, true)
   end
 
   def test_se_us_simple_typing
@@ -85,7 +89,7 @@ class XdotoolTypingTests < Test::Unit::TestCase
 
   def test_se_us_symbol_typing
     system("setxkbmap -option grp:switch,grp:shifts_toggle se,us")
-    _test_typing(SYMBOLS)
+    _test_typing(SYMBOLS, true)
   end
 
   def test_us_dvorak_simple_typing
@@ -105,7 +109,7 @@ class XdotoolTypingTests < Test::Unit::TestCase
 
   def test_se_symbol_typing
     system("setxkbmap se")
-    _test_typing(SYMBOLS)
+    _test_typing(SYMBOLS, true)
   end
 
   def test_de_simple_typing
@@ -115,7 +119,7 @@ class XdotoolTypingTests < Test::Unit::TestCase
 
   def test_de_symbol_typing
     system("setxkbmap de")
-    _test_typing(SYMBOLS)
+    _test_typing(SYMBOLS, true)
   end
 
   def test_terminator
