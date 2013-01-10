@@ -1119,6 +1119,11 @@ the text 'number of extensions: ...'
 
 =back
 
+=head1 BUGS
+
+Typing unusual symbols under non-us keybindings is known to
+occasionally send the wrong character.
+
 =head1 SEE ALSO
 
 L<xprop(1)>, L<xwininfo(1)>, 

@@ -3,8 +3,11 @@ ifneq ($(DEBUG), 0)
 RUBYFLAGS=-d
 endif
 
-all-headless: test-xvfb-nowm test-xvfb-openbox test-xvfb-gnome
-all-xephyr: test-xephyr-nowm test-xephyr-openbox test-xephyr-gnome
+HEADLESS_TESTS?=test-xvfb-nowm test-xvfb-openbox test-xvfb-gnome
+XEPHYR_TESTS?=test-xephyr-nowm test-xephyr-openbox test-xephyr-gnome
+
+all-headless: $(HEADLESS_TESTS)
+all-xephyr: $(XEPHYR_TESTS)
 all: all-headless all-xephyr 
 
 test: all
