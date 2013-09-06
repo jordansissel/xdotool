@@ -134,16 +134,15 @@ int cmd_search(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  if (!search_title && !search_name && !search_class && !search_classname 
-      && context->argc > 0) {
-    fprintf(stderr, "Defaulting to search window name, class, and classname\n");
-    search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
-    search_name = 1;
-    search_class = 1;
-    search_classname = 1;
-  }
-
   if (context->argc > 0) {
+    if (!search_title && !search_name && !search_class && !search_classname) {
+      fprintf(stderr, "Defaulting to search window name, class, and classname\n");
+      search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
+      search_name = 1;
+      search_class = 1;
+      search_classname = 1;
+    }
+
     if (search_title) {
       search.searchmask |= SEARCH_NAME;
       search.winname = context->argv[0];
@@ -160,9 +159,8 @@ int cmd_search(context_t *context) {
       search.searchmask |= SEARCH_CLASSNAME;
       search.winclassname = context->argv[0];
     }
+    consume_args(context, 1);
   }
-
-  consume_args(context, 1);
 
   do {
     xdo_search_windows(context->xdo, &search, &list, &nwindows);
