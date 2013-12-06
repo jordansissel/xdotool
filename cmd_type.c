@@ -139,6 +139,8 @@ int cmd_type(context_t *context) {
       marker = buffer + bytes_read;
       if (fgets(marker, 4096, input) != NULL) {
         bytes_read = (marker - buffer) + strlen(marker);
+      } else {
+        *marker = 0;
       }
 
       if (ferror(input) != 0) {
