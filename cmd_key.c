@@ -9,12 +9,14 @@
 
 int cmd_key(context_t *context) {
   int ret = 0;
-  int i;
+  int i, j;
   int c;
   char *cmd = *context->argv;
   charcodemap_t *active_mods = NULL;
   int active_mods_n;
-  useconds_t delay = 12000;
+  useconds_t key_delay = 12000;
+  useconds_t repeat_delay = 0;
+  int repeat = 1;
   const char *window_arg = NULL;
   int free_arg = 0;
 
@@ -24,8 +26,10 @@ int cmd_key(context_t *context) {
   static struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, 'c' },
     { "delay", required_argument, NULL, 'd' },
+    { "repeat-delay", required_argument, NULL, 'R' },
     { "help", no_argument, NULL, 'h' },
     { "window", required_argument, NULL, 'w' },
+    { "repeat", required_argument, NULL, 'r' },
     { 0, 0, 0, 0 },
   };
 
@@ -33,6 +37,8 @@ int cmd_key(context_t *context) {
      "Usage: %s [options] <keysequence> [keysequence ...]\n"
      "--clearmodifiers     - clear active keyboard modifiers during keystrokes\n"
      "--delay DELAY        - Use DELAY milliseconds between keystrokes\n"
+     "--repeat TIMES       - How many times to repeat the key sequence\n"
+     "--repeat-delay DELAY - DELAY milliseconds between repetitions\n"
      "--window WINDOW      - send keystrokes to a specific window\n"
      "Each keysequence can be any number of modifiers and keys, separated by plus (+)\n"
      "  For example: alt+r\n"
@@ -62,7 +68,18 @@ int cmd_key(context_t *context) {
         break;
       case 'd':
         /* Argument is in milliseconds, keysequence delay is in microseconds. */
-        delay = strtoul(optarg, NULL, 0) * 1000;
+        key_delay = strtoul(optarg, NULL, 0) * 1000;
+        break;
+      case 'r':
+        repeat = atoi(optarg);
+        if (repeat < 1) {
+          fprintf(stderr, "Invalid '--repeat' value given: %s\n", optarg);
+          return EXIT_FAILURE;
+        }
+        break;
+      case 'R': // --repeat-delay
+        /* Argument is in milliseconds, keysequence delay is in microseconds. */
+        repeat_delay = strtoul(optarg, NULL, 0) * 1000;
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -103,19 +120,26 @@ int cmd_key(context_t *context) {
       xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);
     }
 
-    for (i = 0; i < context->argc; i++) {
-      if (is_command(context->argv[i])) {
-        max_arg = i;
-        break;
+    for (j = 0; j < repeat; j++) {
+      for (i = 0; i < context->argc; i++) {
+        if (is_command(context->argv[i])) {
+          max_arg = i;
+          break;
+        }
+        int tmp = keyfunc(context->xdo, window, context->argv[i], key_delay);
+        if (tmp != 0) {
+          fprintf(stderr,
+                  "xdo_send_keysequence_window reported an error for string '%s'\n",
+                  context->argv[i]);
+        }
+        ret += tmp;
+      } /* each keysequence */
+
+      /* Sleep if --repeat-delay given and not on the last repetition */
+      if (repeat_delay > 0 && j < (repeat-1))  {
+        usleep(repeat_delay);
       }
-      int tmp = keyfunc(context->xdo, window, context->argv[i], delay);
-      if (tmp != 0) {
-        fprintf(stderr,
-                "xdo_send_keysequence_window reported an error for string '%s'\n",
-                context->argv[i]);
-      }
-      ret += tmp;
-    }
+    } /* repeat */
 
     if (clear_modifiers) {
       xdo_set_active_modifiers(context->xdo, window, active_mods, active_mods_n);
