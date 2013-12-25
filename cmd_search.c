@@ -13,10 +13,11 @@ int cmd_search(context_t *context) {
   int search_name = 0;
   int search_class = 0;
   int search_classname = 0;
-  typedef enum { 
+  int search_role= 0;
+  typedef enum {
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_class, opt_maxdepth,
     opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname, opt_desktop,
-    opt_limit, opt_sync
+    opt_limit, opt_sync, opt_role
   } optlist_t;
   struct option longopts[] = {
     { "all", no_argument, NULL, opt_all },
@@ -33,13 +34,15 @@ int cmd_search(context_t *context) {
     { "desktop", required_argument, NULL, opt_desktop },
     { "limit", required_argument, NULL, opt_limit },
     { "sync", no_argument, NULL, opt_sync },
+    { "role", no_argument, NULL, opt_role },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = 
+  static const char *usage =
       "Usage: xdotool %s "
       "[options] regexp_pattern\n"
-      "--class         check regexp_pattern agains the window class\n"
-      "--classname     check regexp_pattern agains the window classname\n"
+      "--class         check regexp_pattern against the window class\n"
+      "--classname     check regexp_pattern against the window classname\n"
+      "--role          check regexp_pattern against the window role\n"
       "--maxdepth N    set search depth to N. Default is infinite.\n"
       "                -1 also means infinite.\n"
       "--onlyvisible   matches only windows currently visible\n"
@@ -55,8 +58,8 @@ int cmd_search(context_t *context) {
       "--sync          Wait until a search result is found.\n"
       "-h, --help      show this help output\n"
       "\n"
-      "If none of --name, --classname, or --class are specified, the \n"
-      "defaults are: --name --classname --class\n";
+      "If none of --name, --classname, --role or --class are specified, the \n"
+      "defaults are: --name --classname --class --role\n";
 
   memset(&search, 0, sizeof(xdo_search_t));
   search.max_depth = -1;
@@ -119,6 +122,9 @@ int cmd_search(context_t *context) {
       case opt_sync:
         op_sync = True;
         break;
+      case opt_role:
+        search_role = True;
+        break;
       default:
         fprintf(stderr, "Invalid usage\n");
         fprintf(stderr, usage, cmd);
@@ -135,12 +141,13 @@ int cmd_search(context_t *context) {
   }
 
   if (context->argc > 0) {
-    if (!search_title && !search_name && !search_class && !search_classname) {
+    if (!search_title && !search_name && !search_class && !search_classname && !search_role) {
       fprintf(stderr, "Defaulting to search window name, class, and classname\n");
-      search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
+      search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME | SEARCH_ROLE);
       search_name = 1;
       search_class = 1;
       search_classname = 1;
+      search_role = 1;
     }
 
     if (search_title) {
@@ -154,6 +161,10 @@ int cmd_search(context_t *context) {
     if (search_class) {
       search.searchmask |= SEARCH_CLASS;
       search.winclass = context->argv[0];
+    }
+    if (search_role) {
+        search.searchmask |= SEARCH_ROLE;
+        search.role = context->argv[0];
     }
     if (search_classname) {
       search.searchmask |= SEARCH_CLASSNAME;

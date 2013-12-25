@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <regex.h>
 #include <stdio.h>
+#include <string.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xresource.h>
@@ -19,9 +20,10 @@ static int _xdo_match_window_class(const xdo_t *xdo, Window window, regex_t *re)
 static int _xdo_match_window_classname(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_match_window_name(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_match_window_title(const xdo_t *xdo, Window window, regex_t *re);
+static int _xdo_match_window_role(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_match_window_pid(const xdo_t *xdo, Window window, int pid);
 static int _xdo_is_window_visible(const xdo_t *xdo, Window wid);
-static void find_matching_windows(const xdo_t *xdo, Window window, 
+static void find_matching_windows(const xdo_t *xdo, Window window,
                                   const xdo_search_t *search,
                                   Window **windowlist_ret,
                                   unsigned int *nwindows_ret,
@@ -143,6 +145,42 @@ static int _xdo_match_window_class(const xdo_t *xdo, Window window, regex_t *re)
   return False;
 } /* int _xdo_match_window_class */
 
+static int _xdo_match_window_role(const xdo_t *xdo, Window window, regex_t *re) {
+  unsigned char *role_prop;
+  char *role;
+  int status;
+  long nitems;
+  Atom type;
+  int size;
+  int role_str_size;
+
+  status = xdo_get_window_property(xdo, window, "WM_WINDOW_ROLE", &role_prop, &nitems, &type, &size);
+
+
+  if (status == XDO_SUCCESS) {
+
+    role_str_size = (size / 8) * nitems;
+    role = malloc(role_str_size + 1);
+    memcpy(role, role_prop, role_str_size);
+    role[role_str_size] = '\0';
+    //printf("%d: role %s\n", window, role);
+
+    if (regexec(re, role, 0, NULL, 0) == 0) {
+      XFree(role_prop);
+      free(role);
+      return True;
+    }
+    XFree(role_prop);
+    free(role);
+  } else {
+    /* Treat windows with no role as empty strings */
+    if (regexec(re, "", 0, NULL, 0) == 0) {
+      return True;
+    }
+  }
+  return False;
+} /* int _xdo_match_window_role */
+
 static int _xdo_match_window_classname(const xdo_t *xdo, Window window, regex_t *re) {
   XWindowAttributes attr;
   XClassHint classhint;
@@ -206,22 +244,24 @@ static int check_window_match(const xdo_t *xdo, Window wid,
   regex_t class_re;
   regex_t classname_re;
   regex_t name_re;
+  regex_t role_re;
 
 
   if (!compile_re(search->title, &title_re) \
       || !compile_re(search->winclass, &class_re) \
       || !compile_re(search->winclassname, &classname_re) \
-      || !compile_re(search->winname, &name_re)) {
+      || !compile_re(search->winname, &name_re) \
+      || !compile_re(search->role, &role_re)) {
     return False;
   }
 
   /* Set this to 1 for dev debugging */
   static const int debug = 0;
 
-  int visible_ok, pid_ok, title_ok, name_ok, class_ok, classname_ok, desktop_ok;
-  int visible_want, pid_want, title_want, name_want, class_want, classname_want, desktop_want;
+  int visible_ok, pid_ok, title_ok, name_ok, class_ok, classname_ok, desktop_ok, role_ok;
+  int visible_want, pid_want, title_want, name_want, class_want, classname_want, desktop_want, role_want;
 
-  visible_ok = pid_ok = title_ok = name_ok = class_ok = classname_ok = desktop_ok = True;
+  visible_ok = pid_ok = title_ok = name_ok = class_ok = classname_ok = desktop_ok = role_ok = True;
     //(search->require == SEARCH_ANY ? False : True);
 
   desktop_want = search->searchmask & SEARCH_DESKTOP;
@@ -231,12 +271,13 @@ static int check_window_match(const xdo_t *xdo, Window wid,
   name_want = search->searchmask & SEARCH_NAME;
   class_want = search->searchmask & SEARCH_CLASS;
   classname_want = search->searchmask & SEARCH_CLASSNAME;
+  role_want = search->searchmask & SEARCH_ROLE;
 
   do {
     if (desktop_want) {
       long desktop = -1;
 
-      /* We're modifying xdo here, but since we restore it, we're still 
+      /* We're modifying xdo here, but since we restore it, we're still
        * obeying the "const" contract. */
       int old_quiet = xdo->quiet;
       xdo_t *xdo2 = (xdo_t *)xdo;
@@ -249,16 +290,16 @@ static int check_window_match(const xdo_t *xdo, Window wid,
       desktop_ok = (ret == XDO_SUCCESS && desktop == search->desktop);
     }
 
-    /* Visibility is a hard condition, fail always if we wanted 
+    /* Visibility is a hard condition, fail always if we wanted
      * only visible windows and this one isn't */
     if (visible_want && !_xdo_is_window_visible(xdo, wid)) {
-      if (debug) fprintf(stderr, "skip %ld visible\n", wid); 
+      if (debug) fprintf(stderr, "skip %ld visible\n", wid);
       visible_ok = False;
       break;
     }
 
     if (pid_want && !_xdo_match_window_pid(xdo, wid, search->pid)) {
-      if (debug) fprintf(stderr, "skip %ld pid\n", wid); 
+      if (debug) fprintf(stderr, "skip %ld pid\n", wid);
       pid_ok = False;
     }
 
@@ -281,43 +322,51 @@ static int check_window_match(const xdo_t *xdo, Window wid,
       if (debug) fprintf(stderr, "skip %ld winclassname\n", wid);
       classname_ok = False;
     }
+
+    if (role_want && !_xdo_match_window_role(xdo, wid, &role_re)) {
+      if (debug) fprintf(stderr, "skip %ld role\n", wid);
+      role_ok = False;
+    }
   } while (0);
 
-  if (search->title) 
+  if (search->title)
     regfree(&title_re);
-  if (search->winclass) 
+  if (search->winclass)
     regfree(&class_re);
-  if (search->winclassname) 
+  if (search->winclassname)
     regfree(&classname_re);
-  if (search->winname) 
+  if (search->winname)
     regfree(&name_re);
+  if (search->role)
+    regfree(&role_re);
 
   if (debug) {
-    fprintf(stderr, "win: %ld, pid:%d, title:%d, name:%d, class:%d, visible:%d\n",
-            wid, pid_ok, title_ok, name_ok, class_ok, visible_ok);
+    fprintf(stderr, "win: %ld, pid:%d, title:%d, name:%d, class:%d, visible:%d role:%d \n",
+            wid, pid_ok, title_ok, name_ok, class_ok, visible_ok, role_ok);
   }
 
   switch (search->require) {
     case SEARCH_ALL:
-      return visible_ok && pid_ok && title_ok && name_ok && class_ok && classname_ok && desktop_ok;
+      return visible_ok && pid_ok && title_ok && name_ok && class_ok && classname_ok && desktop_ok && role_ok;
       break;
     case SEARCH_ANY:
       return visible_ok && ((pid_want && pid_ok) || (title_want && title_ok) \
                             || (name_want && name_ok) \
                             || (class_want && class_ok) \
-                            || (classname_want && classname_ok)) \
+                            || (classname_want && classname_ok) \
+                            || (role_want && role_ok)) \
                          && desktop_ok;
       break;
   }
-  
-  fprintf(stderr, 
+
+  fprintf(stderr,
           "Unexpected code reached. search->require is not valid? (%d); "
           "this may be a bug?\n",
           search->require);
   return False;
 } /* int check_window_match */
 
-static void find_matching_windows(const xdo_t *xdo, Window window, 
+static void find_matching_windows(const xdo_t *xdo, Window window,
                                   const xdo_search_t *search,
                                   Window **windowlist_ret,
                                   unsigned int *nwindows_ret,
@@ -367,7 +416,7 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
 
     if (*windowlist_size == *nwindows_ret) {
       *windowlist_size *= 2;
-      *windowlist_ret = realloc(*windowlist_ret, 
+      *windowlist_ret = realloc(*windowlist_ret,
                                 *windowlist_size * sizeof(Window));
     }
   } /* for (i in children) ... */
