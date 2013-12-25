@@ -40,8 +40,8 @@ int cmd_search(context_t *context) {
   static const char *usage =
       "Usage: xdotool %s "
       "[options] regexp_pattern\n"
-      "--class         check regexp_pattern agains the window class\n"
-      "--classname     check regexp_pattern agains the window classname\n"
+      "--class         check regexp_pattern against the window class\n"
+      "--classname     check regexp_pattern against the window classname\n"
       "--role          check regexp_pattern against the window role\n"
       "--maxdepth N    set search depth to N. Default is infinite.\n"
       "                -1 also means infinite.\n"
@@ -58,8 +58,8 @@ int cmd_search(context_t *context) {
       "--sync          Wait until a search result is found.\n"
       "-h, --help      show this help output\n"
       "\n"
-      "If none of --name, --classname, or --class are specified, the \n"
-      "defaults are: --name --classname --class\n";
+      "If none of --name, --classname, --role or --class are specified, the \n"
+      "defaults are: --name --classname --class --role\n";
 
   memset(&search, 0, sizeof(xdo_search_t));
   search.max_depth = -1;
