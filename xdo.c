@@ -123,6 +123,7 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
   if (display == NULL) {
     display = "unknown";
   }
+  xdo->display_name = display;
 
   if (getenv("XDO_QUIET")) {
     xdo->quiet = True;
@@ -146,8 +147,6 @@ void xdo_free(xdo_t *xdo) {
   if (xdo == NULL)
     return;
 
-  if (xdo->display_name)
-    free(xdo->display_name);
   if (xdo->charcodes)
     free(xdo->charcodes);
   if (xdo->xdpy && xdo->close_display_when_freed)
