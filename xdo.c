@@ -1539,7 +1539,7 @@ int _xdo_send_keysequence_window_to_keycode_list(const xdo_t *xdo, const char *k
     (*nkeys)++;
     if (*nkeys == keys_size) {
       keys_size *= 2;
-      *keys = realloc(*keys, keys_size * sizeof(KeyCode));
+      *keys = realloc(*keys, keys_size * sizeof(charcodemap_t));
     }
   }
 
