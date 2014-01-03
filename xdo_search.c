@@ -12,18 +12,33 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
 #include "xdo.h"
+#include <string.h>
 
+/* Pre-compiled regular expressions for window matching */
+typedef struct {
+  regex_t title;
+  regex_t class;
+  regex_t classname;
+  regex_t name;
+  regex_t role;
+} xdo_regex_t;
+
+static void _free_regexes(xdo_regex_t *regexes);
+static int _compile_regexes(const xdo_search_t *search, xdo_regex_t *regexes);
 static int compile_re(const char *pattern, regex_t *re);
-static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *search);
-static int _xdo_match_window_class(const xdo_t *xdo, Window window, regex_t *re);
-static int _xdo_match_window_classname(const xdo_t *xdo, Window window, regex_t *re);
-static int _xdo_match_window_role(const xdo_t *xdo, Window window, regex_t *re);
-static int _xdo_match_window_name(const xdo_t *xdo, Window window, regex_t *re);
-static int _xdo_match_window_title(const xdo_t *xdo, Window window, regex_t *re);
+static int check_window_match(const xdo_t *xdo, Window wid,
+                              const xdo_search_t *search,
+                              const xdo_regex_t *regexes);
+static int _xdo_match_window_class(const xdo_t *xdo, Window window, const regex_t *re);
+static int _xdo_match_window_classname(const xdo_t *xdo, Window window, const regex_t *re);
+static int _xdo_match_window_role(const xdo_t *xdo, Window window, const regex_t *re);
+static int _xdo_match_window_name(const xdo_t *xdo, Window window, const regex_t *re);
+static int _xdo_match_window_title(const xdo_t *xdo, Window window, const regex_t *re);
 static int _xdo_match_window_pid(const xdo_t *xdo, Window window, int pid);
 static int _xdo_is_window_visible(const xdo_t *xdo, Window wid);
-static void find_matching_windows(const xdo_t *xdo, Window window, 
+static void find_matching_windows(const xdo_t *xdo, Window window,
                                   const xdo_search_t *search,
+                                  const xdo_regex_t *regexes,
                                   Window **windowlist_ret,
                                   unsigned int *nwindows_ret,
                                   unsigned int *windowlist_size,
@@ -31,16 +46,21 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
 
 int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
                       Window **windowlist_ret, unsigned int *nwindows_ret) {
+  xdo_regex_t regexes;
   int i = 0;
 
   unsigned int windowlist_size = 100;
   *nwindows_ret = 0;
   *windowlist_ret = calloc(sizeof(Window), windowlist_size);
 
+  if (!_compile_regexes(search, &regexes)) {
+    return XDO_ERROR;
+  }
+
   /* TODO(sissel): Support multiple screens */
   if (search->searchmask & SEARCH_SCREEN) {
       Window root = RootWindow(xdo->xdpy, search->screen);
-      if (check_window_match(xdo, root, search)) {
+      if (check_window_match(xdo, root, search, &regexes)) {
         (*windowlist_ret)[*nwindows_ret] = root;
         (*nwindows_ret)++;
         /* Don't have to check for size bounds here because
@@ -48,13 +68,13 @@ int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
       }
 
       /* Start with depth=1 since we already covered the root windows */
-      find_matching_windows(xdo, root, search, windowlist_ret, nwindows_ret,
-                            &windowlist_size, 1);
+      find_matching_windows(xdo, root, search, &regexes, windowlist_ret,
+                            nwindows_ret, &windowlist_size, 1);
   } else {
     const int screencount = ScreenCount(xdo->xdpy);
     for (i = 0; i < screencount; i++) {
       Window root = RootWindow(xdo->xdpy, i);
-      if (check_window_match(xdo, root, search)) {
+      if (check_window_match(xdo, root, search, &regexes)) {
         (*windowlist_ret)[*nwindows_ret] = root;
         (*nwindows_ret)++;
         /* Don't have to check for size bounds here because
@@ -62,7 +82,7 @@ int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
       }
 
       /* Start with depth=1 since we already covered the root windows */
-      find_matching_windows(xdo, root, search, windowlist_ret,
+      find_matching_windows(xdo, root, search, &regexes, windowlist_ret,
                             nwindows_ret, &windowlist_size, 1);
     }
   }
@@ -77,16 +97,17 @@ int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
   //printf("classname: %s\n", search->winclassname);
   //printf("//Search\n");
 
+  _free_regexes(&regexes);
   return XDO_SUCCESS;
 } /* int xdo_search_windows */
 
-static int _xdo_match_window_title(const xdo_t *xdo, Window window, regex_t *re) {
+static int _xdo_match_window_title(const xdo_t *xdo, Window window, const regex_t *re) {
   fprintf(stderr, "This function (match window by title) is deprecated."
           " You want probably want to match by the window name.\n");
   return _xdo_match_window_name(xdo, window, re);
 } /* int _xdo_match_window_title */
 
-static int _xdo_match_window_name(const xdo_t *xdo, Window window, regex_t *re) {
+static int _xdo_match_window_name(const xdo_t *xdo, Window window, const regex_t *re) {
   /* historically in xdo, 'match_name' matched the classhint 'name' which we
    * match in _xdo_match_window_classname. But really, most of the time 'name'
    * refers to the window manager name for the window, which is displayed in
@@ -121,7 +142,7 @@ static int _xdo_match_window_name(const xdo_t *xdo, Window window, regex_t *re) 
   return False;
 } /* int _xdo_match_window_name */
 
-static int _xdo_match_window_class(const xdo_t *xdo, Window window, regex_t *re) {
+static int _xdo_match_window_class(const xdo_t *xdo, Window window, const regex_t *re) {
   XWindowAttributes attr;
   XClassHint classhint;
   XGetWindowAttributes(xdo->xdpy, window, &attr);
@@ -144,7 +165,7 @@ static int _xdo_match_window_class(const xdo_t *xdo, Window window, regex_t *re)
   return False;
 } /* int _xdo_match_window_class */
 
-static int _xdo_match_window_classname(const xdo_t *xdo, Window window, regex_t *re) {
+static int _xdo_match_window_classname(const xdo_t *xdo, Window window, const regex_t *re) {
   XWindowAttributes attr;
   XClassHint classhint;
   XGetWindowAttributes(xdo->xdpy, window, &attr);
@@ -166,7 +187,7 @@ static int _xdo_match_window_classname(const xdo_t *xdo, Window window, regex_t 
   return False;
 } /* int _xdo_match_window_classname */
 
-static int _xdo_match_window_role(const xdo_t *xdo, Window window, regex_t *re) {
+static int _xdo_match_window_role(const xdo_t *xdo, Window window, const regex_t *re) {
   int status;
   int ret = False;
   int i;
@@ -210,8 +231,7 @@ static int _xdo_match_window_pid(const xdo_t *xdo, Window window, const int pid)
 static int compile_re(const char *pattern, regex_t *re) {
   int ret;
   if (pattern == NULL) {
-    regcomp(re, "^$", REG_EXTENDED | REG_ICASE);
-    return True;
+    pattern = "^$";
   }
 
   ret = regcomp(re, pattern, REG_EXTENDED | REG_ICASE);
@@ -221,6 +241,31 @@ static int compile_re(const char *pattern, regex_t *re) {
   }
   return True;
 } /* int compile_re */
+
+static void _free_regexes(xdo_regex_t *regexes) {
+  regfree(&regexes->title);
+  regfree(&regexes->class);
+  regfree(&regexes->classname);
+  regfree(&regexes->name);
+  regfree(&regexes->role);
+  memset(regexes, 0, sizeof(*regexes));
+} /* void _free_regexes */
+
+/* returns False if one of the regexes failed to compile. If True, then the
+ * resulting regexes must be freed */
+static int _compile_regexes(const xdo_search_t *search, xdo_regex_t *regexes) {
+  memset(regexes, 0, sizeof(*regexes));
+
+  if (!compile_re(search->title, &regexes->title)
+      || !compile_re(search->winclass, &regexes->class)
+      || !compile_re(search->winclassname, &regexes->classname)
+      || !compile_re(search->winname, &regexes->name)
+      || !compile_re(search->winrole, &regexes->role)) {
+    _free_regexes(regexes);
+    return False;
+  }
+  return True;
+} /* int _compile_regexes */
 
 static int _xdo_is_window_visible(const xdo_t *xdo, Window wid) {
   XWindowAttributes wattr;
@@ -232,29 +277,8 @@ static int _xdo_is_window_visible(const xdo_t *xdo, Window wid) {
 } /* int _xdo_is_window_visible */
 
 static int check_window_match(const xdo_t *xdo, Window wid,
-                              const xdo_search_t *search) {
-  regex_t title_re;
-  regex_t class_re;
-  regex_t classname_re;
-  regex_t name_re;
-  regex_t role_re;
-
-
-  if (!compile_re(search->title, &title_re) \
-      || !compile_re(search->winclass, &class_re) \
-      || !compile_re(search->winclassname, &classname_re) \
-      || !compile_re(search->winrole, &role_re) \
-      || !compile_re(search->winname, &name_re)) {
-
-    regfree(&title_re);
-    regfree(&class_re);
-    regfree(&classname_re);
-    regfree(&name_re);
-    regfree(&role_re);
-
-    return False;
-  }
-
+                              const xdo_search_t *search,
+                              const xdo_regex_t *regexes) {
   /* Set this to 1 for dev debugging */
   static const int debug = 0;
 
@@ -331,11 +355,6 @@ static int check_window_match(const xdo_t *xdo, Window wid,
     }
   } while (0);
 
-  regfree(&title_re);
-  regfree(&class_re);
-  regfree(&classname_re);
-  regfree(&name_re);
-  regfree(&role_re);
 
   if (debug) {
     fprintf(stderr, "win: %ld, pid:%d, title:%d, name:%d, class:%d, visible:%d\n",
@@ -387,6 +406,7 @@ static int ignore_badwindow(Display *dpy, XErrorEvent *xerr) {
 
 static void find_matching_windows(const xdo_t *xdo, Window window, 
                                   const xdo_search_t *search,
+                                  const xdo_regex_t *regexes,
                                   Window **windowlist_ret,
                                   unsigned int *nwindows_ret,
                                   unsigned int *windowlist_size,
@@ -430,7 +450,7 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
   /* Breadth first, check all children for matches */
   for (i = 0; i < nchildren; i++) {
     Window child = children[i];
-    if (!check_window_match(xdo, child, search))
+    if (!check_window_match(xdo, child, search, regexes))
       continue;
 
     (*windowlist_ret)[*nwindows_ret] = child;
@@ -452,7 +472,7 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
   /* Now check children-children */
   if (search->max_depth == -1 || (current_depth + 1) <= search->max_depth) {
     for (i = 0; i < nchildren; i++) {
-      find_matching_windows(xdo, children[i], search, windowlist_ret,
+      find_matching_windows(xdo, children[i], search, regexes, windowlist_ret,
                             nwindows_ret, windowlist_size,
                             current_depth + 1);
     }
