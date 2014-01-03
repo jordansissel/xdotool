@@ -2,7 +2,7 @@
 #include <string.h>
 
 int cmd_mouseup(context_t *context) {
-  int ret = 0;
+  int ret = EXIT_FAILURE;
   int button;
   char *cmd = *context->argv;
   char *window_arg = NULL;
@@ -29,17 +29,18 @@ int cmd_mouseup(context_t *context) {
       case 'h':
         printf(usage, cmd);
         consume_args(context, context->argc);
-        return EXIT_SUCCESS;
-        break;
+        ret = EXIT_SUCCESS;
+        goto finalize;
       case 'c':
         clear_modifiers = 1;
         break;
       case 'w':
+        free(window_arg);
         window_arg = strdup(optarg);
         break;
       default:
         fprintf(stderr, usage, cmd);
-        return EXIT_FAILURE;
+        goto finalize;
     }
   }
 
@@ -47,11 +48,13 @@ int cmd_mouseup(context_t *context) {
 
   if (context->argc < 1) {
     fprintf(stderr, usage, cmd);
-    fprintf(stderr, "You specified the wrong number of args.\n");
-    return 1;
+    fprintf(stderr, "What button do you want me to release?\n");
+    goto finalize;
   }
 
   button = atoi(context->argv[0]);
+
+  ret = EXIT_SUCCESS;
 
   window_each(context, window_arg, {
     if (clear_modifiers) {
@@ -68,14 +71,13 @@ int cmd_mouseup(context_t *context) {
 
     if (ret) {
       fprintf(stderr, "xdo_mouse_up reported an error on window %ld\n", window);
-      return ret;
+      goto finalize;
     }
   }); /* window_each(...) */
 
-  if (window_arg != NULL) {
-    free(window_arg);
-  }
   consume_args(context, 1);
+finalize:
+  free(window_arg);
   return ret;
 }
 

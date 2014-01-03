@@ -4,7 +4,7 @@
 int cmd_click(context_t *context) {
   int button;
   char *cmd = context->argv[0];
-  int ret = 0;
+  int ret = EXIT_FAILURE;
   int clear_modifiers = 0;
   charcodemap_t *active_mods = NULL;
   int active_mods_n;
@@ -13,7 +13,7 @@ int cmd_click(context_t *context) {
   int repeat = 1;
 
   int c;
-  typedef enum { 
+  typedef enum {
     opt_unused, opt_help, opt_clearmodifiers, opt_window, opt_delay,
     opt_repeat
   } optlist_t;
@@ -25,7 +25,7 @@ int cmd_click(context_t *context) {
     { "repeat", required_argument, NULL, opt_repeat },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = 
+  static const char *usage =
             "Usage: %s [options] <button>\n"
             "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
             "--window WINDOW        - specify a window to send click to\n"
@@ -45,8 +45,8 @@ int cmd_click(context_t *context) {
       case opt_help:
         printf(usage, cmd);
         consume_args(context, context->argc);
-        return EXIT_SUCCESS;
-        break;
+        ret = EXIT_SUCCESS;
+        goto finalize;
       case 'c':
       case opt_clearmodifiers:
         clear_modifiers = 1;
@@ -54,6 +54,7 @@ int cmd_click(context_t *context) {
       case 'w':
       case opt_window:
         clear_modifiers = 1;
+        free(window_arg);
         window_arg = strdup(optarg);
         break;
       case 'd':
@@ -63,15 +64,15 @@ int cmd_click(context_t *context) {
       case 'r':
       case opt_repeat:
         repeat = atoi(optarg);
-        if (repeat <= 0) { 
+        if (repeat <= 0) {
           fprintf(stderr, "Invalid repeat value '%s' (must be >= 1)\n", optarg);
           fprintf(stderr, usage, cmd);
-          return EXIT_FAILURE;
+          goto finalize;
         }
         break;
       default:
         fprintf(stderr, usage, cmd);
-        return EXIT_FAILURE;
+        goto finalize;
     }
   }
 
@@ -80,10 +81,12 @@ int cmd_click(context_t *context) {
   if (context->argc < 1) {
     fprintf(stderr, usage, cmd);
     fprintf(stderr, "You specified the wrong number of args.\n");
-    return EXIT_FAILURE;
+    goto finalize;
   }
 
   button = atoi(context->argv[0]);
+
+  ret = EXIT_SUCCESS;
 
   window_each(context, window_arg, {
     if (clear_modifiers) {
@@ -94,7 +97,7 @@ int cmd_click(context_t *context) {
     ret = xdo_click_window_multiple(context->xdo, window, button, repeat, delay);
     if (ret != XDO_SUCCESS) {
       fprintf(stderr, "xdo_click_window failed on window %ld\n", window);
-      return ret;
+      goto finalize;
     }
 
     if (clear_modifiers) {
@@ -104,5 +107,8 @@ int cmd_click(context_t *context) {
   }); /* window_each(...) */
 
   consume_args(context, 1);
+
+finalize:
+  free(window_arg);
   return ret;
 }
