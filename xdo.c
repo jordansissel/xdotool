@@ -407,6 +407,7 @@ int xdo_focus_window(const xdo_t *xdo, Window wid) {
 int xdo_wait_for_window_size(const xdo_t *xdo, Window window,
                              unsigned int width, unsigned int height,
                              int flags, int to_or_from) {
+  int ret;
   unsigned int cur_width, cur_height;
   /*unsigned int alt_width, alt_height;*/
 
@@ -428,20 +429,18 @@ int xdo_wait_for_window_size(const xdo_t *xdo, Window window,
   }
 
   int tries = MAX_TRIES;
-  xdo_get_window_size(xdo, window, &cur_width,
-                      &cur_height);
+  ret = xdo_get_window_size(xdo, window, &cur_width, &cur_height);
   //printf("Want: %udx%ud\n", width, height);
   //printf("Alt: %udx%ud\n", alt_width, alt_height);
-  while (tries > 0 && (to_or_from == SIZE_TO
+  while (!ret && tries > 0 && (to_or_from == SIZE_TO
          ? (cur_width != width && cur_height != height)
          : (cur_width == width && cur_height == height))) {
-    xdo_get_window_size(xdo, window, (unsigned int *)&cur_width,
-                        (unsigned int *)&cur_height);
+    ret = xdo_get_window_size(xdo, window, &cur_width, &cur_height);
     usleep(30000);
     tries--;
   }
 
-  return 0;
+  return ret;
 }
 
 int xdo_wait_for_window_active(const xdo_t *xdo, Window window, int active) {
