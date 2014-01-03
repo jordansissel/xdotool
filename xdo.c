@@ -538,7 +538,7 @@ int xdo_set_number_of_desktops(const xdo_t *xdo, long ndesktops) {
 int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops) {
   Atom type;
   int size;
-  long nitems;
+  long nitems = 0;
   unsigned char *data;
   Window root;
   Atom request;
@@ -560,7 +560,7 @@ int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops) {
   } else {
     *ndesktops = 0;
   }
-  free(data);
+  XFree(data);
 
   return _is_success("XGetWindowProperty[_NET_NUMBER_OF_DESKTOPS]",
                      *ndesktops == 0, xdo);
@@ -601,7 +601,7 @@ int xdo_set_current_desktop(const xdo_t *xdo, long desktop) {
 int xdo_get_current_desktop(const xdo_t *xdo, long *desktop) {
   Atom type;
   int size;
-  long nitems;
+  long nitems = 0;
   unsigned char *data;
   Window root;
 
@@ -624,7 +624,7 @@ int xdo_get_current_desktop(const xdo_t *xdo, long *desktop) {
   } else {
     *desktop = -1;
   }
-  free(data);
+  XFree(data);
 
   return _is_success("XGetWindowProperty[_NET_CURRENT_DESKTOP]",
                      *desktop == -1, xdo);
@@ -664,7 +664,7 @@ int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop) {
 int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
   Atom type;
   int size;
-  long nitems;
+  long nitems = 0;
   unsigned char *data;
   Atom request;
 
@@ -685,7 +685,7 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
   } else {
     *desktop = -1;
   }
-  free(data);
+  XFree(data);
 
   return _is_success("XGetWindowProperty[_NET_WM_DESKTOP]",
                      *desktop == -1, xdo);
@@ -694,7 +694,7 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
 int xdo_get_active_window(const xdo_t *xdo, Window *window_ret) {
   Atom type;
   int size;
-  long nitems;
+  long nitems = 0;
   unsigned char *data;
   Atom request;
   Window root;
@@ -715,7 +715,7 @@ int xdo_get_active_window(const xdo_t *xdo, Window *window_ret) {
   } else {
     *window_ret = 0;
   }
-  free(data);
+  XFree(data);
 
   return _is_success("XGetWindowProperty[_NET_ACTIVE_WINDOW]",
                      *window_ret == 0, xdo);
@@ -924,7 +924,7 @@ int xdo_get_mouse_location2(const xdo_t *xdo, int *x_ret, int *y_ret,
     if (window_ret != NULL) *window_ret = window;
   }
 
-  return _is_success("XQueryPointer", ret == False, xdo);
+  return _is_success("XQueryPointer", ret != True, xdo);
 }
 
 int xdo_click_window(const xdo_t *xdo, Window window, int button) {
@@ -1873,7 +1873,7 @@ int xdo_set_active_modifiers(const xdo_t *xdo, Window window, charcodemap_t *act
 int xdo_get_pid_window(const xdo_t *xdo, Window window) {
   Atom type;
   int size;
-  long nitems;
+  long nitems = 0;
   unsigned char *data;
   int window_pid = 0;
 
@@ -1887,7 +1887,7 @@ int xdo_get_pid_window(const xdo_t *xdo, Window window) {
     /* The data itself is unsigned long, but everyone uses int as pid values */
     window_pid = (int) *((unsigned long *)data);
   }
-  free(data);
+  XFree(data);
 
   return window_pid;
 }
@@ -1898,7 +1898,7 @@ int xdo_wait_for_mouse_move_from(const xdo_t *xdo, int origin_x, int origin_y) {
   int tries = MAX_TRIES;
 
   ret = xdo_get_mouse_location(xdo, &x, &y, NULL);
-  while (tries > 0 && 
+  while (!ret && tries > 0 &&
          (x == origin_x && y == origin_y)) {
     usleep(30000);
     ret = xdo_get_mouse_location(xdo, &x, &y, NULL);
@@ -1914,7 +1914,7 @@ int xdo_wait_for_mouse_move_to(const xdo_t *xdo, int dest_x, int dest_y) {
   int tries = MAX_TRIES;
 
   ret = xdo_get_mouse_location(xdo, &x, &y, NULL);
-  while (tries > 0 && (x != dest_x && y != dest_y)) {
+  while (!ret && tries > 0 && (x != dest_x && y != dest_y)) {
     usleep(30000);
     ret = xdo_get_mouse_location(xdo, &x, &y, NULL);
     tries--;
@@ -1931,33 +1931,39 @@ int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret) {
     return XDO_ERROR;
   }
 
-  Atom type;
+  int ret = XDO_ERROR;
+  Atom type = 0;
   int size;
-  long nitems;
+  long nitems = 0;
   unsigned char *data;
   Atom request = XInternAtom(xdo->xdpy, "_NET_DESKTOP_VIEWPORT", False);
   Window root = RootWindow(xdo->xdpy, 0);
   data = xdo_get_window_property_by_atom(xdo, root, request, &nitems, &type, &size);
 
   if (type != XA_CARDINAL) {
-    fprintf(stderr, 
+    fprintf(stderr,
             "Got unexpected type returned from _NET_DESKTOP_VIEWPORT."
             " Expected CARDINAL, got %s\n",
             XGetAtomName(xdo->xdpy, type));
-    return XDO_ERROR;
+    goto finalize;
   }
 
   if (nitems != 2) {
     fprintf(stderr, "Expected 2 items for _NET_DESKTOP_VIEWPORT, got %ld\n",
             nitems);
-    return XDO_ERROR;
+    goto finalize;
   }
 
   int *viewport_data = (int *)data;
   *x_ret = viewport_data[0];
   *y_ret = viewport_data[1];
+  ret = XDO_SUCCESS;
 
-  return XDO_SUCCESS;
+finalize:
+  if (data) {
+    XFree(data);
+  }
+  return ret;
 }
 
 int xdo_set_desktop_viewport(const xdo_t *xdo, int x, int y) {
@@ -1989,12 +1995,12 @@ int xdo_kill_window(const xdo_t *xdo, Window window) {
   return _is_success("XKillClient", ret == 0, xdo);
 }
 
-int xdo_get_window_name(const xdo_t *xdo, Window window, 
+int xdo_get_window_name(const xdo_t *xdo, Window window,
                         unsigned char **name_ret, int *name_len_ret,
                         int *name_type) {
   if (atom_NET_WM_NAME == (Atom)-1) {
     atom_NET_WM_NAME = XInternAtom(xdo->xdpy, "_NET_WM_NAME", False);
-  } 
+  }
   if (atom_WM_NAME == (Atom)-1) {
     atom_WM_NAME = XInternAtom(xdo->xdpy, "WM_NAME", False);
   }
@@ -2005,9 +2011,9 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
     atom_UTF8_STRING = XInternAtom(xdo->xdpy, "UTF8_STRING", False);
   }
 
-  Atom type;
+  Atom type = 0;
   int size;
-  long nitems;
+  long nitems = 0;
 
   /**
    * http://standards.freedesktop.org/wm-spec/1.3/ar01s05.html
