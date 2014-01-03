@@ -1224,7 +1224,6 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
                            int direction) {
   /* for XQueryTree */
   Window dummy, parent, *children = NULL;
-  unsigned int nchildren;
   Atom atom_wmstate = XInternAtom(xdo->xdpy, "WM_STATE", False);
 
   int done = False;
@@ -1233,14 +1232,21 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
       return XDO_ERROR;
     }
 
-    long items;
+    unsigned int nchildren = 0;
+    long items = 0;
     _xdo_debug(xdo, "get_window_property on %lu", window);
-    xdo_get_window_property_by_atom(xdo, window, atom_wmstate, &items, NULL, NULL);
+    char *prop = xdo_get_window_property_by_atom(xdo, window, atom_wmstate, &items, NULL, NULL);
+    XFree(prop);
 
     if (items == 0) {
+      int ret;
+
       /* This window doesn't have WM_STATE property, keep searching. */
       _xdo_debug(xdo, "window %lu has no WM_STATE property, digging more.", window);
-      XQueryTree(xdo->xdpy, window, &dummy, &parent, &children, &nchildren);
+      ret = XQueryTree(xdo->xdpy, window, &dummy, &parent, &children, &nchildren);
+      if (ret) {
+        return XDO_ERROR;
+      }
 
       if (direction == XDO_FIND_PARENTS) {
         _xdo_debug(xdo, "searching parents");
@@ -1251,7 +1257,6 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
       } else if (direction == XDO_FIND_CHILDREN) {
         _xdo_debug(xdo, "searching %d children", nchildren);
         unsigned int i = 0;
-        int ret;
         done = True; /* recursion should end us */
         for (i = 0; i < nchildren; i++) {
           ret = xdo_find_window_client(xdo, children[i], &window, direction);
