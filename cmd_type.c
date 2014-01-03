@@ -117,6 +117,11 @@ int cmd_type(context_t *context) {
     goto finalize;
   }
 
+  /* use %1 if there is a window stack */
+  if (window_arg == NULL && context->nwindows > 0) {
+    window_arg = strdup("%1");
+  }
+
   if (file != NULL) {
     data = calloc(1 + context->argc, sizeof(char *));
 
