@@ -50,24 +50,15 @@
 
 /**
  * @internal
- * Map keysym name to actual ascii 
- */
-typedef struct keysym_charmap {
-  const char *keysym;
-  wchar_t key;
-} keysym_charmap_t;
-
-/**
- * @internal
  * Map character to whatever information we need to be able to send
- * this key (keycode, modifiers, key index, etc)
+ * this key (keycode, modifiers, group, etc)
  */
 typedef struct charcodemap {
   wchar_t key; /** the letter for this key, like 'a' */
   KeyCode code; /** the keycode that this key is on */
   KeySym symbol; /** the symbol representing this key */
-  int index; /** the index in the keysym-per-keycode list that is this key */
-  int modmask; /** the modifiers activated by this key */
+  int group; /** the keyboard group that has this key in it */
+  int modmask; /** the modifiers to apply when sending this key */
    /** if this key need to be bound at runtime because it does not
     * exist in the current keymap, this will be set to 1. */
   int needs_binding;
@@ -93,12 +84,6 @@ typedef struct xdo {
 
   /** @internal Lenth of charcodes array */
   int charcodes_len;
-
-  /** @internal result from XGetModifierMapping */
-  XModifierKeymap *modmap;
-
-  /** @internal current keyboard mapping (via XGetKeyboardMapping) */
-  KeySym *keymap;
 
   /** @internal highest keycode value */
   int keycode_high; /* highest and lowest keycodes */
@@ -780,12 +765,6 @@ int xdo_get_window_property(const xdo_t *xdo, Window window, const char *propert
  * @return the input mask
  */
 unsigned int xdo_get_input_state(const xdo_t *xdo);
-
-/**
- * If you need the keysym-to-character map, you can fetch it using this method.
- * @see keysym_charmap_t
- */
-const keysym_charmap_t *xdo_get_keysym_charmap(void);
 
 /**
  * If you need the symbol map, use this method.
