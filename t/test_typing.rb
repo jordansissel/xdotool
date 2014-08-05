@@ -3,7 +3,7 @@
 
 require "test/unit"
 require "tempfile"
-require "xdo_test_helper"
+require "./xdo_test_helper"
 
 class XdotoolTypingTests < Test::Unit::TestCase
   include XdoTestHelper

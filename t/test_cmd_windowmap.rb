@@ -3,7 +3,7 @@
 #
 
 require "test/unit"
-require "xdo_test_helper"
+require "./xdo_test_helper"
 
 class XdotoolCommandWindowMapTests < Test::Unit::TestCase
   include XdoTestHelper

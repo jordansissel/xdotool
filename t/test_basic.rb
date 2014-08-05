@@ -2,7 +2,7 @@
 #
 
 require "test/unit"
-require "xdo_test_helper"
+require "./xdo_test_helper"
 
 class XdotoolBasicTests < Test::Unit::TestCase
   include XdoTestHelper
