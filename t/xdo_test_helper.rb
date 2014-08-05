@@ -26,7 +26,8 @@ module XdoTestHelper
     reader, writer = IO.pipe
     @windowpid = fork do
       reader.close
-      exec("exec xterm -T '#{@title}' -e 'echo $WINDOWID >& #{writer.fileno}; echo $$ >& #{writer.fileno}; #{cmd}'")
+      writer.close_on_exec = false
+      exec("xterm", "-T", @title,  "-e", "echo $WINDOWID >& #{writer.fileno}; echo $$ >& #{writer.fileno}; #{cmd}", :close_others => false)
     end # xterm fork
     writer.close
     @wid = reader.readline.to_i
