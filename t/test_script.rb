@@ -2,7 +2,7 @@
 #
 
 require "test/unit"
-require "./xdo_test_helper"
+require_relative "xdo_test_helper"
 require "tempfile"
 
 class XdotoolScriptTests < Test::Unit::TestCase
