@@ -1130,7 +1130,7 @@ L<xprop(1)>, L<xwininfo(1)>,
 
 Project site: L<http://www.semicomplete.com/projects/xdotool>
 
-Google Code: L<http://semicomplete.googlecode.com/>
+Source code and Issues: L<https://github.com/jordansissel/xdotool>
 
 EWMH specification: L<http://standards.freedesktop.org/wm-spec/wm-spec-1.3.html>
 
@@ -1138,7 +1138,7 @@ EWMH specification: L<http://standards.freedesktop.org/wm-spec/wm-spec-1.3.html>
 
 Please send questions to xdotool-users@googlegroups.com. File bugs and feature requests at the following URL:
 
-L<http://code.google.com/p/semicomplete/issues/list>
+L<https://github.com/jordansissel/xdotool/issues>
 
 Alternately, if you prefer email, feel free to file bugs by emailing the list.
 What works for you :)
