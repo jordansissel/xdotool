@@ -4,7 +4,7 @@
 #include <errno.h>
 
 int cmd_type(context_t *context) {
-  int ret = 0;
+  int ret = EXIT_FAILURE;
   int i;
   int c;
   char *cmd = *context->argv;
@@ -66,6 +66,7 @@ int cmd_type(context_t *context) {
                                longopts, &option_index)) != -1) {
     switch (c) {
       case opt_window:
+        free(window_arg);
         window_arg = strdup(optarg);
         break;
       case opt_delay:
@@ -78,20 +79,22 @@ int cmd_type(context_t *context) {
       case opt_help:
         printf(usage, cmd);
         consume_args(context, context->argc);
-        return EXIT_SUCCESS;
-        break;
+        ret = EXIT_SUCCESS;
+        goto finalize;
       case opt_args:
         arity = atoi(optarg);
         break;
       case opt_terminator:
+        free(terminator);
         terminator = strdup(optarg);
         break;
       case opt_file:
-	file = strdup(optarg);
-	break;
+        free(file);
+        file = strdup(optarg);
+        break;
       default:
         fprintf(stderr, usage, cmd);
-        return EXIT_FAILURE;
+        goto finalize;
     }
   }
 
@@ -100,18 +103,23 @@ int cmd_type(context_t *context) {
   if (context->argc == 0 && file == NULL) {
     fprintf(stderr, "You specified the wrong number of args.\n");
     fprintf(stderr, usage, cmd);
-    return 1;
+    goto finalize;
   }
 
   if (arity > 0 && terminator != NULL) {
     fprintf(stderr, "Don't use both --terminator and --args.\n");
-    return EXIT_FAILURE;
+    goto finalize;
   }
 
   if (context->argc < arity) {
     fprintf(stderr, "You said '--args %d' but only gave %d arguments.\n",
             arity, context->argc);
-    return EXIT_FAILURE;
+    goto finalize;
+  }
+
+  /* use %1 if there is a window stack */
+  if (window_arg == NULL && context->nwindows > 0) {
+    window_arg = strdup("%1");
   }
 
   if (file != NULL) {
@@ -124,7 +132,7 @@ int cmd_type(context_t *context) {
       input = fopen(file, "r");
       if (input == NULL) {
         fprintf(stderr, "Failure opening '%s': %s\n", file, strerror(errno));
-        return EXIT_FAILURE;
+        goto finalize;
       }
     }
 
@@ -132,7 +140,7 @@ int cmd_type(context_t *context) {
       marker = realloc(buffer, bytes_read + 4096);
       if (marker == NULL) {
         fprintf(stderr, "Failure allocating for '%s': %s\n", file, strerror(errno));
-        return EXIT_FAILURE;
+        goto finalize;
       }
 
       buffer = marker;
@@ -145,12 +153,13 @@ int cmd_type(context_t *context) {
 
       if (ferror(input) != 0) {
         fprintf(stderr, "Failure reading '%s': %s\n", file, strerror(errno));
-        return EXIT_FAILURE;
+        goto finalize;
       }
     }
 
     data[0] = buffer;
     data_count++;
+    buffer = NULL; /* prevent double-free */
 
     fclose(input);
   }
@@ -177,6 +186,13 @@ int cmd_type(context_t *context) {
     data_count++;
     args_count++;
   }
+  if (data[0] == NULL) {
+    fprintf(stderr, "Missing things to type.\n");
+    goto finalize;
+  }
+
+  /* pretend success unless one of the type commands fail */
+  ret = EXIT_SUCCESS;
 
   window_each(context, window_arg, {
     if (clear_modifiers) {
@@ -190,9 +206,8 @@ int cmd_type(context_t *context) {
 
       if (tmp) {
         fprintf(stderr, "xdo_enter_text_window reported an error\n");
+        ret = EXIT_FAILURE;
       }
-
-      ret += tmp;
     }
 
     if (clear_modifiers) {
@@ -201,11 +216,19 @@ int cmd_type(context_t *context) {
     }
   }); /* window_each(...) */
 
-  if (window_arg != NULL) {
-    free(window_arg);
-  }
-
   consume_args(context, args_count);
-  return ret > 0;
+
+finalize:
+  free(window_arg);
+  free(terminator);
+  free(file);
+  free(buffer);
+  if (data) {
+    for (i = 0; i < data_count; ++i) {
+      free(data[i]);
+    }
+  }
+  free(data);
+  return ret;
 }
 

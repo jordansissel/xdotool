@@ -322,16 +322,16 @@ int script_main(int argc, char **argv) {
    * args_main().
    */
 
+  int ret = EXIT_FAILURE;
   FILE *input = NULL;
   const char *path = argv[1];
   char buffer[4096];
 
-  char **script_argv = (char **) calloc(1, sizeof(char *));
-  int script_argc = 1;
+  char **script_argv = (char **) calloc(2, sizeof(char *));
+  int script_argc = 0;
 
   /* copy argv[0] to script_argv[0] */
-  script_argv[0] = (char *) calloc(strlen(argv[0])+1, sizeof(char));
-  strcpy(script_argv[0], argv[0]);
+  script_argv[script_argc++] = strdup(argv[0]);
 
   /* determine whether reading from a file or from stdin */
   if (!strcmp(path, "-")) {
@@ -340,12 +340,12 @@ int script_main(int argc, char **argv) {
     input = fopen(path, "r");
     if (input == NULL) {
       fprintf(stderr, "Failure opening '%s': %s\n", path, strerror(errno));
-      return EXIT_FAILURE;
+      goto finalize;
     }
   }
-  
+
   /* read input... */
-  int pos;
+  unsigned pos;
   char *token;
 
   while (fgets(buffer, 4096, input) != NULL) {
@@ -361,11 +361,11 @@ int script_main(int argc, char **argv) {
     }
 
     /* replace newline with null */
-    if (line[strlen(line)-1] == '\n') 
-      line[strlen(line)-1] = '\0'; 
+    if (line[strlen(line) - 1] == '\n')
+      line[strlen(line) - 1] = '\0';
 
     /* tokenize line into script_argv... */
-    while (strlen(line)) {
+    while (line[0]) {
       token = NULL;
 
       /* modify line to contain the current token. Tokens are
@@ -389,18 +389,18 @@ int script_main(int argc, char **argv) {
       */
       if (line[0] == '$') {
         /* ignore dollar sign */
-        line++; 
-      
+        line++;
+
         if (isdigit(line[0])) {
-          /* get the position of this parameter in argv */ 
+          /* get the position of this parameter in argv */
           pos = atoi(line) + 1; /* $1 is actually index 2 in the argv array */
 
           /* bail if no argument was given for this parameter */
-          if (pos >= argc) {
+          if (pos >= (unsigned) argc) {
             fprintf (stderr, "%s: error: `%s' needs at least %d %s; only %d given\n",
                      argv[0], argv[1], pos - 1, pos == 2 ? "argument" : "arguments",
                      argc - 2);
-            return EXIT_FAILURE;
+            goto finalize;
           }
           /* use command line argument */
           token = argv[pos];
@@ -413,31 +413,32 @@ int script_main(int argc, char **argv) {
              * present, let's abort */
             fprintf(stderr, "%s: error: environment variable $%s is not set.\n",
                     argv[0], line);
-            return EXIT_FAILURE;
+            goto finalize;
           }
         }
       }
-      else { 
+      else {
         /* use the verbatim token */
         token = line;
-      }      
+      }
 
       /* append token */
       if (token != NULL) {
+        char **tmp;
 
-        script_argv = realloc(script_argv, (script_argc+1) * sizeof(char *));
-        if (script_argv == NULL) {
-          fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n", 
+        tmp = realloc(script_argv, (script_argc+1) * sizeof(char *));
+        if (tmp == NULL) {
+          fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
                   argv[0], argv[1]);
-          exit(EXIT_FAILURE);
+          goto finalize;
         }
-        script_argv[script_argc] = (char *) calloc(strlen(token)+1, sizeof(char));
+        script_argv = tmp;
+        script_argv[script_argc] = strdup(token);
 
         //printf("arg %d: %s\n", script_argc, token);
-        strncpy(script_argv[script_argc], token, strlen(token)+1);      
         script_argc++;
       }
-      
+
       /* advance line to the next token */
       line += strlen(line)+1;
       line += strspn(line, " \t");
@@ -446,11 +447,21 @@ int script_main(int argc, char **argv) {
   fclose(input);
 
   /* Add NULL at the end */
-  script_argv = realloc(script_argv, (script_argc+1) * sizeof(char *));
-  /* TODO(sissel): STOPPED HERE */
+  script_argv[script_argc] = NULL;
 
   /* run the parsed script */
-  return args_main(script_argc, script_argv);
+  ret = args_main(script_argc, script_argv);
+
+finalize:
+  if (script_argv) {
+    int i;
+
+    for (i = 0; i < script_argc; ++i) {
+      free(script_argv[i]);
+    }
+  }
+  free(script_argv);
+  return ret;
 }
 
 int args_main(int argc, char **argv) {

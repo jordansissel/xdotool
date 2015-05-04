@@ -8,7 +8,7 @@ int cmd_exec(context_t *context) {
   char *cmd = *context->argv;
   char **command = NULL;
   int command_count = 0;
-  int ret = EXIT_SUCCESS;
+  int ret = EXIT_FAILURE;
   int opsync = 0;
   int arity = -1;
   char *terminator = NULL;
@@ -46,8 +46,8 @@ int cmd_exec(context_t *context) {
       case opt_help:
         printf(usage, cmd);
         consume_args(context, context->argc);
-        return EXIT_SUCCESS;
-        break;
+        ret = EXIT_SUCCESS;
+        goto finalize;
       case opt_sync:
         opsync = 1;
         break;
@@ -55,11 +55,12 @@ int cmd_exec(context_t *context) {
         arity = atoi(optarg);
         break;
       case opt_terminator:
+        free(terminator);
         terminator = strdup(optarg);
         break;
       default:
         fprintf(stderr, usage, cmd);
-        return EXIT_FAILURE;
+        goto finalize;
     }
   }
 
@@ -68,18 +69,18 @@ int cmd_exec(context_t *context) {
   if (context->argc == 0) {
     fprintf(stderr, "No arguments given.\n");
     fprintf(stderr, usage, cmd);
-    return EXIT_FAILURE;
+    goto finalize;
   }
 
   if (arity > 0 && terminator != NULL) {
     fprintf(stderr, "Don't use both --terminator and --args.\n");
-    return EXIT_FAILURE;
+    goto finalize;
   }
 
   if (context->argc < arity) {
     fprintf(stderr, "You said '--args %d' but only gave %d arguments.\n",
             arity, context->argc);
-    return EXIT_FAILURE;
+    goto finalize;
   }
 
   command = calloc(context->argc + 1, sizeof(char *));
@@ -99,8 +100,12 @@ int cmd_exec(context_t *context) {
     command_count = i + 1; /* i starts at 0 */
     xdotool_debug(context, "Exec arg[%d]: %s", i, command[i]);
   }
+  if (i == 0 && command[i] == NULL) {
+    fprintf(stderr, "Missing command argument before terminator.\n");
+    goto finalize;
+  }
   command[i] = NULL;
-  
+
   pid_t child;
   child = fork();
   if (child == 0) { /* child */
@@ -114,13 +119,14 @@ int cmd_exec(context_t *context) {
       int status = 0;
       waitpid(child, &status, 0);
       ret = WEXITSTATUS(status);
+    } else {
+      ret = EXIT_SUCCESS;
     }
   }
 
+finalize:
   consume_args(context, command_count);
-  if (terminator != NULL) {
-    free(terminator);
-  }
+  free(terminator);
 
   for (i=0; i < command_count; i++) {
     free(command[i]);

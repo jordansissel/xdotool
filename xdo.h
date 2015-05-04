@@ -77,7 +77,7 @@ typedef struct xdo {
   Display *xdpy;
 
   /** The display name, if any. NULL if not specified. */
-  char *display_name;
+  const char *display_name;
 
   /** @internal Array of known keys/characters */
   charcodemap_t *charcodes;

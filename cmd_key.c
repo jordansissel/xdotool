@@ -8,7 +8,7 @@
  */
 
 int cmd_key(context_t *context) {
-  int ret = 0;
+  int ret = EXIT_FAILURE;
   int i, j;
   int c;
   char *cmd = *context->argv;
@@ -17,8 +17,7 @@ int cmd_key(context_t *context) {
   useconds_t key_delay = 12000;
   useconds_t repeat_delay = 0;
   int repeat = 1;
-  const char *window_arg = NULL;
-  int free_arg = 0;
+  char *window_arg = NULL;
 
   /* Options */
   int clear_modifiers = 0;
@@ -33,7 +32,7 @@ int cmd_key(context_t *context) {
     { 0, 0, 0, 0 },
   };
 
-  static const char *usage = 
+  static const char *usage =
      "Usage: %s [options] <keysequence> [keysequence ...]\n"
      "--clearmodifiers     - clear active keyboard modifiers during keystrokes\n"
      "--delay DELAY        - Use DELAY milliseconds between keystrokes\n"
@@ -55,8 +54,8 @@ int cmd_key(context_t *context) {
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':
+        free(window_arg);
         window_arg = strdup(optarg);
-        free_arg = 1;
         break;
       case 'c':
         clear_modifiers = 1;
@@ -64,8 +63,8 @@ int cmd_key(context_t *context) {
       case 'h':
         printf(usage, cmd);
         consume_args(context, context->argc);
-        return EXIT_SUCCESS;
-        break;
+        ret = EXIT_SUCCESS;
+        goto finalize;
       case 'd':
         /* Argument is in milliseconds, keysequence delay is in microseconds. */
         key_delay = strtoul(optarg, NULL, 0) * 1000;
@@ -74,7 +73,7 @@ int cmd_key(context_t *context) {
         repeat = atoi(optarg);
         if (repeat < 1) {
           fprintf(stderr, "Invalid '--repeat' value given: %s\n", optarg);
-          return EXIT_FAILURE;
+          goto finalize;
         }
         break;
       case 'R': // --repeat-delay
@@ -83,7 +82,7 @@ int cmd_key(context_t *context) {
         break;
       default:
         fprintf(stderr, usage, cmd);
-        return EXIT_FAILURE;
+        goto finalize;
     }
   }
 
@@ -92,12 +91,12 @@ int cmd_key(context_t *context) {
   if (context->argc == 0) {
     fprintf(stderr, "You specified the wrong number of args.\n");
     fprintf(stderr, usage, cmd);
-    return 1;
+    goto finalize;
   }
 
   /* use %1 if there is a window stack */
   if (window_arg == NULL && context->nwindows > 0) {
-    window_arg = "%1";
+    window_arg = strdup("%1");
   }
 
   int (*keyfunc)(const xdo_t *, Window, const char *, useconds_t) = NULL;
@@ -110,8 +109,10 @@ int cmd_key(context_t *context) {
     keyfunc = xdo_send_keysequence_window_down;
   } else {
     fprintf(stderr, "Unknown command '%s'\n", cmd);
-    return 1;
+    goto finalize;
   }
+
+  ret = EXIT_SUCCESS;
 
   int max_arg = context->argc;
   window_each(context, window_arg, {
@@ -131,8 +132,8 @@ int cmd_key(context_t *context) {
           fprintf(stderr,
                   "xdo_send_keysequence_window reported an error for string '%s'\n",
                   context->argv[i]);
+          ret = EXIT_FAILURE;
         }
-        ret += tmp;
       } /* each keysequence */
 
       /* Sleep if --repeat-delay given and not on the last repetition */
@@ -147,12 +148,10 @@ int cmd_key(context_t *context) {
     }
   }); /* window_each(...) */
 
-  if (free_arg) {
-    free((char *)window_arg);
-  }
-
   consume_args(context, max_arg);
 
+finalize:
+  free(window_arg);
   return ret;
 }
 

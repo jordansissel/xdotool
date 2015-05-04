@@ -8,6 +8,7 @@
 #include "xdo_cmd.h"
 
 int cmd_set_window(context_t *context) {
+  int ret = EXIT_FAILURE;
   char *cmd = *context->argv;
   int c;
   char *role = NULL, *icon = NULL, *name = NULL, *_class = NULL,
@@ -28,7 +29,7 @@ int cmd_set_window(context_t *context) {
     { 0, 0, 0, 0 },
   };
   int option_index;
-  static const char *usage = 
+  static const char *usage =
       "Usage: %s [options] [window=%1]\n"
       "--name NAME  - set the window name (aka title)\n"
       "--icon-name NAME - set the window name while minimized/iconified\n"
@@ -43,19 +44,24 @@ int cmd_set_window(context_t *context) {
   while ((c = getopt_long_only(context->argc, context->argv, "+hn:i:r:C:N:u:",
                                longopts, &option_index)) != -1) {
     switch(c) {
-      case 'n': 
-        name = strdup(optarg); 
+      case 'n':
+        free(name);
+        name = strdup(optarg);
         break;
       case 'i':
+        free(icon);
         icon = strdup(optarg);
         break;
       case 'r':
+        free(role);
         role = strdup(optarg);
         break;
       case 'C':
+        free(_class);
         _class = strdup(optarg);
         break;
       case 'N':
+        free(classname);
         classname = strdup(optarg);
         break;
       case 'O':
@@ -67,11 +73,12 @@ int cmd_set_window(context_t *context) {
       case 'h':
         printf(usage, cmd);
         consume_args(context, context->argc);
-        return EXIT_SUCCESS;
+        ret = EXIT_SUCCESS;
+        goto finalize;
       default:
         fprintf(stderr, usage, cmd);
-        return EXIT_FAILURE;
-    }    
+        goto finalize;
+    }
   }
 
   /* adjust context->argc, argv */
@@ -79,7 +86,7 @@ int cmd_set_window(context_t *context) {
 
   if (!window_get_arg(context, 0, 0, &window_arg)) {
     fprintf(stderr, usage, cmd);
-    return EXIT_FAILURE;
+    goto finalize;
   }
 
   /* TODO(sissel): error handling needed... */
@@ -99,6 +106,14 @@ int cmd_set_window(context_t *context) {
       xdo_set_window_urgency(context->xdo, window, urgency);
   }); /* window_each(...) */
 
-  return 0;
+  ret = EXIT_SUCCESS;
+
+finalize:
+  free(role);
+  free(icon);
+  free(name);
+  free(_class);
+  free(classname);
+  return ret;
 }
 

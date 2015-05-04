@@ -17,7 +17,7 @@ struct mousemove {
 static int _mousemove(context_t *context, struct mousemove *mousemove);
 
 int cmd_mousemove(context_t *context) {
-  int ret = 0;
+  int ret = EXIT_FAILURE;
   char *cmd = *context->argv;
   char *window_arg = NULL;
 
@@ -46,7 +46,7 @@ int cmd_mousemove(context_t *context) {
     { "window", required_argument, NULL, opt_window },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = 
+  static const char *usage =
       "Usage: %s [options] <x> <y>\n"
       "-c, --clearmodifiers      - reset active modifiers (alt, etc) while typing\n"
       //"-d, --delay <MS>          - sleeptime in milliseconds between steps.\n"
@@ -67,13 +67,14 @@ int cmd_mousemove(context_t *context) {
       case opt_help:
         printf(usage, cmd);
         consume_args(context, context->argc);
-        return EXIT_SUCCESS;
-        break;
+        ret = EXIT_SUCCESS;
+        goto finalize;
       case opt_screen:
         mousemove.screen = atoi(optarg);
         break;
       case 'w':
       case opt_window:
+        free(window_arg);
         window_arg = strdup(optarg);
         break;
       case 'p':
@@ -93,7 +94,7 @@ int cmd_mousemove(context_t *context) {
       default:
         printf("unknown opt: %d\n", c);
         fprintf(stderr, usage, cmd);
-        return EXIT_FAILURE;
+        goto finalize;
     }
   }
 
@@ -103,15 +104,15 @@ int cmd_mousemove(context_t *context) {
       || (strcmp(context->argv[0], "restore") && context->argc < 2)) {
     fprintf(stderr, usage, cmd);
     fprintf(stderr, "You specified the wrong number of args (expected 2 coordinates or 'restore').\n");
-    return 1;
+    goto finalize;
   }
 
   if (!strcmp(context->argv[0], "restore")) {
     if (!context->have_last_mouse) {
       fprintf(stderr, "Have no previous mouse position. Cannot restore.\n");
-      return EXIT_FAILURE;
+      goto finalize;
     }
-    
+
     mousemove.x = context->last_mouse_x;
     mousemove.y = context->last_mouse_y;
     mousemove.screen = context->last_mouse_screen;
@@ -122,15 +123,18 @@ int cmd_mousemove(context_t *context) {
     consume_args(context, 2);
   }
 
+  ret = EXIT_SUCCESS;
 
   window_each(context, window_arg, {
     mousemove.window = window;
     ret = _mousemove(context, &mousemove);
     if (ret != XDO_SUCCESS) {
-      return ret;
+      goto finalize;
     }
   }); /* window_each(...) */
 
+finalize:
+  free(window_arg);
   return ret;
 }
 
@@ -150,7 +154,7 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
     xdo_get_mouse_location(context->xdo, &(context->last_mouse_x),
                       &(context->last_mouse_y), &(context->last_mouse_screen));
   }
-  
+
   if (mousemove->polar_coordinates) {
     /* x becomes angle (degrees), y becomes distance.
      * XXX: Origin should be center (of window or screen)
@@ -206,7 +210,7 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
       /* Nothing to move. Quit now. */
       return 0;
     }
-    
+
     fprintf(stderr, "--step support not yet implemented\n");
 
     if (window > 0) {

@@ -2,13 +2,13 @@
 #include <string.h>
 
 int cmd_mousedown(context_t *context) {
-  int ret = 0;
+  int ret = EXIT_FAILURE;
   int button;
   char *cmd = *context->argv;
+  char *window_arg = NULL;
   charcodemap_t *active_mods = NULL;
   int active_mods_n;
   int clear_modifiers = 0;
-  char *window_arg = NULL;
 
   int c;
   static struct option longopts[] = {
@@ -23,23 +23,24 @@ int cmd_mousedown(context_t *context) {
             "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n";
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "+chw:",
+  while ((c = getopt_long_only(context->argc, context->argv, "+cw:h",
                                longopts, &option_index)) != -1) {
     switch (c) {
-      case 'c':
-        clear_modifiers = 1;
-        break;
       case 'h':
         printf(usage, cmd);
         consume_args(context, context->argc);
-        return EXIT_SUCCESS;
+        ret = EXIT_SUCCESS;
+        goto finalize;
+      case 'c':
+        clear_modifiers = 1;
         break;
       case 'w':
+        free(window_arg);
         window_arg = strdup(optarg);
         break;
       default:
         fprintf(stderr, usage, cmd);
-        return EXIT_FAILURE;
+        goto finalize;
     }
   }
 
@@ -48,10 +49,12 @@ int cmd_mousedown(context_t *context) {
   if (context->argc < 1) {
     fprintf(stderr, usage, cmd);
     fprintf(stderr, "What button do you want me to send?\n");
-    return EXIT_FAILURE;
+    goto finalize;
   }
 
   button = atoi(context->argv[0]);
+
+  ret = EXIT_SUCCESS;
 
   window_each(context, window_arg, {
     if (clear_modifiers) {
@@ -68,11 +71,13 @@ int cmd_mousedown(context_t *context) {
 
     if (ret) {
       fprintf(stderr, "xdo_mouse_down reported an error on window %ld\n", window);
-      return ret;
+      goto finalize;
     }
   }); /* window_each(...) */
 
   consume_args(context, 1);
-
+finalize:
+  free(window_arg);
   return ret;
 }
+

@@ -4,7 +4,7 @@ int cmd_windowunmap(context_t *context) {
   int ret = 0;
   char *cmd = *context->argv;
   const char *window_arg = "%1";
-  int opsync;
+  int opsync = 0;
 
   int c;
   typedef enum {
