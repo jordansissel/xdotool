@@ -8,6 +8,11 @@ KNOWN ISSUES:
 
 FOR TODO LIST, SEE TODO FILE :)
 
+2.20150503
+  - Lots of changes over the past 4 years, but with many folks telling me to do
+    another release tarball, here it is.
+    We can backfill the changelog later.
+
 2.20110530.*
   - New set_window feature: --urgency. This lets you set the urgency flag on a
     window Window managers will interpret this as something about your window
