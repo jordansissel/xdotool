@@ -65,6 +65,7 @@ int cmd_window_select(context_t *context);
 int cmd_windowactivate(context_t *context);
 int cmd_windowfocus(context_t *context);
 int cmd_windowkill(context_t *context);
+int cmd_windowclose(context_t *context);
 int cmd_windowmap(context_t *context);
 int cmd_windowminimize(context_t *context);
 int cmd_windowmove(context_t *context);

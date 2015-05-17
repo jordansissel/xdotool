@@ -1789,6 +1789,12 @@ int xdo_kill_window(const xdo_t *xdo, Window window) {
   return _is_success("XKillClient", ret == 0, xdo);
 }
 
+int xdo_close_window(const xdo_t *xdo, Window window) {
+  int ret;
+  ret = XDestroyWindow(xdo->xdpy, window);
+  return _is_success("XDestroyWindow", ret == 0, xdo);
+}
+
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
                         unsigned char **name_ret, int *name_len_ret,
                         int *name_type) {
