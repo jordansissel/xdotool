@@ -49,6 +49,7 @@ CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
          cmd_windowkill.o cmd_behave.o cmd_window_select.o \
          cmd_getwindowname.o cmd_behave_screen_edge.o \
          cmd_windowminimize.o cmd_exec.o cmd_getwindowgeometry.o \
+         cmd_windowclose.o \
          cmd_sleep.o cmd_get_display_geometry.o
 
 .PHONY: all
