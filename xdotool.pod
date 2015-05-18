@@ -682,6 +682,12 @@ L<WINDOW STACK> window references (like %1) are valid for both I<source_window>
 and I<destination_window> See L<WINDOW STACK> and L<COMMAND CHAINING> for more
 details.
 
+=item B<windowclose> I<[window]>
+
+Close a window. This action will destroy the window, but will not try
+to kill the client controlling it. If no window is given, %1 is the
+default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
+
 =item B<windowkill> I<[window]>
 
 Kill a window. This action will destroy the window and kill the client
