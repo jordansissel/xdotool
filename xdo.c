@@ -1325,8 +1325,9 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
         idx++;
       }
     }
-	}
-	xdo->charcodes_len = idx;
+  }
+  xdo->charcodes_len = idx;
+  XkbFreeClientMap(desc, 0, 1);
 }
 
 /* context-free functions */

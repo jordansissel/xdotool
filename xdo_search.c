@@ -212,6 +212,12 @@ static int check_window_match(const xdo_t *xdo, Window wid,
       || !compile_re(search->winclass, &class_re) \
       || !compile_re(search->winclassname, &classname_re) \
       || !compile_re(search->winname, &name_re)) {
+
+    regfree(&title_re);
+    regfree(&class_re);
+    regfree(&classname_re);
+    regfree(&name_re);
+
     return False;
   }
 
@@ -283,14 +289,10 @@ static int check_window_match(const xdo_t *xdo, Window wid,
     }
   } while (0);
 
-  if (search->title) 
-    regfree(&title_re);
-  if (search->winclass) 
-    regfree(&class_re);
-  if (search->winclassname) 
-    regfree(&classname_re);
-  if (search->winname) 
-    regfree(&name_re);
+  regfree(&title_re);
+  regfree(&class_re);
+  regfree(&classname_re);
+  regfree(&name_re);
 
   if (debug) {
     fprintf(stderr, "win: %ld, pid:%d, title:%d, name:%d, class:%d, visible:%d\n",
