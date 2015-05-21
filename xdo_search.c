@@ -349,7 +349,11 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
 
   /* Break if XQueryTree fails.
    * TODO(sissel): report an error? */
-  if (!XQueryTree(xdo->xdpy, window, &dummy, &dummy, &children, &nchildren)) {
+  Status success = XQueryTree(xdo->xdpy, window, &dummy, &dummy, &children, &nchildren);
+
+  if (!success) {
+    if (children != NULL)
+      XFree(children);
     return;
   }
 
@@ -382,4 +386,7 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
                             current_depth + 1);
     }
   } /* recurse on children if not at max depth */
+
+  if (children != NULL)
+    XFree(children);
 } /* void find_matching_windows */
