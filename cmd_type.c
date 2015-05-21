@@ -201,6 +201,8 @@ int cmd_type(context_t *context) {
     }
   }); /* window_each(...) */
 
+  free(data);
+
   if (window_arg != NULL) {
     free(window_arg);
   }

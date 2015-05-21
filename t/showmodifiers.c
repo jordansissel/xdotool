@@ -22,4 +22,5 @@ int main(int argc, char **argv) {
     }
     free(keys);
   }
+  xdo_free(xdo);
 }

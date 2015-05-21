@@ -2,7 +2,7 @@
 #include <string.h>
 
 int cmd_search(context_t *context) {
-  Window *list;
+  Window *list = NULL;
   xdo_search_t search;
   unsigned int nwindows;
   unsigned int i;
@@ -163,6 +163,10 @@ int cmd_search(context_t *context) {
   }
 
   do {
+    if (list != NULL) {
+      free(list);
+    }
+
     xdo_search_windows(context->xdo, &search, &list, &nwindows);
 
     if (context->argc == 0) {

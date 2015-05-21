@@ -451,7 +451,13 @@ int script_main(int argc, char **argv) {
   /* TODO(sissel): STOPPED HERE */
 
   /* run the parsed script */
-  return args_main(script_argc, script_argv);
+  int result = args_main(script_argc, script_argv);
+
+  for(int i=0; i<script_argc+1; ++i) {
+      free(script_argv[i]);
+  }
+  free(script_argv);
+  return result;
 }
 
 int args_main(int argc, char **argv) {

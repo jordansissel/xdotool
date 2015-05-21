@@ -306,6 +306,10 @@ int cmd_behave_screen_edge(context_t *context) {
       } /* if quiesce */
     } /* if trigger == True */
 
+    if (tmpcontext != NULL) {
+      free(tmpcontext);
+    }
+
     if (ret != XDO_SUCCESS) {
       printf("Command failed.\n");
     }
