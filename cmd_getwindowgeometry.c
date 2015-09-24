@@ -7,15 +7,19 @@ int cmd_getwindowgeometry(context_t *context) {
   unsigned int width, height;
 
   int shell_output = False;
+  char out_prefix[17] = {'\0'};
 
   int c;
   static struct option longopts[] = {
     { "help", no_argument, NULL, 'h' },
     { "shell", no_argument, NULL, 's' },
+    { "prefix", required_argument, NULL, 'p' },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-    "Usage: %s [window=%1]\n"
+    "Usage: %s [window=%1] [--shell] [--prefix <STR>]\n"
+    "--shell      - output shell variables for use with eval\n"
+    "--prefix STR - use prefix for shell variables names (max 16 chars) \n"
     HELP_SEE_WINDOW_STACK;
   int option_index;
 
@@ -29,6 +33,10 @@ int cmd_getwindowgeometry(context_t *context) {
         break;
       case 's':
         shell_output = True;
+        break;
+      case 'p':
+        strncpy(out_prefix, optarg, sizeof(out_prefix)-1);
+        out_prefix[ sizeof(out_prefix)-1 ] = '\0'; //just in case
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -57,12 +65,12 @@ int cmd_getwindowgeometry(context_t *context) {
     }
 
     if (shell_output) {
-      xdotool_output(context, "WINDOW=%ld", window);
-      xdotool_output(context, "X=%d", x);
-      xdotool_output(context, "Y=%d", y);
-      xdotool_output(context, "WIDTH=%u", width);
-      xdotool_output(context, "HEIGHT=%u", height);
-      xdotool_output(context, "SCREEN=%d", XScreenNumberOfScreen(screen));
+      xdotool_output(context, "%sWINDOW=%ld", out_prefix, window);
+      xdotool_output(context, "%sX=%d", out_prefix, x);
+      xdotool_output(context, "%sY=%d", out_prefix, y);
+      xdotool_output(context, "%sWIDTH=%u", out_prefix, width);
+      xdotool_output(context, "%sHEIGHT=%u", out_prefix, height);
+      xdotool_output(context, "%sSCREEN=%d", out_prefix, XScreenNumberOfScreen(screen));
     } else {
       xdotool_output(context, "Window %ld", window);
       xdotool_output(context, "  Position: %d,%d (screen: %d)", x, y,
