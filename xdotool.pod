@@ -66,7 +66,7 @@ are valid keystrokes.
 Example: Send the keystroke "F2"
  xdotool key F2
 
-Example: Send 'a' with an accent over it (not on english keyboards, but still
+Example: Send 'a' with an accent over it (not on English keyboards, but still
 works with xdotool)
  xdotool key Aacute
 
@@ -442,7 +442,7 @@ World"
 =item B<--sync >
 
 Block until there are results. This is useful when you are launching an
-application want want to wait until the application window is visible.
+application and want to wait until the application window is visible.
 For example:
 
  google-chrome &
@@ -1056,7 +1056,7 @@ These would error:
 
 When xdotool exits, the current window stack is lost.
 
-Additinally, commands that modify the L<WINDOW STACK> will not print the
+Additionally, commands that modify the L<WINDOW STACK> will not print the
 results if they are not the last command. For example:
 
  # Output the active window:
