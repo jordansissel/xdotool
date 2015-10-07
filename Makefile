@@ -28,7 +28,7 @@ CFLAGS?=-pipe -O2 $(WARNFLAGS)
 CFLAGS+=-g # TODO(sissel): Comment before release
 CFLAGS+=$(CPPFLAGS)
 
-DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst -lXinerama
+DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst -lXinerama -lxkbcommon
 DEFAULT_INC=-I/usr/X11R6/include -I/usr/local/include
 
 XDOTOOL_LIBS=$(shell pkg-config --libs x11 2> /dev/null || echo "$(DEFAULT_LIBS)")  $(shell sh platform.sh extralibs)
