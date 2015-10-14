@@ -11,10 +11,12 @@ int cmd_search(context_t *context) {
 
   int search_title = 0;
   int search_name = 0;
+  int out_shell = 0;
+  char out_prefix[17] = {'\0'};
   int search_class = 0;
   int search_classname = 0;
-  typedef enum { 
-    opt_unused, opt_title, opt_onlyvisible, opt_name, opt_class, opt_maxdepth,
+  typedef enum {
+    opt_unused, opt_title, opt_onlyvisible, opt_name, opt_shell, opt_prefix, opt_class, opt_maxdepth,
     opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname, opt_desktop,
     opt_limit, opt_sync
   } optlist_t;
@@ -26,6 +28,8 @@ int cmd_search(context_t *context) {
     { "help", no_argument, NULL, opt_help },
     { "maxdepth", required_argument, NULL, opt_maxdepth },
     { "name", no_argument, NULL, opt_name },
+    { "shell", no_argument, NULL, opt_shell },
+    { "prefix", required_argument, NULL, opt_prefix },
     { "onlyvisible", 0, NULL, opt_onlyvisible },
     { "pid", required_argument, NULL, opt_pid },
     { "screen", required_argument, NULL, opt_screen },
@@ -35,7 +39,7 @@ int cmd_search(context_t *context) {
     { "sync", no_argument, NULL, opt_sync },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = 
+  static const char *usage =
       "Usage: xdotool %s "
       "[options] regexp_pattern\n"
       "--class         check regexp_pattern agains the window class\n"
@@ -49,6 +53,8 @@ int cmd_search(context_t *context) {
       "--desktop N     only search a specific desktop number\n"
       "--limit N       break search after N results\n"
       "--name          check regexp_pattern agains the window name\n"
+      "--shell         print results as shell array WINDOWS=( ... )\n"
+      "--prefix STR    use prefix (max 16 chars) for array name STRWINDOWS\n"
       "--title         DEPRECATED. Same as --name.\n"
       "--all           Require all conditions match a window. Default is --any\n"
       "--any           Windows matching any condition will be reported\n"
@@ -109,6 +115,13 @@ int cmd_search(context_t *context) {
       case opt_name:
         search_name = True;
         break;
+      case opt_shell:
+        out_shell = True;
+        break;
+      case opt_prefix:
+        strncpy(out_prefix, optarg, sizeof(out_prefix)-1);
+        out_prefix[ sizeof(out_prefix)-1 ] = '\0'; //just in case
+        break;
       case opt_desktop:
         search.desktop = strtol(optarg, NULL, 0);
         search.searchmask |= SEARCH_DESKTOP;
@@ -165,11 +178,13 @@ int cmd_search(context_t *context) {
   do {
     xdo_search_windows(context->xdo, &search, &list, &nwindows);
 
-    if (context->argc == 0) {
-      /* only print if we're the last command */
+    if ( (context->argc == 0) || out_shell ) {
+      /* only print if we're the last command or printing to shell*/
+      if (out_shell) printf("%s%s", out_prefix, "WINDOWS=(");
       for (i = 0; i < nwindows; i++) {
         window_print(list[i]);
       }
+      if (out_shell) printf("%s",")\n");
     }
 
     if (op_sync && nwindows == 0) {
@@ -187,6 +202,7 @@ int cmd_search(context_t *context) {
   context->windows = list;
   context->nwindows = nwindows;
 
-  /* error if number of windows found is zero (behave like grep) */
-  return (nwindows ? EXIT_SUCCESS : EXIT_FAILURE);
+  /* error if number of windows found is zero (behave like grep) 
+  but return success when being used inside eval (--shell option)*/
+  return (nwindows || out_shell ? EXIT_SUCCESS : EXIT_FAILURE);
 }

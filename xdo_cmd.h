@@ -10,6 +10,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "xdo.h"
 #include "xdotool.h"
 
