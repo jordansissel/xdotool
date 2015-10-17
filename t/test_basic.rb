@@ -35,6 +35,17 @@ class XdotoolBasicTests < Test::Unit::TestCase
     assert_status_fail(status)
   end
 
+  def test_windowlower_succeeds_on_valid_window
+    status, lines = xdotool "windowlower #{@wid}"
+    assert_status_ok(status)
+    assert_equal(0, lines.length, "No output from windowlower")
+  end
+
+  def test_windowlower_fails_on_invalid_window
+    status, lines = xdotool "windowlower 1 2> /dev/null"
+    assert_status_fail(status)
+  end
+
   def test_windowsize_by_pixel_works
     w = 500
     h = 400
@@ -216,4 +227,3 @@ class XdotoolBasicTests < Test::Unit::TestCase
     end
   end
 end
-

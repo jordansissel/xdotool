@@ -251,6 +251,7 @@ struct dispatch {
   { "windowfocus", cmd_windowfocus, },
   { "windowkill", cmd_windowkill, },
   { "windowclose", cmd_windowclose, },
+  { "windowlower", cmd_windowlower, },
   { "windowmap", cmd_windowmap, },
   { "windowminimize", cmd_windowminimize, },
   { "windowmove", cmd_windowmove, },

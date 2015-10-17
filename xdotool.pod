@@ -668,6 +668,12 @@ before moving on.
 
 =back
 
+=item B<windowlower> I<[window_id=%1]>
+
+Lower the window to the bottom of the stack. This may not work on all window
+managers. If no window is given, %1 is the default. See L<WINDOW STACK> and
+L<COMMAND CHAINING> for more details.
+
 =item B<windowraise> I<[window_id=%1]>
 
 Raise the window to the top of the stack. This may not work on all window

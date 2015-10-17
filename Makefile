@@ -42,7 +42,7 @@ CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
          cmd_windowraise.o cmd_windowsize.o cmd_set_window.o cmd_search.o \
          cmd_getwindowfocus.o cmd_getwindowpid.o cmd_getactivewindow.o \
          cmd_windowmap.o cmd_windowunmap.o cmd_windowreparent.o \
-         cmd_set_num_desktops.o \
+         cmd_set_num_desktops.o cmd_windowlower.o \
          cmd_get_num_desktops.o cmd_set_desktop.o cmd_get_desktop.o \
          cmd_set_desktop_for_window.o cmd_get_desktop_for_window.o \
          cmd_get_desktop_viewport.o cmd_set_desktop_viewport.o \
@@ -271,4 +271,3 @@ $(DEBDIR)/libxdo$(MAJOR)-dev/data.tar.gz: $(DEBDIR)/libxdo$(MAJOR)-dev/
 # Build a tarball for xdotool-doc files
 $(DEBDIR)/xdotool-doc/data.tar.gz: $(DEBDIR)/xdotool-doc/
 	tar -C $(DEBDIR) -zcf $@ usr/share
-

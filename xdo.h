@@ -534,6 +534,14 @@ int xdo_focus_window(const xdo_t *xdo, Window wid);
 int xdo_raise_window(const xdo_t *xdo, Window wid);
 
 /**
+ * Lower a window to the bottom of the window stack. This is also sometimes
+ * termed as sending the window back.
+ *
+ * @param wid The window to raise.
+ */
+int xdo_lower_window(const xdo_t *xdo, Window wid);
+
+/**
  * Get the window currently having focus.
  *
  * @param window_ret Pointer to a window where the currently-focused window
