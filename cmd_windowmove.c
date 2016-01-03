@@ -18,9 +18,11 @@ static int _windowmove(context_t *context, struct windowmove *windowmove);
 
 int cmd_windowmove(context_t *context) {
   int ret = 0;
+  unsigned int width, height;
+  int is_width_percent = 0, is_height_percent = 0;
   char *cmd = *context->argv;
   struct windowmove windowmove;
-  
+
   windowmove.x = 0;
   windowmove.y = 0;
   windowmove.opsync = 0;
@@ -37,7 +39,7 @@ int cmd_windowmove(context_t *context) {
     { "relative", no_argument, NULL, opt_relative },
     { 0, 0, 0, 0 },
   };
-  static const char *usage = 
+  static const char *usage =
     "Usage: %s [options] [window=%1] x y\n"
     "--sync      - only exit once the window has moved\n"
     "--relative  - make movements relative to the current window position"
@@ -80,18 +82,47 @@ int cmd_windowmove(context_t *context) {
   if (context->argv[0][0] == 'x') {
     windowmove.flags |= WINDOWMOVE_X_CURRENT;
   } else {
-    windowmove.x = (int)strtol(context->argv[0], NULL, 0);
+    /* Use percentage if given a percent. */
+    if (strchr(context->argv[0], '%')) {
+        is_width_percent = 1;
+    } else {
+        windowmove.x = (int)strtol(context->argv[0], NULL, 0);
+    }
   }
 
   if (context->argv[1][0] == 'y') {
     windowmove.flags |= WINDOWMOVE_Y_CURRENT;
   } else {
-    windowmove.y = (int)strtol(context->argv[1], NULL, 0);
+    if (strchr(context->argv[0], '%')) {
+        is_width_percent = 1;
+    } else {
+        windowmove.y = (int)strtol(context->argv[1], NULL, 0);
+    }
   }
 
-  consume_args(context, 2);  
+  width = (unsigned int)strtoul(context->argv[0], NULL, 0);
+  height = (unsigned int)strtoul(context->argv[1], NULL, 0);
+  consume_args(context, 2);
+
+  XWindowAttributes wattr;
+  unsigned int original_w, original_h;
+  unsigned int root_w, root_h; /* for percent */
 
   window_each(context, window_arg, {
+      if (is_width_percent || is_height_percent) {
+        Window root = 0;
+        XGetWindowAttributes(context->xdo->xdpy, window, &wattr);
+        root = wattr.root;
+        xdo_get_window_size(context->xdo, root, &root_w, &root_h);
+
+        if (is_width_percent) {
+          windowmove.x = (root_w * width / 100);
+        }
+
+        if (is_height_percent) {
+          windowmove.y = (root_h * height / 100);
+        }
+      }
       windowmove.window = window;
       _windowmove(context, &windowmove);
     }); /* window_each(...) */
@@ -104,7 +135,7 @@ static int _windowmove(context_t *context, struct windowmove *windowmove) {
   int ret;
 
   /* Grab the current position of the window if we are moving synchronously
-   * or if we are moving along an axis. 
+   * or if we are moving along an axis.
    * That is, with --sync or x or y in args were literally 'x' or 'y'
    * or if --relative is given*/
   if (windowmove->opsync || windowmove->flags != 0) {
@@ -144,7 +175,7 @@ static int _windowmove(context_t *context, struct windowmove *windowmove) {
   } else {
     if (windowmove->opsync) {
       /* This 'sync' request is stateful (we need to know the original window
-       * location to make the decision about 'done' 
+       * location to make the decision about 'done'
        * Some window managers force alignments or otherwise mangle move
        * requests, so we can't just look for the x,y positions exactly.
        * Just look for any change in the window's position. */
@@ -163,4 +194,4 @@ static int _windowmove(context_t *context, struct windowmove *windowmove) {
   }
 
   return ret;
-} 
+}
