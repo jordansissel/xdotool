@@ -93,8 +93,9 @@ int cmd_windowmove(context_t *context) {
   if (context->argv[1][0] == 'y') {
     windowmove.flags |= WINDOWMOVE_Y_CURRENT;
   } else {
+    /* Use percentage if given a percent. */
     if (strchr(context->argv[0], '%')) {
-        is_width_percent = 1;
+        is_height_percent = 1;
     } else {
         windowmove.y = (int)strtol(context->argv[1], NULL, 0);
     }
