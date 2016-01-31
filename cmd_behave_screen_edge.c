@@ -21,7 +21,7 @@
  * Then again, since we always query the size of the window (root) that
  * the mouse is in, maybe it doesn't matter.
  *
- * Possible improvmeents to this could be to select ConfigureNotify so
+ * Possible improvements to this could be to select ConfigureNotify so
  * we can be told of window size changes rather than querying the root
  * window size every time. 
  */
@@ -235,7 +235,7 @@ int cmd_behave_screen_edge(context_t *context) {
             }
           } else { /* else, we are still in wanted edge/corner state */
 
-            /* Only care care if we have a trigger delay */
+            /* Only care if we have a trigger delay */
             if (timerisset(&triggertime)) {
               /* Check if current time exceeds trigger time */
               clock_gettime(CLOCK_MONOTONIC, &now);

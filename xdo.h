@@ -18,7 +18,7 @@
  * @mainpage
  *
  * libxdo helps you send fake mouse and keyboard input, search for windows,
- * perform various window managment tasks such as desktop changes, window
+ * perform various window management tasks such as desktop changes, window
  * movement, etc.
  *
  * For examples on libxdo usage, the xdotool source code is a good reference.
@@ -82,7 +82,7 @@ typedef struct xdo {
   /** @internal Array of known keys/characters */
   charcodemap_t *charcodes;
 
-  /** @internal Lenth of charcodes array */
+  /** @internal Length of charcodes array */
   int charcodes_len;
 
   /** @internal highest keycode value */
@@ -307,7 +307,7 @@ int xdo_get_mouse_location2(const xdo_t *xdo, int *x_ret, int *y_ret,
 
 /**
  * Wait for the mouse to move from a location. This function will block
- * until the condition has been satisified.
+ * until the condition has been satisfied.
  *
  * @param origin_x the X position you expect the mouse to move from
  * @param origin_y the Y position you expect the mouse to move from
@@ -462,7 +462,7 @@ int xdo_move_window(const xdo_t *xdo, Window wid, int x, int y);
  * @param width the unit width you want to translate
  * @param height the unit height you want to translate
  * @param width_ret the return location of the translated width
- * @param height_ret the return locatino of the translated height
+ * @param height_ret the return location of the translated height
  */
 int xdo_translate_window_with_sizehint(const xdo_t *xdo, Window window,
                                        unsigned int width, unsigned int height,
@@ -789,7 +789,7 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
                              int *nkeys);
 
 /**
- * Send any events necesary to clear the the active modifiers.
+ * Send any events necessary to clear the active modifiers.
  * For example, if you are holding 'alt' when xdo_get_active_modifiers is 
  * called, then this method will send a key-up for 'alt'
  */

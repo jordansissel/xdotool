@@ -29,7 +29,7 @@ int cmd_click(context_t *context) {
             "Usage: %s [options] <button>\n"
             "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
             "--window WINDOW        - specify a window to send click to\n"
-            "--repeat REPEATS       - number of times times to click. Default is 1\n"
+            "--repeat REPEATS       - number of times to click. Default is 1\n"
             "--delay MILLISECONDS   - delay in milliseconds between clicks.\n"
             "    This has no effect if you do not use --repeat.\n"
             "    Default is 100ms\n"
