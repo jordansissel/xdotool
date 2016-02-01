@@ -33,7 +33,7 @@ DEFAULT_INC=-I/usr/X11R6/include -I/usr/local/include
 
 XDOTOOL_LIBS=$(shell pkg-config --libs x11 2> /dev/null || echo "$(DEFAULT_LIBS)")  $(shell sh platform.sh extralibs)
 LIBXDO_LIBS=$(shell pkg-config --libs xtst xinerama xkbcommon 2> /dev/null || echo "$(DEFAULT_LIBS)")
-INC=$(shell pkg-config --cflags x11 xtst xinerama 2> /dev/null || echo "$(DEFAULT_INC)")
+INC=$(shell pkg-config --cflags x11 xtst xinerama xkbcommon 2> /dev/null || echo "$(DEFAULT_INC)")
 CFLAGS+=-std=c99 $(INC)
 
 CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
