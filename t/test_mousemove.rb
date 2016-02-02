@@ -106,4 +106,23 @@ class XdotoolMouseMoveTests < Test::Unit::TestCase
     xdotool_ok "mousemove_relative --sync --polar 270 100"
     assert_mouse_position_near(start_x - 100, start_y);
   end
+
+  # https://github.com/jordansissel/xdotool/issues/64
+  def test_mousemove_same_position_of_the_other_window
+    move_x = 100
+    move_y = 200
+
+    # It seems window wid located at (0, 0) at first.
+    xdotool_ok "windowmove --sync #{@wid} 400 400"
+
+    status, xwininfo_output = runcmd "xwininfo -id #{@wid}"
+    the_other_window_x = xwininfo_output.grep(/ Absolute upper-left X:/).first[/[0-9]+/].to_i
+    the_other_window_y = xwininfo_output.grep(/ Absolute upper-left Y:/).first[/[0-9]+/].to_i
+
+    xdotool_ok "mousemove --sync #{move_x} #{move_y}"
+    xdotool_ok "mousemove --sync --window #{@wid} #{move_x} #{move_y}"
+
+    assert_mouse_position_near(the_other_window_x + move_x,
+                               the_other_window_y + move_y)
+  end
 end # XdotoolMouseMoveTests
