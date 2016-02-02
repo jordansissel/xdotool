@@ -185,10 +185,6 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
   int mx, my, mscreen;
   xdo_get_mouse_location(context->xdo, &mx, &my, &mscreen);
 
-  /* Break early if we don't need to move */
-  if (mx == x && my == y && mscreen == screen) {
-    return 0;
-  }
 
   if (mousemove->clear_modifiers) {
     xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
