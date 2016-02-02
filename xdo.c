@@ -744,7 +744,7 @@ int xdo_select_window_with_click(const xdo_t *xdo, Window *window_ret) {
   if (e.xbutton.subwindow == 0) {
     *window_ret = e.xbutton.root;
   } else {
-     /* Random testing showed that that 'root' always is the same as 'window'
+     /* Random testing showed that 'root' always is the same as 'window'
       * while 'subwindow' is the actual window we clicked on. Confusing... */
      *window_ret = e.xbutton.subwindow;
     _xdo_debug(xdo, "Click on window %lu foo", *window_ret);
@@ -1127,7 +1127,7 @@ int xdo_get_focused_window(const xdo_t *xdo, Window *window_ret) {
   ret = XGetInputFocus(xdo->xdpy, window_ret, &unused_revert_ret);
 
   /* Xvfb with no window manager and given otherwise no input, with 
-   * a single client, will return the currenet focused window as '1'
+   * a single client, will return the current focused window as '1'
    * I think this is a bug, so let's alert the user. */
   if (*window_ret == 1) {
     fprintf(stderr, 

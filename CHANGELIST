@@ -398,12 +398,12 @@ FOR TODO LIST, SEE TODO FILE :)
   * Minor Makefile fixes for package maintainers.
 
 20080720:
-  * Add 'getmouselocation' which ouputs the coordinate of the mouse cursor and
+  * Add 'getmouselocation' which outputs the coordinate of the mouse cursor and
     the screen number the mouse is on.
   * Add 'getactivewindow' which uses NETWM to query the active window; this is
     often more reliable than 'getwindowfocus' assuming your window manager
     supports it
-  * Fix typos in the documentationn.
+  * Fix typos in the documentation.
 
 20080716:
   * Fix return codes in xdo_keysequence() and other functions
