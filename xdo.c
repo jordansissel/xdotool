@@ -940,9 +940,10 @@ int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button,
       return ret;
     }
     repeat--;
-    if (repeat > 0) {
-      usleep(delay);
-    }
+
+    /* Sleeping even after the last click is important, so that a call to xdo_set_active_modifiers()
+     * right after won't think that the button is still pressed. */
+    usleep(delay);
   } /* while (repeat > 0) */
   return ret;
 } /* int xdo_click_window_multiple */
