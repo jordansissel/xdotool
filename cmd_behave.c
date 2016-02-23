@@ -106,10 +106,10 @@ int cmd_behave(context_t *context) {
     XNextEvent(context->xdo->xdpy, &e);
     xdotool_debug(context, "Got event type %d", e.type);
 
-    context_t *tmpcontext = calloc(1, sizeof(context_t));
-    memcpy(tmpcontext, context, sizeof(context_t));
+    // Copy context
+    context_t tmpcontext = *context;
 
-    tmpcontext->nwindows = 1;
+    tmpcontext.nwindows = 1;
     Window hover; /* for LeaveNotify */
     switch (e.type) {
       case LeaveNotify:
@@ -132,17 +132,17 @@ int cmd_behave(context_t *context) {
 
         /* fall through */
       case EnterNotify:
-        tmpcontext->windows = &(e.xcrossing.window);
-        ret = context_execute(tmpcontext);
+        tmpcontext.windows = &(e.xcrossing.window);
+        ret = context_execute(&tmpcontext);
         break;
       case FocusIn:
       case FocusOut:
-        tmpcontext->windows = &(e.xfocus.window);
-        ret = context_execute(tmpcontext);
+        tmpcontext.windows = &(e.xfocus.window);
+        ret = context_execute(&tmpcontext);
         break;
       case ButtonRelease:
-        tmpcontext->windows = &(e.xbutton.window);
-        ret = context_execute(tmpcontext);
+        tmpcontext.windows = &(e.xbutton.window);
+        ret = context_execute(&tmpcontext);
         break;
       default:
         printf("Unexpected event: %d\n", e.type);
