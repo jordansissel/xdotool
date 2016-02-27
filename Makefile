@@ -232,7 +232,7 @@ create-package-deb: pre-create-package VERSION xdo_version.h
 	wd=$$PWD; \
 	cd $(DEBDIR)/$*; \
 	  ar -qc $$wd/$*_$(VERSION)-1_$(shell uname -m).deb \
-	    debian-binary data.tar.gz control.tar.gz
+	    debian-binary control.tar.gz data.tar.gz
 
 $(DEBDIR)/usr:
 	$(MAKE) install DESTDIR=$(DEBDIR) PREFIX=/usr INSTALLMAN=/usr/share/man
