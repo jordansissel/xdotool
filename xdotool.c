@@ -255,6 +255,7 @@ struct dispatch {
   { "windowminimize", cmd_windowminimize, },
   { "windowmove", cmd_windowmove, },
   { "windowraise", cmd_windowraise, },
+  { "windowlower", cmd_windowlower, },
   { "windowreparent", cmd_windowreparent, },
   { "windowsize", cmd_windowsize, },
   { "windowunmap", cmd_windowunmap, },
@@ -302,7 +303,7 @@ int xdotool_main(int argc, char **argv) {
     stat_ret = stat(argv[1], &data);
     int i = 0;
     int argv1_is_command= 0;
-    
+
     for (i = 0; dispatch[i].name != NULL; i++) {
       if (!strcasecmp(dispatch[i].name, argv[1])) {
         argv1_is_command = 1;
@@ -344,7 +345,7 @@ int script_main(int argc, char **argv) {
       return EXIT_FAILURE;
     }
   }
-  
+
   /* read input... */
   int pos;
   char *token;
@@ -362,8 +363,8 @@ int script_main(int argc, char **argv) {
     }
 
     /* replace newline with null */
-    if (line[strlen(line)-1] == '\n') 
-      line[strlen(line)-1] = '\0'; 
+    if (line[strlen(line)-1] == '\n')
+      line[strlen(line)-1] = '\0';
 
     /* tokenize line into script_argv... */
     while (strlen(line)) {
@@ -390,10 +391,10 @@ int script_main(int argc, char **argv) {
       */
       if (line[0] == '$') {
         /* ignore dollar sign */
-        line++; 
-      
+        line++;
+
         if (isdigit(line[0])) {
-          /* get the position of this parameter in argv */ 
+          /* get the position of this parameter in argv */
           pos = atoi(line) + 1; /* $1 is actually index 2 in the argv array */
 
           /* bail if no argument was given for this parameter */
@@ -418,27 +419,27 @@ int script_main(int argc, char **argv) {
           }
         }
       }
-      else { 
+      else {
         /* use the verbatim token */
         token = line;
-      }      
+      }
 
       /* append token */
       if (token != NULL) {
 
         script_argv = realloc(script_argv, (script_argc+1) * sizeof(char *));
         if (script_argv == NULL) {
-          fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n", 
+          fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
                   argv[0], argv[1]);
           exit(EXIT_FAILURE);
         }
         script_argv[script_argc] = (char *) calloc(strlen(token)+1, sizeof(char));
 
         //printf("arg %d: %s\n", script_argc, token);
-        strncpy(script_argv[script_argc], token, strlen(token)+1);      
+        strncpy(script_argv[script_argc], token, strlen(token)+1);
         script_argc++;
       }
-      
+
       /* advance line to the next token */
       line += strlen(line)+1;
       line += strspn(line, " \t");
@@ -477,7 +478,7 @@ int args_main(int argc, char **argv) {
     cmd_help(NULL);
     exit(1);
   }
-  
+
   //for(i = 0; i<argc; i++) {
     //fprintf(stderr, "argv[%d] = \"%s\"\n", i, argv[i]);
   //}
@@ -495,7 +496,7 @@ int args_main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
   }
-  
+
   context_t context;
   context.xdo = xdo_new(NULL);
   context.prog = *argv;
