@@ -739,6 +739,12 @@ Set window class name (not to be confused with window class)
 
 Set window class (not to be confused with window class name)
 
+=item B<--urgency value>
+
+Set window urgency hint. If the value is 1, the window will be marked urgent,
+and the window manager will somehow highlight it for the user's attention.
+If the value is 0, the window will be marked non-urgent.
+
 =item B<--overrideredirect value>
 
 Set window's override_redirect value. This value is a hint to the window
