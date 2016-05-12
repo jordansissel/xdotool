@@ -4,6 +4,7 @@ INSTALLBIN?=$(PREFIX)/bin
 INSTALLLIB?=$(PREFIX)/lib
 INSTALLMAN?=$(PREFIX)/man
 INSTALLINCLUDE?=$(PREFIX)/include
+LDCONFIG?=ldconfig
 
 DPREFIX=$(DESTDIR)$(PREFIX)
 DINSTALLBIN=$(DESTDIR)$(INSTALLBIN)
@@ -77,7 +78,7 @@ pre-install:
 post-install:
 	@if [ "$$(uname)" = "Linux" ] ; then \
 		echo "Running ldconfig to update library cache"; \
-		ldconfig \
+		$(LDCONFIG) \
 		  || echo "Failed running 'ldconfig'. Maybe you need to be root?"; \
 	fi
 
