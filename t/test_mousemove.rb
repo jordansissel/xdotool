@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require "test/unit"
-require "./xdo_test_helper"
+require_relative "xdo_test_helper"
 
 class XdotoolMouseMoveTests < Test::Unit::TestCase
   include XdoTestHelper
