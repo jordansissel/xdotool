@@ -2,3 +2,6 @@
 *.so
 *.1
 xdo_version.h
+xdotool
+xdotool.static
+libxdo.so*

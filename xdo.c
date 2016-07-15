@@ -258,7 +258,7 @@ int xdo_move_window(const xdo_t *xdo, Window wid, int x, int y) {
 }
 
 int xdo_translate_window_with_sizehint(const xdo_t *xdo, Window window,
-                                       unsigned int width, unsigned int height, 
+                                       unsigned int width, unsigned int height,
                                        unsigned int *width_ret, unsigned int *height_ret) {
   XSizeHints hints;
   long supplied_return;
@@ -367,24 +367,24 @@ int xdo_set_window_urgency (const xdo_t *xdo, Window wid, int urgency) {
 }
 
 int xdo_set_window_property(const xdo_t *xdo, Window wid, const char *property, const char *value) {
-  
+
   char netwm_property[256] = "_NET_";
   int ret = 0;
   strncat(netwm_property, property, strlen(property));
 
   // Change the property
-  ret = XChangeProperty(xdo->xdpy, wid, 
-                        XInternAtom(xdo->xdpy, property, False), 
-                        XInternAtom(xdo->xdpy, "STRING", False), 8, 
+  ret = XChangeProperty(xdo->xdpy, wid,
+                        XInternAtom(xdo->xdpy, property, False),
+                        XInternAtom(xdo->xdpy, "STRING", False), 8,
                         PropModeReplace, (unsigned char*)value, strlen(value));
   if (ret == 0) {
     return _is_success("XChangeProperty", ret == 0, xdo);
   }
 
   // Change _NET_<property> just in case for simpler NETWM compliance?
-  ret = XChangeProperty(xdo->xdpy, wid, 
-                        XInternAtom(xdo->xdpy, netwm_property, False), 
-                        XInternAtom(xdo->xdpy, "STRING", False), 8, 
+  ret = XChangeProperty(xdo->xdpy, wid,
+                        XInternAtom(xdo->xdpy, netwm_property, False),
+                        XInternAtom(xdo->xdpy, "STRING", False), 8,
                         PropModeReplace, (unsigned char*)value, strlen(value));
   return _is_success("XChangeProperty", ret == 0, xdo);
 }
@@ -443,7 +443,7 @@ int xdo_wait_for_window_active(const xdo_t *xdo, Window window, int active) {
 
   /* If active is true, wait until activewin is our window
    * otherwise, wait until activewin is not our window */
-  while (tries > 0 && 
+  while (tries > 0 &&
          (active ? activewin != window : activewin == window)) {
     ret = xdo_get_active_window(xdo, &activewin);
     if (ret == XDO_ERROR) {
@@ -515,7 +515,7 @@ int xdo_set_number_of_desktops(const xdo_t *xdo, long ndesktops) {
   xev.type = ClientMessage;
   xev.xclient.display = xdo->xdpy;
   xev.xclient.window = root;
-  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_NUMBER_OF_DESKTOPS", 
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_NUMBER_OF_DESKTOPS",
                                          False);
   xev.xclient.format = 32;
   xev.xclient.data.l[0] = ndesktops;
@@ -577,7 +577,7 @@ int xdo_set_current_desktop(const xdo_t *xdo, long desktop) {
   xev.type = ClientMessage;
   xev.xclient.display = xdo->xdpy;
   xev.xclient.window = root;
-  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_CURRENT_DESKTOP", 
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_CURRENT_DESKTOP",
                                          False);
   xev.xclient.format = 32;
   xev.xclient.data.l[0] = desktop;
@@ -640,7 +640,7 @@ int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop) {
   xev.type = ClientMessage;
   xev.xclient.display = xdo->xdpy;
   xev.xclient.window = wid;
-  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_WM_DESKTOP", 
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_WM_DESKTOP",
                                          False);
   xev.xclient.format = 32;
   xev.xclient.data.l[0] = desktop;
@@ -762,6 +762,13 @@ int xdo_raise_window(const xdo_t *xdo, Window wid) {
   return _is_success("XRaiseWindow", ret == 0, xdo);
 }
 
+int xdo_lower_window(const xdo_t *xdo, Window wid) {
+  int ret = 0;
+  ret = XLowerWindow(xdo->xdpy, wid);
+  XFlush(xdo->xdpy);
+  return _is_success("XLowerWindow", ret == 0, xdo);
+}
+
 int xdo_move_mouse(const xdo_t *xdo, int x, int y, int screen)  {
   int ret = 0;
 
@@ -825,7 +832,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
 
     /* Get the coordinates of the cursor relative to xbpe.window and also find what
      * subwindow it might be on */
-    XTranslateCoordinates(xdo->xdpy, xbpe.root, xbpe.window, 
+    XTranslateCoordinates(xdo->xdpy, xbpe.root, xbpe.window,
                           xbpe.x_root, xbpe.y_root, &xbpe.x, &xbpe.y, &xbpe.subwindow);
 
     /* Normal behavior of 'mouse up' is that the modifier mask includes
@@ -1018,7 +1025,7 @@ int _xdo_send_keysequence_window_do(const xdo_t *xdo, Window window, const char 
   return ret;
 }
 
-int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys, 
+int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys,
                             int nkeys, int pressed, int *modifier, useconds_t delay) {
   int i = 0;
   int modstate = 0;
@@ -1028,7 +1035,7 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
   KeySym *keysyms = NULL;
   int keysyms_per_keycode = 0;
   int scratch_keycode = 0; /* Scratch space for temporary keycode bindings */
-  //keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low, 
+  //keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low,
                                 //xdo->keycode_high - xdo->keycode_low,
                                 //&keysyms_per_keycode);
   /* Find a keycode that is unused for scratchspace */
@@ -1099,7 +1106,7 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
   return XDO_SUCCESS;
 }
 
-  
+
 int xdo_send_keysequence_window_down(const xdo_t *xdo, Window window, const char *keyseq,
                          useconds_t delay) {
   return _xdo_send_keysequence_window_do(xdo, window, keyseq, True, NULL, delay);
@@ -1127,11 +1134,11 @@ int xdo_get_focused_window(const xdo_t *xdo, Window *window_ret) {
 
   ret = XGetInputFocus(xdo->xdpy, window_ret, &unused_revert_ret);
 
-  /* Xvfb with no window manager and given otherwise no input, with 
+  /* Xvfb with no window manager and given otherwise no input, with
    * a single client, will return the current focused window as '1'
    * I think this is a bug, so let's alert the user. */
   if (*window_ret == 1) {
-    fprintf(stderr, 
+    fprintf(stderr,
             "XGetInputFocus returned the focused window of %ld. "
             "This is likely a bug in the X server.\n", *window_ret);
   }
@@ -1147,7 +1154,7 @@ int xdo_wait_for_window_focus(const xdo_t *xdo, Window window, int want_focus) {
     return ret;
   }
 
-  while (tries > 0 && 
+  while (tries > 0 &&
          (want_focus ? focuswin != window : focuswin == window)) {
     usleep(30000); /* TODO(sissel): Use exponential backoff up to 1 second */
     ret = xdo_get_focused_window(xdo, &focuswin);
@@ -1621,7 +1628,7 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
         }
       }
     }
-  } 
+  }
 
   XFreeModifiermap(modifiers);
 
@@ -1727,7 +1734,7 @@ int xdo_wait_for_mouse_move_from(const xdo_t *xdo, int origin_x, int origin_y) {
   int tries = MAX_TRIES;
 
   ret = xdo_get_mouse_location(xdo, &x, &y, NULL);
-  while (tries > 0 && 
+  while (tries > 0 &&
          (x == origin_x && y == origin_y)) {
     usleep(30000);
     ret = xdo_get_mouse_location(xdo, &x, &y, NULL);
@@ -1769,7 +1776,7 @@ int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret) {
   data = xdo_get_window_property_by_atom(xdo, root, request, &nitems, &type, &size);
 
   if (type != XA_CARDINAL) {
-    fprintf(stderr, 
+    fprintf(stderr,
             "Got unexpected type returned from _NET_DESKTOP_VIEWPORT."
             " Expected CARDINAL, got %s\n",
             XGetAtomName(xdo->xdpy, type));
@@ -1824,12 +1831,12 @@ int xdo_close_window(const xdo_t *xdo, Window window) {
   return _is_success("XDestroyWindow", ret == 0, xdo);
 }
 
-int xdo_get_window_name(const xdo_t *xdo, Window window, 
+int xdo_get_window_name(const xdo_t *xdo, Window window,
                         unsigned char **name_ret, int *name_len_ret,
                         int *name_type) {
   if (atom_NET_WM_NAME == (Atom)-1) {
     atom_NET_WM_NAME = XInternAtom(xdo->xdpy, "_NET_WM_NAME", False);
-  } 
+  }
   if (atom_WM_NAME == (Atom)-1) {
     atom_WM_NAME = XInternAtom(xdo->xdpy, "WM_NAME", False);
   }

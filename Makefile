@@ -40,7 +40,8 @@ CFLAGS+=-std=c99 $(INC)
 CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
          cmd_mouseup.o cmd_getmouselocation.o cmd_type.o cmd_key.o \
          cmd_windowmove.o cmd_windowactivate.o cmd_windowfocus.o \
-         cmd_windowraise.o cmd_windowsize.o cmd_set_window.o cmd_search.o \
+         cmd_windowraise.o cmd_windowlower.o cmd_windowsize.o \
+         cmd_set_window.o cmd_search.o \
          cmd_getwindowfocus.o cmd_getwindowpid.o cmd_getactivewindow.o \
          cmd_windowmap.o cmd_windowunmap.o cmd_windowreparent.o \
          cmd_set_num_desktops.o \
@@ -108,7 +109,7 @@ installman: xdotool.1
 deinstall: uninstall
 
 .PHONY: uninstall
-uninstall: 
+uninstall:
 	rm -f $(DINSTALLBIN)/xdotool
 	rm -f $(DINSTALLMAN)/xdotool.1
 	rm -f $(DINSTALLLIB)/libxdo.$(LIBSUFFIX)
@@ -249,13 +250,13 @@ $(DEBDIR)/%/control: $(DEBDIR)/%/
 	sed -e 's/%VERSION%/$(VERSION)/g; s/%MAJOR%/$(MAJOR)/' \
 		ext/debian/$(shell echo $* | tr -d 0-9).control > $@
 
-# Generate the 'md5sums' file 
-$(DEBDIR)/%/md5sums: $(DEBDIR)/%/ $(DEBDIR)/%/data.tar.gz 
+# Generate the 'md5sums' file
+$(DEBDIR)/%/md5sums: $(DEBDIR)/%/ $(DEBDIR)/%/data.tar.gz
 	tar -ztf $(DEBDIR)/$*/data.tar.gz | (cd $(DEBDIR); xargs md5sum || true) > $@
 
 # Generate the 'control.tar.gz'
 $(DEBDIR)/%/control.tar.gz: $(DEBDIR)/%/control $(DEBDIR)/%/md5sums
-	tar -C $(DEBDIR)/$* -zcf $(DEBDIR)/$*/control.tar.gz control md5sums 
+	tar -C $(DEBDIR)/$* -zcf $(DEBDIR)/$*/control.tar.gz control md5sums
 
 # Build a tarball for xdotool files
 $(DEBDIR)/xdotool/data.tar.gz: $(DEBDIR)/xdotool/
@@ -272,4 +273,3 @@ $(DEBDIR)/libxdo$(MAJOR)-dev/data.tar.gz: $(DEBDIR)/libxdo$(MAJOR)-dev/
 # Build a tarball for xdotool-doc files
 $(DEBDIR)/xdotool-doc/data.tar.gz: $(DEBDIR)/xdotool-doc/
 	tar -C $(DEBDIR) -zcf $@ usr/share
-
