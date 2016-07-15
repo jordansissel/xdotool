@@ -1,4 +1,5 @@
 *.o
-*.so
+*.so*
 *.1
 xdo_version.h
+xdotool
