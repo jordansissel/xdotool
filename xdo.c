@@ -63,6 +63,7 @@ static void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
                           int modstate, int is_press, useconds_t delay);
 static void _xdo_send_modifier(const xdo_t *xdo, int modmask, int is_press);
 
+static int _xdo_query_keycode_to_modifier(XModifierKeymap *modmap, KeyCode keycode);
 static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press);
 
 static int _is_success(const char *funcname, int code, const xdo_t *xdo);
@@ -1287,6 +1288,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
   int keycode, group, groups, level, modmask, num_map;
 
   XDisplayKeycodes(xdo->xdpy, &(xdo->keycode_low), &(xdo->keycode_high));
+  XModifierKeymap *modmap = XGetModifierMapping(xdo->xdpy);
   KeySym *keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low,
                                         xdo->keycode_high - xdo->keycode_low + 1,
                                         &xdo->keysyms_per_keycode);
@@ -1319,7 +1321,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
         xdo->charcodes[idx].key = _keysym_to_char(keysym);
         xdo->charcodes[idx].code = keycode;
         xdo->charcodes[idx].group = group;
-        xdo->charcodes[idx].modmask = modmask;
+        xdo->charcodes[idx].modmask = modmask | _xdo_query_keycode_to_modifier(modmap, keycode);
         xdo->charcodes[idx].symbol = keysym;
 
         idx++;
@@ -1328,6 +1330,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
   }
   xdo->charcodes_len = idx;
   XkbFreeClientMap(desc, 0, 1);
+  XFreeModifiermap(modmap);
 }
 
 /* context-free functions */
@@ -1534,6 +1537,31 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
   if (delay > 0) {
     usleep(delay);
   }
+}
+
+int _xdo_query_keycode_to_modifier(XModifierKeymap *modmap, KeyCode keycode) {
+  int i = 0, j = 0;
+  int max = modmap->max_keypermod;
+
+  for (i = 0; i < 8; i++) { /* 8 modifier types, per XGetModifierMapping(3X) */
+    for (j = 0; j < max && modmap->modifiermap[(i * max) + j]; j++) {
+      if (keycode == modmap->modifiermap[(i * max) + j]) {
+        switch (i) {
+          case ShiftMapIndex: return ShiftMask; break;
+          case LockMapIndex: return LockMask; break;
+          case ControlMapIndex: return ControlMask; break;
+          case Mod1MapIndex: return Mod1Mask; break;
+          case Mod2MapIndex: return Mod2Mask; break;
+          case Mod3MapIndex: return Mod3Mask; break;
+          case Mod4MapIndex: return Mod4Mask; break;
+          case Mod5MapIndex: return Mod5Mask; break;
+        }
+      } /* end if */
+    } /* end loop j */
+  } /* end loop i */
+
+  /* No modifier found for this keycode, return no mask */
+  return 0;
 }
 
 void _xdo_send_modifier(const xdo_t *xdo, int modmask, int is_press) {
