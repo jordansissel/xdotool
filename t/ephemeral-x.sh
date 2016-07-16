@@ -1,7 +1,7 @@
 #!/bin/sh
 # Start an ephemeral X server.
 #
-# This is useful for when you want to lauch an X server for a specific
+# This is useful for when you want to launch an X server for a specific
 # process. When that process exits, the X server will be killed.
 # 
 
