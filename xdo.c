@@ -1028,9 +1028,10 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
   KeySym *keysyms = NULL;
   int keysyms_per_keycode = 0;
   int scratch_keycode = 0; /* Scratch space for temporary keycode bindings */
-  //keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low, 
-                                //xdo->keycode_high - xdo->keycode_low,
-                                //&keysyms_per_keycode);
+  keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low,
+                                xdo->keycode_high - xdo->keycode_low,
+                                &keysyms_per_keycode);
+
   /* Find a keycode that is unused for scratchspace */
   for (i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
     int j = 0;
