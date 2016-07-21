@@ -328,11 +328,8 @@ int script_main(int argc, char **argv) {
   char buffer[4096];
 
   char **script_argv = (char **) calloc(1, sizeof(char *));
-  int script_argc = 1;
-
-  /* copy argv[0] to script_argv[0] */
-  script_argv[0] = (char *) calloc(strlen(argv[0])+1, sizeof(char));
-  strcpy(script_argv[0], argv[0]);
+  int script_argc = 0;
+  int script_argc_max = 0;
 
   /* determine whether reading from a file or from stdin */
   if (!strcmp(path, "-")) {
@@ -344,10 +341,25 @@ int script_main(int argc, char **argv) {
       return EXIT_FAILURE;
     }
   }
+
+  context_t context;
+  context.xdo = xdo_new(NULL);
+  context.prog = *argv;
+  context.windows = NULL;
+  context.nwindows = 0;
+  context.have_last_mouse = False;
+  context.debug = (getenv("DEBUG") != NULL);
+
+  if (context.xdo == NULL) {
+    fprintf(stderr, "Failed creating new xdo instance\n");
+    return 1;
+  }
+  context.xdo->debug = context.debug;
   
   /* read input... */
   int pos;
   char *token;
+  int result;
 
   while (fgets(buffer, 4096, input) != NULL) {
     char *line = buffer;
@@ -426,13 +438,17 @@ int script_main(int argc, char **argv) {
       /* append token */
       if (token != NULL) {
 
-        script_argv = realloc(script_argv, (script_argc+1) * sizeof(char *));
+        if(script_argc + 1 > script_argc_max){
+          script_argv = realloc(script_argv, (script_argc + 1) * sizeof(char *));
+          script_argc_max++;
+        }
+
         if (script_argv == NULL) {
           fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n", 
                   argv[0], argv[1]);
           exit(EXIT_FAILURE);
         }
-        script_argv[script_argc] = (char *) calloc(strlen(token)+1, sizeof(char));
+        script_argv[script_argc] = (char *) calloc(strlen(token) + 1, sizeof(char));
 
         //printf("arg %d: %s\n", script_argc, token);
         strncpy(script_argv[script_argc], token, strlen(token)+1);      
@@ -440,18 +456,36 @@ int script_main(int argc, char **argv) {
       }
       
       /* advance line to the next token */
-      line += strlen(line)+1;
+      line += strlen(line) + 1;
       line += strspn(line, " \t");
+    } /* while line being tokenized */
+
+    /* 
+     * Add NULL at the end and reallocate memory if necessary.
+     */
+    if(script_argc_max <= script_argc){
+      script_argv = realloc(script_argv, (script_argc+1) * sizeof(char *));
+      /* TODO(sissel): STOPPED HERE */
+      script_argc_max++;
+    }
+    *(script_argv + script_argc) = NULL;
+
+    if(script_argc > 0){
+      context.argc = script_argc;
+      context.argv = script_argv;
+      result = context_execute(&context);
+
+      script_argc = 0;
+      *script_argv = NULL;
     }
   }
   fclose(input);
 
-  /* Add NULL at the end */
-  script_argv = realloc(script_argv, (script_argc+1) * sizeof(char *));
-  /* TODO(sissel): STOPPED HERE */
 
-  /* run the parsed script */
-  int result = args_main(script_argc, script_argv);
+  xdo_free(context.xdo);
+  if (context.windows != NULL) {
+    free(context.windows);
+  }
 
   for(int i=0; i<script_argc+1; ++i) {
       free(script_argv[i]);
