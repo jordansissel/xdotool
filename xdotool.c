@@ -475,6 +475,15 @@ int script_main(int argc, char **argv) {
       context.argv = script_argv;
       result = context_execute(&context);
 
+      /*
+       * Free the allocated memory for tokens.
+       */
+      for(int j = 0; j < script_argc; j++){
+        if(*(script_argv + j) != NULL){
+          free(*(script_argv + j));
+        }
+      }
+
       script_argc = 0;
       *script_argv = NULL;
     }
