@@ -28,6 +28,7 @@ LIBNAMEFLAG=$(shell sh platform.sh libnameflag $(MAJOR) $(INSTALLLIB))
 CFLAGS?=-pipe -O2 $(WARNFLAGS)
 CFLAGS+=-g # TODO(sissel): Comment before release
 CFLAGS+=$(CPPFLAGS)
+CFLAGS+=$(shell sh cflags.sh)
 
 DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst -lXinerama -lxkbcommon
 DEFAULT_INC=-I/usr/X11R6/include -I/usr/local/include
