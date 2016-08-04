@@ -741,6 +741,11 @@ int xdo_select_window_with_click(const xdo_t *xdo, Window *window_ret) {
   XUngrabPointer(xdo->xdpy, CurrentTime);
   XFreeCursor(xdo->xdpy, cursor);
 
+  if (e.xbutton.button != 1) {
+    fprintf(stderr, "window selection aborted with button %d\n", e.xbutton.button);
+    return XDO_ERROR;
+  }
+
   /* If there is no subwindow, then we clicked on the root window */
   if (e.xbutton.subwindow == 0) {
     *window_ret = e.xbutton.root;
