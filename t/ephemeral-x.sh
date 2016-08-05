@@ -71,7 +71,7 @@ cleanup() {
   pkill -KILL -P $$ || true
 }
 
-eval "set -- $( (POSIXLY_CORRECT=1 getopt -s sh +x:w:qh "$@" || echo " "FAIL) | tr -d '\n' )"
+eval "set -- $( (POSIXLY_CORRECT=1 getopt +x:w:qh "$@" || echo " "FAIL) | tr -d '\n' )"
 
 while [ "0$#" -gt 0 ] ; do
   case $1 in
