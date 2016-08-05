@@ -8,7 +8,11 @@ KNOWN ISSUES:
 
 FOR TODO LIST, SEE TODO FILE :)
 
-3.20160804
+3.20160804.2
+  - Fix some bugs in the Makefile especially for OS X / macOS Sierra 
+    (Misty De Meo)
+
+3.20160804.1
   - Fix compilation problems on OSX 10.12 aka macOS Sierra. (#138; Jordan
     Sissel and Misty De Meo)
   - Fix memory leaks in window search and charcode map lookups (Markus Roth)
