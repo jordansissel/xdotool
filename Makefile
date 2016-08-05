@@ -211,6 +211,7 @@ test-package-build: create-package
 	@NAME=xdotool-$(VERSION) && \
 	echo "Testing package $$NAME" && \
 	tar -zxf $${NAME}.tar.gz && \
+	make -C $${NAME} && \
 	make -C $${NAME} docs && \
 	make -C $${NAME} test && \
 	echo "Package ready: $${NAME}"; \
