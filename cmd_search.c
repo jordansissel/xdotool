@@ -52,7 +52,7 @@ int cmd_search(context_t *context) {
       "--screen N      only search a specific screen. Default is all screens\n"
       "--desktop N     only search a specific desktop number\n"
       "--limit N       break search after N results\n"
-      "--name          check regexp_pattern agains the window name\n"
+      "--name          check regexp_pattern against the window name\n"
       "--shell         print results as shell array WINDOWS=( ... )\n"
       "--prefix STR    use prefix (max 16 chars) for array name STRWINDOWS\n"
       "--title         DEPRECATED. Same as --name.\n"
