@@ -25,6 +25,9 @@ FOR TODO LIST, SEE TODO FILE :)
     XSendEvent in a special circumstance. If the window id given (by window
     stack or the --window flag) is the currenly-focused window, key sequences
     will be sent using XTEST. (#85, mpnolan)
+  - getmouselocation, getwindowgeometry, and search commands: now supports
+    --shell and --prefix for having stdout be consumable by bash or similar
+    shells. (#80, yatsek)
 
 3.20150503
   - Lots of changes over the past 4 years, but with many folks telling me to do
