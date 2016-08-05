@@ -15,7 +15,16 @@ FOR TODO LIST, SEE TODO FILE :)
   - xdotool selectwindow (xdo_select_window_with_click) now only selects the
     window if mouse button 1 is pressed. Any other buttons will cause this
     selection to be aborted. (#136, #137; Jordan Sissel and Yuri D'Elia)
-
+  - Fix bug where `xdotool click` with --clearmodifiers can sometimes leave
+    stuck keys or mouse buttons. (#102, Aurelien Lourot)
+  - windowmove now supports coordinates as a percentage of screen size. For
+    example, a move to 50% 50% would move the window such that the top-left
+    corner of the window is in the center of the screen. (#92, #27; Collin
+    Guarino)
+  - Typing commands (key and type) will now try to use XTEST instead of
+    XSendEvent in a special circumstance. If the window id given (by window
+    stack or the --window flag) is the currenly-focused window, key sequences
+    will be sent using XTEST. (#85, mpnolan)
 
 3.20150503
   - Lots of changes over the past 4 years, but with many folks telling me to do
