@@ -1514,8 +1514,18 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
   /* Properly ensure the modstate is set by finding a key
    * that activates each bit in the modifier state */
   int mask = modstate | key->modmask;
+  int use_xtest = 0;
 
   if (window == CURRENTWINDOW) {
+    use_xtest = 1;
+  } else {
+    Window focuswin = 0;
+    xdo_get_focused_window(xdo, &focuswin);
+    if (focuswin == window) {
+      use_xtest = 1;
+    }
+  }
+  if (use_xtest) {
     //printf("XTEST: Sending key %d %s\n", key->code, is_press ? "down" : "up");
     XkbStateRec state;
     XkbGetState(xdo->xdpy, XkbUseCoreKbd, &state);
