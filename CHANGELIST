@@ -8,6 +8,11 @@ KNOWN ISSUES:
 
 FOR TODO LIST, SEE TODO FILE :)
 
+3.20160805.1
+  - Fix release tool problem. cflags.sh was missing from the previous two
+    releases. 
+    `make test-package-build` now works correctly on OSX 10.11 and Fedora 23.
+
 3.20160804.2
   - Fix some bugs in the Makefile especially for OS X / macOS Sierra 
     (Misty De Meo)
