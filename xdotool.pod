@@ -11,7 +11,7 @@ B<xdotool> I<cmd> I<args...>
 Notation: Some documentation uses I<[window]> to denote an optional
 window argument. This case means that the argument, if not present, will
 default to "%1". See L<WINDOW STACK> for what "%1" means.
- 
+
 =head1 DESCRIPTION
 
 B<xdotool> lets you programmatically (or manually) simulate keyboard input and
@@ -31,7 +31,7 @@ Options:
 
 =over
 
-=item B<--window window> 
+=item B<--window window>
 
 Send keystrokes to a specific window id. You can use
 L<WINDOW STACK> references like "%1" and "%@" here. If there is a window stack,
@@ -39,11 +39,11 @@ then "%1" is the default, otherwise the current window is used.
 
 See also: L<SENDEVENT NOTES> and L<WINDOW STACK>
 
-=item B<--clearmodifiers> 
+=item B<--clearmodifiers>
 
 Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
 
-=item B<--delay milliseconds> 
+=item B<--delay milliseconds>
 
 Delay between keystrokes. Default is 12ms.
 
@@ -90,18 +90,18 @@ Options:
 
 =over
 
-=item B<--window windowid> 
+=item B<--window windowid>
 
 Send keystrokes to a specific window id. See L<SENDEVENT NOTES> below. The
 default, if no window is given, depends on the window stack. If the window
 stack is empty the current window is typed at using XTEST. Otherwise, the
 default is "%1" (see L<WINDOW STACK>).
 
-=item B<--delay milliseconds> 
+=item B<--delay milliseconds>
 
 Delay between keystrokes. Default is 12ms.
 
-=item B<--clearmodifiers> 
+=item B<--clearmodifiers>
 
 Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
 
@@ -120,7 +120,7 @@ Example: to type 'Hello world!' you would do:
 
 =head1 MOUSE COMMANDS
 
-=over 
+=over
 
 =item B<mousemove> I<[options]> I<x y OR 'restore'>
 
@@ -137,7 +137,7 @@ the original position before you moved it, use this:
 
 =over
 
-=item B<--window WINDOW> 
+=item B<--window WINDOW>
 
 Specify a window to move relative to. Coordinates 0,0 are at the top left of
 the window you choose.
@@ -153,7 +153,7 @@ have multiple screens and ARE NOT using Xinerama.
 The default is the current screen. If you specify --window, the --screen flag
 is ignored.
 
-=item B<--polar> 
+=item B<--polar>
 
 Use polar coordinates. This makes 'x' an angle (in degrees, 0-360, etc) and 'y'
 the distance.
@@ -164,18 +164,18 @@ down, 270 = left.
 The origin defaults to the center of the current screen. If you specify a
 --window, then the origin is the center of that window.
 
-=item B<--clearmodifiers> 
+=item B<--clearmodifiers>
 
 See L<CLEARMODIFIERS>
 
-=item B<--sync> 
+=item B<--sync>
 
 After sending the mouse move request, wait until the mouse is actually
 moved. If no movement is necessary, we will not wait. This is useful for
 scripts that depend on actions being completed before moving on.
 
 Note: We wait until the mouse moves at all, not necessarily that it
-actually reaches your intended destination. Some applications lock the 
+actually reaches your intended destination. Some applications lock the
 mouse cursor to certain regions of the screen, so waiting for any movement is
 better in the general case than waiting for a specific target.
 
@@ -185,9 +185,9 @@ better in the general case than waiting for a specific target.
 
 Move the mouse x,y pixels relative to the current position of the mouse cursor.
 
-=over 
+=over
 
-=item B<--polar> 
+=item B<--polar>
 
 Use polar coordinates. This makes 'x' an angle (in degrees, 0-360, etc) and 'y'
 the distance.
@@ -206,7 +206,7 @@ actually reaches your intended destination. Some applications lock the mouse
 cursor to certain regions of the screen, so waiting for any movement is better
 in the general case than waiting for a specific target.
 
-=item B<--clearmodifiers> 
+=item B<--clearmodifiers>
 
 See L<CLEARMODIFIERS>
 
@@ -222,7 +222,7 @@ wheel up is 4, wheel down is 5.
 
 =over
 
-=item B<--clearmodifiers> 
+=item B<--clearmodifiers>
 
 Clear modifiers before clicking. See L<CLEARMODIFIERS> below.
 
@@ -236,7 +236,7 @@ Specify how many times to click. Default is 1. For a double-click, use
 Specify how long, in milliseconds, to delay between clicks. This option is not
 used if the I<--repeat> flag is set to 1 (default).
 
-=item B<--window> WINDOW 
+=item B<--window> WINDOW
 
 Specify a window to send a click to. See L<SENDEVENT NOTES> below for caveats. Uses the
 current mouse position when generating the event.
@@ -368,15 +368,15 @@ The options available are:
 
 =over
 
-=item B<--class> 
+=item B<--class>
 
 Match against the window class.
 
-=item B<--classname> 
+=item B<--classname>
 
 Match against the window classname.
 
-=item B<--maxdepth> N 
+=item B<--maxdepth> N
 
 Set recursion/child search depth. Default is -1,
 meaning infinite. 0 means no depth, only root windows will be searched. If you
@@ -388,12 +388,12 @@ window manager does decorations).
 Match against the window name. This is the same string that is displayed in the
 window titlebar.
 
-=item B<--onlyvisible> 
+=item B<--onlyvisible>
 
 Show only visible windows in the results. This means ones with map state
 IsViewable.
 
-=item B<--pid PID> 
+=item B<--pid PID>
 
 Match windows that belong to a specific process id. This may not work for some
 X applications that do not set this metadata on its windows.
@@ -416,7 +416,7 @@ speed up your search if you only want a few results.
 
 The default is no search limit (which is equivalent to '--limit 0')
 
-=item B<--title> 
+=item B<--title>
 
 DEPRECATED. See --name.
 
@@ -533,7 +533,7 @@ y, width, height, and screen number.
 
 =over
 
-=item B<--shell> 
+=item B<--shell>
 
 Output values suitable for 'eval' in a shell.
 
@@ -569,20 +569,20 @@ The options available are:
 
 =over
 
-=item B<--usehints> 
+=item B<--usehints>
 
 Use window sizing hints (when available) to set width and height.  This is
 useful on terminals for setting the size based on row/column of text rather
 than pixels.
 
-=item B<--sync> 
+=item B<--sync>
 
 After sending the window size request, wait until the window is actually
 resized. If no change is necessary, we will not wait. This is useful for
 scripts that depend on actions being completed before moving on.
 
 Note: Because many window managers may ignore or alter the original resize
-request, we will wait until the size changes from its original size, not 
+request, we will wait until the size changes from its original size, not
 necessary to the requested size.
 
 =back
@@ -605,15 +605,21 @@ Examples:
  xdotool getactivewindow windowmove 100 y      # Moves to 100,y
  xdotool getactivewindow windowmove 100 y      # Moves to 100,y
 
+Percentages are valid for width and height. They are relative to the geometry
+of the screen the window is on. For example, to make a window the full width of
+the screen, but half height:
+
+ xdotool windowmove I<window> 100% 50%
+
 =over
 
-=item B<--sync> 
+=item B<--sync>
 
 After sending the window move request, wait until the window is actually
 moved. If no movement is necessary, we will not wait. This is useful for
 scripts that depend on actions being completed before moving on.
 
-=item B<--relative> 
+=item B<--relative>
 
 Make movement relative to the current window position.
 
@@ -628,7 +634,7 @@ Uses L<XSetInputFocus> which may be ignored by some window managers or programs.
 
 =over
 
-=item B<--sync> 
+=item B<--sync>
 
 After sending the window focus request, wait until the window is actually
 focused. This is useful for scripts that depend on actions being completed
@@ -644,7 +650,7 @@ L<COMMAND CHAINING> for more details.
 
 =over
 
-=item B<--sync> 
+=item B<--sync>
 
 After requesting the window map, wait until the window is actually mapped
 (visible). This is useful for scripts that depend on actions being completed
@@ -660,7 +666,7 @@ L<COMMAND CHAINING> for more details.
 
 =over
 
-=item B<--sync> 
+=item B<--sync>
 
 After requesting the window minimize, wait until the window is actually
 minimized. This is useful for scripts that depend on actions being completed
@@ -677,7 +683,7 @@ L<COMMAND CHAINING> for more details.
 =item B<windowreparent> I<[source_window]> I<destination_window>
 
 Reparent a window. This moves the I<source_window> to be a child window of
-I<destination_window>. If no source is given, %1 is the default. 
+I<destination_window>. If no source is given, %1 is the default.
 L<WINDOW STACK> window references (like %1) are valid for both I<source_window>
 and I<destination_window> See L<WINDOW STACK> and L<COMMAND CHAINING> for more
 details.
@@ -719,11 +725,11 @@ Options:
 
 =over
 
-=item B<--name newname> 
+=item B<--name newname>
 
 Set window WM_NAME (the window title, usually)
 
-=item B<--icon-name newiconname> 
+=item B<--icon-name newiconname>
 
 Set window WM_ICON_NAME (the window title when minimized, usually)
 
@@ -765,7 +771,7 @@ the window is mapped again, so you may want to issue 'windowunmap' and
 These commands follow the EWMH standard. See the section L<EXTENDED WINDOW
 MANAGER HINTS> for more information.
 
-=over 
+=over
 
 =item B<windowactivate> I<[options]> I<[window]>
 
@@ -779,7 +785,7 @@ L<COMMAND CHAINING> for more details.
 
 =over
 
-=item B<--sync> 
+=item B<--sync>
 
 After sending the window activation, wait until the window is actually
 activated. This is useful for scripts that depend on actions being completed
@@ -813,7 +819,7 @@ managers. A viewport is simply a view on a very large desktop area.
 
 Move the viewport to the given position. Not all requests will be obeyed - some
 windowmangers only obey requests that align to workspace boundaries, such as
-the screen size. 
+the screen size.
 
 For example, if your screen is 1280x800, you can move to the 2nd workspace by doing:
  xdotool set_desktop_viewport 1280 0
@@ -824,7 +830,7 @@ Change the current view to the specified desktop.
 
 =over
 
-=item B<--relative> 
+=item B<--relative>
 
 Use relative movements instead of absolute. This lets you move relative to the
 current desktop.
@@ -850,8 +856,8 @@ STACK> and L<COMMAND CHAINING> for more details.
 
 =head1 MISCELLANEOUS COMMANDS
 
- 
-=over 
+
+=over
 
 =item B<exec> I<[options]> I<command> I<[...]>
 
@@ -862,7 +868,7 @@ Options:
 
 =over
 
-=item B<--sync> 
+=item B<--sync>
 
 Block until the child process exits. The child process exit status is then
 passed to the parent process (xdotool) which copies it.
@@ -892,7 +898,7 @@ valid, here.
 =head1 SCRIPTS
 
 xdotool can read a list of commands via stdin or a file if you want. A script
-will fail when any command fails. 
+will fail when any command fails.
 
 Truthfully, 'script' mode isn't fully fleshed out and may fall below your
 expectations. If you have suggestions, please email the list or file a bug (See
@@ -956,7 +962,7 @@ For example, if you were to run this command:
 
 The result would be 'a' or 'A' depending on whether or not you were holding the
 shift key on your keyboard. Often it is undesirable to have any modifiers
-active, so you can tell xdotool to clear any active modifiers. 
+active, so you can tell xdotool to clear any active modifiers.
 
 The order of operations if you hold shift while running 'xdotool key --clearmodifiers a' is this:
 
@@ -1024,7 +1030,7 @@ stack.
 =head1 COMMAND CHAINING
 
 xdotool supports running multiple commands on a single invocation. Generally,
-you'll start with a search command (see L<WINDOW STACK>) and then perform a 
+you'll start with a search command (see L<WINDOW STACK>) and then perform a
 set of actions on those results.
 
 To query the window stack, you can use special notation "%N" where N is a
@@ -1066,7 +1072,7 @@ Additionally, commands that modify the L<WINDOW STACK> will not print the
 results if they are not the last command. For example:
 
  # Output the active window:
- % xdotool getactivewindow 
+ % xdotool getactivewindow
  20971533
 
  # Output the pid of the active window, but not the active window id:
@@ -1077,7 +1083,7 @@ results if they are not the last command. For example:
 
 The following pieces of the EWMH standard are supported:
 
-=over 
+=over
 
 =item _NET_SUPPORTED
 
@@ -1138,7 +1144,7 @@ occasionally send the wrong character.
 
 =head1 SEE ALSO
 
-L<xprop(1)>, L<xwininfo(1)>, 
+L<xprop(1)>, L<xwininfo(1)>,
 
 Project site: L<http://www.semicomplete.com/projects/xdotool>
 

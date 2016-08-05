@@ -946,9 +946,10 @@ int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button,
       return ret;
     }
     repeat--;
-    if (repeat > 0) {
-      usleep(delay);
-    }
+
+    /* Sleeping even after the last click is important, so that a call to xdo_set_active_modifiers()
+     * right after won't think that the button is still pressed. */
+    usleep(delay);
   } /* while (repeat > 0) */
   return ret;
 } /* int xdo_click_window_multiple */
@@ -1513,8 +1514,18 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
   /* Properly ensure the modstate is set by finding a key
    * that activates each bit in the modifier state */
   int mask = modstate | key->modmask;
+  int use_xtest = 0;
 
   if (window == CURRENTWINDOW) {
+    use_xtest = 1;
+  } else {
+    Window focuswin = 0;
+    xdo_get_focused_window(xdo, &focuswin);
+    if (focuswin == window) {
+      use_xtest = 1;
+    }
+  }
+  if (use_xtest) {
     //printf("XTEST: Sending key %d %s\n", key->code, is_press ? "down" : "up");
     XkbStateRec state;
     XkbGetState(xdo->xdpy, XkbUseCoreKbd, &state);
