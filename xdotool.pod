@@ -14,7 +14,7 @@ default to "%1". See L<WINDOW STACK> for what "%1" means.
  
 =head1 DESCRIPTION
 
-B<xdotool> lets you programatically (or manually) simulate keyboard input and
+B<xdotool> lets you programmatically (or manually) simulate keyboard input and
 mouse activity, move and resize windows, etc. It does this using X11's
 XTEST extension and other Xlib functions.
 

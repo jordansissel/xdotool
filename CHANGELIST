@@ -36,7 +36,7 @@ FOR TODO LIST, SEE TODO FILE :)
   - bugfix: xdotool should use command names first before trying file scripts. 
     See https://bbs.archlinux.org/viewtopic.php?pid=938309 for original report.
   - Add a 'sleep' command. (Requested by Joseph Krahn via mailing list)
-  - Add --relative flag to windowmve. (Requested by Anthony Thyssen via mailing
+  - Add --relative flag to windowmove. (Requested by Anthony Thyssen via mailing
   - Add --desktop flag to the search command. This lets you search for windows
     on specific desktop. Requires a window manager that supports multiple
     desktops in a way that EWMH supports.

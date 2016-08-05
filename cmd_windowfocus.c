@@ -48,7 +48,7 @@ int cmd_windowfocus(context_t *context) {
   window_each(context, window_arg, {
     ret = xdo_focus_window(context->xdo, window);
     if (ret) {
-      fprintf(stderr, "xdo_focus_windofocus_window reported an error\n");
+      fprintf(stderr, "xdo_focus_window reported an error\n");
       return ret;
     } else {
       if (opsync) {
