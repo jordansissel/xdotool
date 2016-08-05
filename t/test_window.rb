@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
-require "test/unit"
+require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolWindowTests < Test::Unit::TestCase
+class XdotoolWindowTests < MiniTest::Test
   include XdoTestHelper
 
   def setup

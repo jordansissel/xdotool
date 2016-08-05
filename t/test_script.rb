@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 #
 
-require "test/unit"
+require "minitest"
 require "./xdo_test_helper"
 require "tempfile"
 
-class XdotoolScriptTests < Test::Unit::TestCase
+class XdotoolScriptTests < MiniTest::Test
   include XdoTestHelper
 
   def xdotool_script_ok(commands)

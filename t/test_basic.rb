@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 #
 
-require "test/unit"
+require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolBasicTests < Test::Unit::TestCase
+class XdotoolBasicTests < MiniTest::Test
   include XdoTestHelper
 
   def test_noargs_exit_1

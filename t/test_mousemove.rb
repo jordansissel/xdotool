@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
-require "test/unit"
+require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolMouseMoveTests < Test::Unit::TestCase
+class XdotoolMouseMoveTests < MiniTest::Test
   include XdoTestHelper
 
   def test_mousemove_should_have_no_output

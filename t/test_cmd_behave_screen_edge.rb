@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 #
 
-require "test/unit"
+require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolCommandBehaveScreenEdgeTests < Test::Unit::TestCase
+class XdotoolCommandBehaveScreenEdgeTests < MiniTest::Test
   include XdoTestHelper
 
   def test_expected_failures

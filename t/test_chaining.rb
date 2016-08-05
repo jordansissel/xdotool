@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 #
 
-require "test/unit"
+require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolChainingTests < Test::Unit::TestCase
+class XdotoolChainingTests < MiniTest::Test
   include XdoTestHelper
 
   def setup

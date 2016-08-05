@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 #
 
-require "test/unit"
+require "minitest"
 require "tempfile"
 require "./xdo_test_helper"
 
-class XdotoolTypingTests < Test::Unit::TestCase
+class XdotoolTypingTests < MiniTest::Test
   include XdoTestHelper
   SYMBOLS = "`12345678990-=~ !@\#$%^&*()_+[]\{}|;':\",./<>?"
   LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"

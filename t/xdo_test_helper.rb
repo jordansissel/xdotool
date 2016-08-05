@@ -1,4 +1,4 @@
-require "test/unit"
+require "minitest"
 
 module XdoTestHelper
   def setup
@@ -145,7 +145,7 @@ module XdoTestHelper
     (1 .. times).each do
       begin
         yield
-      rescue Test::Unit::AssertionFailedError => e
+      rescue MiniTest::Unit::AssertionFailedError => e
         $stderr.puts "Retrying..."
         last_exception = e
         sleep(delay)

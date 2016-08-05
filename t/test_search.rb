@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 #
 
-require "test/unit"
+require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolSearchTests < Test::Unit::TestCase
+class XdotoolSearchTests < MiniTest::Test
   include XdoTestHelper
 
   def test_search_pid

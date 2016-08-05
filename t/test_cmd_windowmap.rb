@@ -2,10 +2,10 @@
 #!/usr/bin/env ruby
 #
 
-require "test/unit"
+require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolCommandWindowMapTests < Test::Unit::TestCase
+class XdotoolCommandWindowMapTests < MiniTest::Test
   include XdoTestHelper
 
   def test_succeeds_with_valid_window

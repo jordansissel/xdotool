@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 #
 
-require "test/unit"
+require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolCommandKeyTests < Test::Unit::TestCase
+class XdotoolCommandKeyTests < MiniTest::Test
   include XdoTestHelper
 
   def test_flags
