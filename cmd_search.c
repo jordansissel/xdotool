@@ -143,8 +143,12 @@ int cmd_search(context_t *context) {
   /*
    * Look-ahead if next command can work with empty window stack or not.
    */
-  if(strcasecmp(*(context->argv + optind + 1), "getwindowstacklen") == 0){
-    flg_keep_chain = 1;
+  if(context->argc > optind + 1){
+    if(*(context->argv + optind + 1)){
+      if(strcasecmp(*(context->argv + optind + 1), "getwindowstacklen") == 0){
+        flg_keep_chain = 1;
+      }
+    }
   }
   consume_args(context, optind);
 
