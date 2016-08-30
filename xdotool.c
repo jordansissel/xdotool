@@ -346,6 +346,15 @@ char *null_terminate_quoted(char *ptr_buf){
     if(*ptr_quote == *ptr_buf){
       *ptr_quote = 0;
     }
+    else if(*ptr_quote == 0){
+      /* 
+       * We don't have pre-parsing state nowhere, so it is not possible to give
+       * more detailed error.
+       */
+      fprintf(stderr, "WARNING: Quote not closed within parsed script. " 
+        "Resulting argument is: `%s`.\n", ptr_buf
+      );
+    }
     /* escaping slash found */
     else{
       flg_move = 0;
