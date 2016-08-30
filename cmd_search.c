@@ -215,12 +215,12 @@ int cmd_search(context_t *context) {
     if (op_sync && nwindows == 0) {
       xdotool_debug(context, "No search results, still waiting...");
 
-      usleep(sync_duration_usec);
       if(sync_max_iter){
         if(++sync_iter >= sync_max_iter){
           break;
         }
       }
+      usleep(sync_duration_usec);
     }
   } while (op_sync && nwindows == 0);
 
