@@ -70,6 +70,7 @@ int cmd_search(context_t *context) {
 
   char *cmd = *context->argv;
   int option_index;
+  char flg_keep_chain = 0;
 
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
                                longopts, &option_index)) != -1) {
@@ -139,6 +140,12 @@ int cmd_search(context_t *context) {
     }
   }
 
+  /*
+   * Look-ahead if next command can work with empty window stack or not.
+   */
+  if(strcasecmp(*(context->argv + optind + 1), "getwindowstacklen") == 0){
+    flg_keep_chain = 1;
+  }
   consume_args(context, optind);
 
   /* We require a pattern or a pid to search for */
@@ -205,6 +212,10 @@ int cmd_search(context_t *context) {
   }
   context->windows = list;
   context->nwindows = nwindows;
+
+  if(flg_keep_chain){
+    return EXIT_SUCCESS;
+  }
 
   /* error if number of windows found is zero (behave like grep) 
   but return success when being used inside eval (--shell option)*/

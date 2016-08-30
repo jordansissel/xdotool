@@ -31,6 +31,6 @@ int cmd_getwindowstacklen(context_t *context) {
   consume_args(context, optind);
   xdotool_output(context, "stack_length:%i", context->nwindows);
 
-  return EXIT_SUCCESS;
+  return context->nwindows? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
