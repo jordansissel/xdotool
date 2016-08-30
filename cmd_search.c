@@ -15,6 +15,7 @@ int cmd_search(context_t *context) {
   char out_prefix[17] = {'\0'};
   int search_class = 0;
   int search_classname = 0;
+  char flg_keep_chain = 0;
   typedef enum {
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_shell, opt_prefix, opt_class, opt_maxdepth,
     opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname, opt_desktop,
@@ -70,7 +71,6 @@ int cmd_search(context_t *context) {
 
   char *cmd = *context->argv;
   int option_index;
-  char flg_keep_chain = 0;
 
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
                                longopts, &option_index)) != -1) {
