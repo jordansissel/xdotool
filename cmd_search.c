@@ -36,7 +36,7 @@ int cmd_search(context_t *context) {
     { "title", no_argument, NULL, opt_title },
     { "desktop", required_argument, NULL, opt_desktop },
     { "limit", required_argument, NULL, opt_limit },
-    { "sync", no_argument, NULL, opt_sync },
+    { "sync", optional_argument, NULL, opt_sync },
     { 0, 0, 0, 0 },
   };
   static const char *usage =
@@ -58,7 +58,9 @@ int cmd_search(context_t *context) {
       "--title         DEPRECATED. Same as --name.\n"
       "--all           Require all conditions match a window. Default is --any\n"
       "--any           Windows matching any condition will be reported\n"
-      "--sync          Wait until a search result is found.\n"
+      "--sync [T [A]]  Wait T * A seconds until a search result is found.\n"
+      "                T - sync waiting time till next attempt, default: 0.5\n"
+      "                A - attempt count, 0 means infinity, default: 0. \n"
       "-h, --help      show this help output\n"
       "\n"
       "If none of --name, --classname, or --class are specified, the \n"
@@ -70,6 +72,10 @@ int cmd_search(context_t *context) {
 
   char *cmd = *context->argv;
   int option_index;
+  double sync_duration_usec = 500000;
+  int sync_max_iter = 0;
+  int sync_iter = 0;
+  char cnt_sync_args = 0;
 
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
                                longopts, &option_index)) != -1) {
@@ -131,6 +137,20 @@ int cmd_search(context_t *context) {
         break;
       case opt_sync:
         op_sync = True;
+        /* Parse all optional arguments till next long option. */
+        while(optind < context->argc && **(context->argv + optind) != '-' && cnt_sync_args < 2){
+          switch(cnt_sync_args){
+            case 0:
+              sync_duration_usec = atof(*(context->argv + optind)) * (1000000);
+              break;
+            case 1:
+              sync_max_iter = atoi(*(context->argv + optind));
+              break;
+          }
+
+          optind++;
+          cnt_sync_args++;
+        }
         break;
       default:
         fprintf(stderr, "Invalid usage\n");
@@ -175,6 +195,7 @@ int cmd_search(context_t *context) {
     consume_args(context, 1);
   }
 
+  
   do {
     if (list != NULL) {
       free(list);
@@ -194,8 +215,12 @@ int cmd_search(context_t *context) {
     if (op_sync && nwindows == 0) {
       xdotool_debug(context, "No search results, still waiting...");
 
-      /* TODO(sissel): Make this tunable */
-      usleep(500000);
+      usleep(sync_duration_usec);
+      if(sync_max_iter){
+        if(++sync_iter >= sync_max_iter){
+          break;
+        }
+      }
     }
   } while (op_sync && nwindows == 0);
 
