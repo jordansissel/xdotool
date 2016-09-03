@@ -8,7 +8,7 @@ int cmd_type(context_t *context) {
   int i;
   int c;
   char *cmd = *context->argv;
-  char *window_arg = NULL;
+  const char *window_arg = "%1";
   int arity = -1;
   char *terminator = NULL;
   char *file = NULL;
@@ -59,14 +59,15 @@ int cmd_type(context_t *context) {
     "--file <filepath> - specify a file, the contents of which will be\n"
     "                    be typed as if passed as an argument. The filepath\n"
     "                    may also be '-' to read from stdin.\n"
-            "-h, --help             - show this help output\n";
+            "-h, --help             - show this help output\n"
+    HELP_SEE_WINDOW_STACK;
   int option_index;
 
   while ((c = getopt_long_only(context->argc, context->argv, "+w:d:ch",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case opt_window:
-        window_arg = strdup(optarg);
+        window_arg = optarg;
         break;
       case opt_delay:
         /* --delay is in milliseconds, convert to microseconds */
@@ -202,10 +203,6 @@ int cmd_type(context_t *context) {
   }); /* window_each(...) */
 
   free(data);
-
-  if (window_arg != NULL) {
-    free(window_arg);
-  }
 
   consume_args(context, args_count);
   return ret > 0;
