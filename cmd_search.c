@@ -9,25 +9,22 @@ int cmd_search(context_t *context) {
   int c;
   int op_sync = False;
 
-  int search_title = 0;
-  int search_name = 0;
   int out_shell = 0;
   char out_prefix[17] = {'\0'};
-  int search_class = 0;
-  int search_classname = 0;
   typedef enum {
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_shell, opt_prefix, opt_class, opt_maxdepth,
     opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname, opt_desktop,
-    opt_limit, opt_sync
+    opt_limit, opt_sync, opt_match
   } optlist_t;
   struct option longopts[] = {
     { "all", no_argument, NULL, opt_all },
     { "any", no_argument, NULL, opt_any },
-    { "class", no_argument, NULL, opt_class },
-    { "classname", no_argument, NULL, opt_classname },
+    { "class", required_argument, NULL, opt_class },
+    { "classname", required_argument, NULL, opt_classname },
+    { "name", required_argument, NULL, opt_name },
+    { "match", required_argument, NULL, opt_match },
     { "help", no_argument, NULL, opt_help },
     { "maxdepth", required_argument, NULL, opt_maxdepth },
-    { "name", no_argument, NULL, opt_name },
     { "shell", no_argument, NULL, opt_shell },
     { "prefix", required_argument, NULL, opt_prefix },
     { "onlyvisible", 0, NULL, opt_onlyvisible },
@@ -42,8 +39,8 @@ int cmd_search(context_t *context) {
   static const char *usage =
       "Usage: xdotool %s "
       "[options] regexp_pattern\n"
-      "--class         check regexp_pattern against the window class\n"
-      "--classname     check regexp_pattern against the window classname\n"
+      "--class STR     check regexp_pattern against the window class\n"
+      "--classname STR check regexp_pattern against the window classname\n"
       "--maxdepth N    set search depth to N. Default is infinite.\n"
       "                -1 also means infinite.\n"
       "--onlyvisible   matches only windows currently visible\n"
@@ -52,17 +49,17 @@ int cmd_search(context_t *context) {
       "--screen N      only search a specific screen. Default is all screens\n"
       "--desktop N     only search a specific desktop number\n"
       "--limit N       break search after N results\n"
-      "--name          check regexp_pattern against the window name\n"
+      "--match STR     check regexp_pattern against the name, class and classname\n"
+      "--name STR      check regexp_pattern against the window name\n"
       "--shell         print results as shell array WINDOWS=( ... )\n"
       "--prefix STR    use prefix (max 16 chars) for array name STRWINDOWS\n"
-      "--title         DEPRECATED. Same as --name.\n"
-      "--all           Require all conditions match a window. Default is --any\n"
-      "--any           Windows matching any condition will be reported\n"
+      "--all           Require all conditions match a window. \n"
+      "--any           Windows matching any condition will be reported (default)\n"
       "--sync          Wait until a search result is found.\n"
       "-h, --help      show this help output\n"
       "\n"
-      "If none of --name, --classname, or --class are specified, the \n"
-      "defaults are: --name --classname --class\n";
+      "If none of --pid, --name, --classname, or --class are specified, the \n"
+      "defaults are: --name --classname --class (aka --match)\n";
 
   memset(&search, 0, sizeof(xdo_search_t));
   search.max_depth = -1;
@@ -102,19 +99,33 @@ int cmd_search(context_t *context) {
         search.only_visible = True;
         search.searchmask |= SEARCH_ONLYVISIBLE;
         break;
+      case opt_match:
+	/* Search all 3 string based fields */
+	search.winclass	 = optarg;
+	search.searchmask |= SEARCH_CLASS;
+	
+	search.winclassname  = optarg;
+	search.searchmask |= SEARCH_CLASSNAME;
+
+	search.winname	= optarg;
+	search.searchmask |= SEARCH_NAME;
+	break;
       case opt_class:
-        search_class = True;
-        break;
+	search.winclass	 = optarg;
+	search.searchmask |= SEARCH_CLASS;
+	break;
       case opt_classname:
-        search_classname = True;
-        break;
+	search.winclassname  = optarg;
+	search.searchmask |= SEARCH_CLASSNAME;
+	break;
       case opt_title:
-        fprintf(stderr, "This flag is deprecated. Assuming you mean --name (the"
-                " window name).\n");
-        /* fall through */
+	fprintf(stderr, "This flag is deprecated. Assuming you mean --name "
+		"(the window name).\n");
+	/* fall through */
       case opt_name:
-        search_name = True;
-        break;
+	search.winname	= optarg;
+	search.searchmask |= SEARCH_NAME;
+	break;
       case opt_shell:
         out_shell = True;
         break;
@@ -142,37 +153,34 @@ int cmd_search(context_t *context) {
   consume_args(context, optind);
 
   /* We require a pattern or a pid to search for */
-  if (context->argc < 1 && search.pid == 0) {
+  if ((context->argc < 1 && search.pid == 0) &&
+      !(search.searchmask & (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME))) {
     fprintf(stderr, usage, cmd);
     return EXIT_FAILURE;
   }
 
-  if (context->argc > 0) {
-    if (!search_title && !search_name && !search_class && !search_classname) {
-      fprintf(stderr, "Defaulting to search window name, class, and classname\n");
-      search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
-      search_name = 1;
-      search_class = 1;
-      search_classname = 1;
-    }
+  if (context->argc > 0 &&
+      /* If a longopt search criteria was NOT specified, assume next arg is match criteria */
+       !(search.searchmask & (SEARCH_PID | SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME)) ) {
 
-    if (search_title) {
-      search.searchmask |= SEARCH_NAME;
-      search.winname = context->argv[0];
-    }
-    if (search_name) {
-      search.searchmask |= SEARCH_NAME;
-      search.winname = context->argv[0];
-    }
-    if (search_class) {
-      search.searchmask |= SEARCH_CLASS;
-      search.winclass = context->argv[0];
-    }
-    if (search_classname) {
-      search.searchmask |= SEARCH_CLASSNAME;
-      search.winclassname = context->argv[0];
-    }
+    fprintf(stderr, "Defaulting to search window --name, --class, and " 
+	    "--classname for '%s'.\n"
+	    "(Use --match to avoid this error msg, or use more"
+	    " specific options as needed)\n", 
+	    context->argv[0]);
+    search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
+    search.winname = context->argv[0];
+    search.winclass = context->argv[0];
+    search.winclassname = context->argv[0];
     consume_args(context, 1);
+  }
+
+  if ((search.require & SEARCH_ALL) &&
+      (search.searchmask & SEARCH_NAME &&
+       search.searchmask & SEARCH_CLASS &&
+       search.searchmask & SEARCH_CLASSNAME) ) {
+    fprintf(stderr, "Warning: match all (--all) is on, this may be undesirable when\n"
+	    "searching across all three --name, --class and --classname values.\n");
   }
 
   do {
