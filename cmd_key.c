@@ -47,8 +47,8 @@ int cmd_key(context_t *context) {
      "including those not currently available on your keyboard.\n"
      "\n"
      "If no window is given, and there are windows in the stack, %1 is used. Otherwise\n"
-     "the currently-focused window is used\n"
-     HELP_CHAINING_ENDS;
+     "the currently-focused window is used\n";
+
   int option_index;
 
   while ((c = getopt_long_only(context->argc, context->argv, "+d:hcw:",
