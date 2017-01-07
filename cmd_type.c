@@ -8,7 +8,7 @@ int cmd_type(context_t *context) {
   int i;
   int c;
   char *cmd = *context->argv;
-  const char *window_arg = "%1";
+  const char *window_arg = NULL;
   int arity = -1;
   char *terminator = NULL;
   char *file = NULL;
