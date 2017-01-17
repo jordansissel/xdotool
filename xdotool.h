@@ -72,6 +72,7 @@ int cmd_windowmove(context_t *context);
 int cmd_windowraise(context_t *context);
 int cmd_windowreparent(context_t *context);
 int cmd_windowsize(context_t *context);
+int cmd_windowstate(context_t *context);
 int cmd_windowunmap(context_t *context);
 /* pager-like commands */
 int cmd_set_num_desktops(context_t *context);

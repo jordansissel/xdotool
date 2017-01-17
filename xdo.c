@@ -1879,6 +1879,26 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
   return 0;
 }
 
+int xdo_window_state(xdo_t *xdo, Window window, unsigned long action, const char *property) {
+  int ret;
+  XEvent xev;
+  Window root = RootWindow(xdo->xdpy, 0);
+
+  memset(&xev, 0, sizeof(xev));
+  xev.xclient.type = ClientMessage;
+  xev.xclient.serial = 0;
+  xev.xclient.send_event = True;
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_WM_STATE", False);
+  xev.xclient.window = window;
+  xev.xclient.format = 32;
+  xev.xclient.data.l[0] = action;
+  xev.xclient.data.l[1] = XInternAtom(xdo->xdpy, property, False);
+
+  ret = XSendEvent(xdo->xdpy, root, False,
+                   SubstructureNotifyMask | SubstructureRedirectMask, &xev);
+  return _is_success("XSendEvent[EWMH:_NET_WM_STATE]", ret == 0, xdo);
+}
+
 int xdo_minimize_window(const xdo_t *xdo, Window window) {
   int ret;
   int screen;

@@ -613,6 +613,16 @@ int xdo_unmap_window(const xdo_t *xdo, Window wid);
  */
 int xdo_minimize_window(const xdo_t *xdo, Window wid);
 
+#define _NET_WM_STATE_REMOVE        0    /* remove/unset property */
+#define _NET_WM_STATE_ADD           1    /* add/set property */
+#define _NET_WM_STATE_TOGGLE        2    /* toggle property  */
+
+/**
+ * Change window state
+ * @param action the _NET_WM_STATE action
+ */
+int xdo_window_state(xdo_t *xdo, Window window, unsigned long action, const char *property);
+
 /** 
  * Reparents a window
  *
