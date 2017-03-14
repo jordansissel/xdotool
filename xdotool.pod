@@ -837,6 +837,13 @@ current desktop.
 
 =back
 
+Examples:
+ # Change to desktop #5
+ xdotool set_desktop 5
+
+ # Change to the previous desktop. (Note the use of "--")
+ xdotool set_desktop --relative -- -1
+
 =item B<get_desktop>
 
 Output the current desktop in view.
