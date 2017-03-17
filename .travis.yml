@@ -5,8 +5,6 @@ dist: trusty
 
 install:
   - sudo apt-get install libx11-dev libxtst-dev libxinerama-dev libxkbcommon-dev
-  #- sudo apt-get install xlib xtst
-
 
 # Start virtual X server, from https://docs.travis-ci.com/user/gui-and-headless-browsers/
 before_script:
@@ -16,5 +14,5 @@ before_script:
 
 script: 
   - make
-  - make install
+  - sudo make install
   - make uninstall
