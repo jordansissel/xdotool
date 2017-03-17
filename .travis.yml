@@ -4,7 +4,9 @@ compiler: gcc
 dist: trusty
 
 install:
-  - sudo apt-get install xlib xtst
+  - sudo apt-get install libx11-dev
+  #- sudo apt-get install xlib xtst
+
 
 # Start virtual X server, from https://docs.travis-ci.com/user/gui-and-headless-browsers/
 before_script:
