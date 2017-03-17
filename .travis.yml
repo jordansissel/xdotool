@@ -4,7 +4,7 @@ compiler: gcc
 dist: trusty
 
 install:
-  - sudo apt-get install libx11-dev libxtst-dev libxinerama-dev
+  - sudo apt-get install libx11-dev libxtst-dev libxinerama-dev libxkbcommon-dev
   #- sudo apt-get install xlib xtst
 
 
