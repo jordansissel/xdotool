@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/richelbilderbeek/xdotool.svg?branch=master)](https://travis-ci.org/richelbilderbeek/xdotool)
-
 xdotool: Fake input from the mouse and keyboard very easily.
   Also supports window manager actions such as moving, activating, and other
   actions on windows.
