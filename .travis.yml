@@ -15,4 +15,4 @@ before_script:
 script: 
   - make
   - sudo make install
-  - make uninstall
+  - sudo make uninstall
