@@ -1,0 +1,9 @@
+sudo: require
+language: cpp
+compiler: gcc
+dist: trusty
+
+script: 
+  - make
+  - make install
+  - make uninstall
