@@ -350,31 +350,75 @@ Examples:
 
 =over
 
-=item B<search> I<[options]> I<pattern>
+=item B<search> I<[options]> I<--criteria> I<match>
 
-Search for windows with titles, names, or classes with a regular expression
-pattern. The output is line-delimited list of X window identifiers. If you
-are using L<COMMAND CHAINING>, the L<search> command will only write window
-ids to stdout if it is the last (or only) command in the chain; otherwise, it
-is silent.
+Where [--criteria] is one of --pid, --name, --class, --classname or --match.
+
+Search for windows with certain pids or by matching their names or class
+strings with a regular expression pattern. The output is line-delimited list
+of X window identifiers. If you are using L<COMMAND CHAINING>, the L<search>
+command will only write window ids to stdout if it is the last (or only)
+command in the chain; otherwise, it is silent.
 
 The result is saved to the window stack for future chained commands. See
 L<WINDOW STACK> and L<COMMAND CHAINING> for details.
 
-The default options are C<--name --class --classname> (unless you specify one
-one or more of --name --class or --classname).
+I<DEPRICATED USAGE:> If you do not specify a search criteria a default --match
+search will be perfomed across all three C<--name --class and --classname>.
+It will also report this as a warning to let you know an option was consumed
+as the --match value.  Thus if this is your intent, explicitly using the
+--match option is recommended.
 
-The options available are:
+One or more search I<criteria> is required:
 
 =over
 
-=item B<--class>
+=item B<--class regex>
 
 Match against the window class.
 
-=item B<--classname>
+=item B<--classname regex>
 
 Match against the window classname.
+
+=item B<--name regex>
+
+Match against the window name. This is the same string that is displayed in the
+window titlebar.
+
+=item B<--match regex>
+
+Match against all three of the window properties above (name, class, classname).
+
+=item B<--pid PID>
+
+Match windows that belong to a specific process id. This may not work for some
+X applications that do not set this metadata on its windows.
+
+=back
+
+Other Search Options:
+
+=over
+
+=item B<--any>
+
+Match windows that match any condition (logically, 'or'). This is on by
+default. For example:
+
+ xdotool search --any --pid 1424 --name "Hello World"
+
+This will match any windows owned by pid 1424 or windows with name "Hello
+World"
+
+=item B<--all>
+
+Require that all conditions be met. For example:
+
+ xdotool search --all --pid 1424 --name "Hello World"
+
+This will match only windows that have "Hello World" as a name and are owned by
+pid 1424.
 
 =item B<--maxdepth> N
 
@@ -383,20 +427,10 @@ meaning infinite. 0 means no depth, only root windows will be searched. If you
 only want toplevel windows, set maxdepth of 1 (or 2, depending on how your
 window manager does decorations).
 
-=item B<--name>
-
-Match against the window name. This is the same string that is displayed in the
-window titlebar.
-
 =item B<--onlyvisible>
 
 Show only visible windows in the results. This means ones with map state
 IsViewable.
-
-=item B<--pid PID>
-
-Match windows that belong to a specific process id. This may not work for some
-X applications that do not set this metadata on its windows.
 
 =item B<--screen N>
 
@@ -415,29 +449,6 @@ Stop searching after finding N matching windows. Specifying a limit will help
 speed up your search if you only want a few results.
 
 The default is no search limit (which is equivalent to '--limit 0')
-
-=item B<--title>
-
-DEPRECATED. See --name.
-
-=item B<--all>
-
-Require that all conditions be met. For example:
-
- xdotool search --all --pid 1424 --name "Hello World"
-
-This will match only windows that have "Hello World" as a name and are owned by
-pid 1424.
-
-=item B<--any>
-
-Match windows that match any condition (logically, 'or'). This is on by
-default. For example:
-
- xdotool search --any --pid 1424 --name "Hello World"
-
-This will match any windows owned by pid 1424 or windows with name "Hello
-World"
 
 =item B<--sync >
 
