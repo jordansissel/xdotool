@@ -24,6 +24,15 @@ class XdotoolBasicTests < MiniTest::Test
     assert_equal(@wid, lines[0].to_i)
   end
 
+  def test_getwindowfocus_gets_a_valid_window_hex
+    xdotool "windowfocus --sync #{@wid_hex}"
+    status, lines = xdotool "getwindowfocus -f"
+    assert_status_ok(status)
+    assert_equal(1, lines.length, "Only one line of output expected from getwindowfocus")
+    assert_equal(@wid_hex, lines[0].to_i.to_s(16))
+  end
+
+
   def test_windowraise_succeeds_on_valid_window
     status, lines = xdotool "windowraise #{@wid}"
     assert_status_ok(status)

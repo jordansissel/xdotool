@@ -201,7 +201,11 @@ void window_list(context_t *context, const char *window_arg,
      */
     Window window = CURRENTWINDOW;
     if (window_arg != NULL) {
-      window = (Window)strtol(window_arg, NULL, 0);
+      if (window_arg[0] == '0' && window_arg[1] == 'x') {
+        window = (Window)strtol(window_arg + 2, NULL, 16);
+      } else {
+        window = (Window)strtol(window_arg, NULL, 0);
+      }
     }
 
     context->window_placeholder[0] = window;

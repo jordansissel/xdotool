@@ -32,6 +32,7 @@ module XdoTestHelper
     end # xterm fork
     writer.close
     @wid = reader.readline.to_i
+    @wid_hex = @wid.to_s(16)
     @shellpid = reader.readline.to_i
 
     healthy = false
