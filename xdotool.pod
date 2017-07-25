@@ -361,8 +361,8 @@ is silent.
 The result is saved to the window stack for future chained commands. See
 L<WINDOW STACK> and L<COMMAND CHAINING> for details.
 
-The default options are C<--name --class --classname> (unless you specify one
-one or more of --name --class or --classname).
+The default options are C<--name --class --classname> (unless you specify one or
+more of --name, --class or --classname).
 
 The options available are:
 
