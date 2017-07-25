@@ -257,6 +257,7 @@ struct dispatch {
   { "windowraise", cmd_windowraise, },
   { "windowreparent", cmd_windowreparent, },
   { "windowsize", cmd_windowsize, },
+  { "windowstate", cmd_windowstate, },
   { "windowunmap", cmd_windowunmap, },
 
   { "set_num_desktops", cmd_set_num_desktops, },

@@ -41,7 +41,7 @@ CFLAGS+=-std=c99 $(INC)
 CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
          cmd_mouseup.o cmd_getmouselocation.o cmd_type.o cmd_key.o \
          cmd_windowmove.o cmd_windowactivate.o cmd_windowfocus.o \
-         cmd_windowraise.o cmd_windowsize.o cmd_set_window.o cmd_search.o \
+         cmd_windowraise.o cmd_windowsize.o cmd_windowstate.o cmd_set_window.o cmd_search.o \
          cmd_getwindowfocus.o cmd_getwindowpid.o cmd_getactivewindow.o \
          cmd_windowmap.o cmd_windowunmap.o cmd_windowreparent.o \
          cmd_set_num_desktops.o \
