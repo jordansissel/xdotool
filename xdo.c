@@ -977,7 +977,7 @@ int xdo_enter_text_window(const xdo_t *xdo, Window window, const char *string, u
     }
     _xdo_charcodemap_from_char(xdo, &key);
     if (key.code == 0 && key.symbol == NoSymbol) {
-      fprintf(stderr, "I don't what key produces '%lc', skipping.\n",
+      fprintf(stderr, "I don't know which key produces '%lc', skipping.\n",
               key.key);
       continue;
     } else {
