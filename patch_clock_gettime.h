@@ -1,6 +1,7 @@
 
 /* Hack support for clock_gettime into OS X */
 
+#if !defined(CLOCK_MONOTONIC)
 #define CLOCK_MONOTONIC 1
 typedef int clockid_t;
 int clock_gettime(clockid_t clk_id, struct timespec *res) {
@@ -13,3 +14,4 @@ int clock_gettime(clockid_t clk_id, struct timespec *res) {
   }
   return ret;
 }
+#endif
