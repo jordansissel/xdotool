@@ -11,14 +11,17 @@ int cmd_getmouselocation(context_t *context) {
     { "help", no_argument, NULL, 'h' },
     { "shell", no_argument, NULL, 's' },
     { "prefix", required_argument, NULL, 'p' },
+    { "window-stack", no_argument, NULL, 'w' },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
     "Usage: %s [--shell] [--prefix <STR>]\n"
     "--shell      - output shell variables for use with eval\n"
-    "--prefix STR - use prefix for shell variables names (max 16 chars) \n";
+    "--prefix STR - use prefix for shell variables names (max 16 chars) \n"
+    "--window-stack - add window to the WINDOW STACK\n";
   int option_index;
   int output_shell = 0;
+  int window_stack = 0;
   char out_prefix[17] = {'\0'};
 
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
@@ -35,6 +38,9 @@ int cmd_getmouselocation(context_t *context) {
       case 'p':
         strncpy(out_prefix, optarg, sizeof(out_prefix)-1);
         out_prefix[ sizeof(out_prefix)-1 ] = '\0'; //just in case
+        break;
+      case 'w':
+        window_stack = 1;
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -53,6 +59,9 @@ int cmd_getmouselocation(context_t *context) {
     xdotool_output(context, "%sWINDOW=%d", out_prefix, window);
   } else {
     xdotool_output(context, "x:%d y:%d screen:%d window:%ld", x, y, screen_num, window);
+  }
+  if (window_stack) {
+    window_save(context, window);
   }
   return ret;
 }
