@@ -4,13 +4,14 @@
 struct events {
   const char * const name;
   int mask;
+  int type
 } events[] = {
-  { "mouse-enter", EnterWindowMask },
-  { "mouse-leave", LeaveWindowMask },
-  { "focus", FocusChangeMask },
-  { "blur", FocusChangeMask },
-  { "mouse-click", ButtonReleaseMask },
-  { NULL, 0 },
+  { "mouse-enter", EnterWindowMask, EnterNotify },
+  { "mouse-leave", LeaveWindowMask, LeaveNotify },
+  { "focus", FocusChangeMask, FocusIn },
+  { "blur", FocusChangeMask, FocusOut },
+  { "mouse-click", ButtonReleaseMask, ButtonRelease },
+  { NULL, 0, 0 },
 };
 
 /* So we can invoke xdotool from within this command */
@@ -75,12 +76,14 @@ int cmd_behave(context_t *context) {
   /* The remainder of args are supposed to be what to run on the action */
 
   long selectmask = 0;
+  int eventtype = 0;
   int i;
   for (i = 0; events[i].name != NULL; i++) {
     //printf("%s vs %s\n", events[i].name, event);
     if (!strcmp(events[i].name, event)) {
       xdotool_debug(context, "Adding mask for event '%s': 0x%lx", event, events[i].mask);
       selectmask |= events[i].mask;
+      eventtype = events[i].type;
     }
   }
 
@@ -137,8 +140,16 @@ int cmd_behave(context_t *context) {
         break;
       case FocusIn:
       case FocusOut:
-        tmpcontext.windows = &(e.xfocus.window);
-        ret = context_execute(&tmpcontext);
+        /* As both events are selected by the same mask,
+         * we have to make sure we only fire on the type
+         * that was requested. */
+        if (e.type == eventtype) {
+            tmpcontext.windows = &(e.xfocus.window);
+            ret = context_execute(&tmpcontext);
+        } else {
+            /* Set to success to avoid "Command failed." */
+            ret = XDO_SUCCESS;
+        }
         break;
       case ButtonRelease:
         tmpcontext.windows = &(e.xbutton.window);
