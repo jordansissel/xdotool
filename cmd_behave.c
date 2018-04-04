@@ -112,6 +112,7 @@ int cmd_behave(context_t *context) {
     // Copy context
     context_t tmpcontext = *context;
 
+    tmpcontext.windows = calloc(1, sizeof(Window));
     tmpcontext.nwindows = 1;
     Window hover; /* for LeaveNotify */
     switch (e.type) {
@@ -135,7 +136,7 @@ int cmd_behave(context_t *context) {
 
         /* fall through */
       case EnterNotify:
-        tmpcontext.windows = &(e.xcrossing.window);
+        *tmpcontext.windows = e.xcrossing.window;
         ret = context_execute(&tmpcontext);
         break;
       case FocusIn:
@@ -144,7 +145,7 @@ int cmd_behave(context_t *context) {
          * we have to make sure we only fire on the type
          * that was requested. */
         if (e.type == eventtype) {
-            tmpcontext.windows = &(e.xfocus.window);
+            *tmpcontext.windows = e.xfocus.window;
             ret = context_execute(&tmpcontext);
         } else {
             /* Set to success to avoid "Command failed." */
@@ -152,7 +153,7 @@ int cmd_behave(context_t *context) {
         }
         break;
       case ButtonRelease:
-        tmpcontext.windows = &(e.xbutton.window);
+        *tmpcontext.windows = e.xbutton.window;
         ret = context_execute(&tmpcontext);
         break;
       default:
@@ -162,6 +163,10 @@ int cmd_behave(context_t *context) {
 
     if (ret != XDO_SUCCESS) {
       xdotool_output(context, "Command failed.");
+    }
+
+    if(tmpcontext.windows != NULL) {
+        free(tmpcontext.windows);
     }
   }
   return ret;
