@@ -11,6 +11,9 @@ struct events {
   { "focus", FocusChangeMask, FocusIn },
   { "blur", FocusChangeMask, FocusOut },
   { "mouse-click", ButtonReleaseMask, ButtonRelease },
+  { "destroy", StructureNotifyMask, DestroyNotify },
+  { "map", StructureNotifyMask, MapNotify },
+  { "unmap", StructureNotifyMask, UnmapNotify },
   { NULL, 0, 0 },
 };
 
@@ -39,7 +42,10 @@ int cmd_behave(context_t *context) {
     "  mouse-leave      - When the mouse leaves a window\n"
     "  mouse-click      - Fired when the mouse button is released\n"
     "  focus            - When the window gets focus\n"
-    "  blur             - When the window loses focus\n";
+    "  blur             - When the window loses focus\n"
+    "  destroy          - When the window gets destroyed\n"
+    "  map              - When the window is mapped\n"
+    "  unmap            - When the window is unmapped\n";
 
   int option_index;
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
@@ -155,6 +161,21 @@ int cmd_behave(context_t *context) {
       case ButtonRelease:
         *tmpcontext.windows = e.xbutton.window;
         ret = context_execute(&tmpcontext);
+        break;
+      case DestroyNotify:
+      case MapNotify:
+      case UnmapNotify:
+      case CirculateNotify: /* these four*/
+      case ConfigureNotify: /* are also */
+      case GravityNotify:   /* caught by */
+      case ReparentNotify:  /* StructureNotifyMask */
+        if (e.type == eventtype) {
+            *tmpcontext.windows = e.xany.window;
+            ret = context_execute(&tmpcontext);
+        } else {
+            /* Set to success to avoid "Command failed." */
+            ret = XDO_SUCCESS;
+        }
         break;
       default:
         printf("Unexpected event: %d\n", e.type);
