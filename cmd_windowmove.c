@@ -18,9 +18,9 @@ static int _windowmove(context_t *context, struct windowmove *windowmove);
 
 int cmd_windowmove(context_t *context) {
   int ret = 0;
-  unsigned int width, height;
-  int is_width_percent = 0, is_height_percent = 0;
+  unsigned int x,y;
   char *cmd = *context->argv;
+  char *xarg, *yarg;
   struct windowmove windowmove;
 
   windowmove.x = 0;
@@ -73,59 +73,28 @@ int cmd_windowmove(context_t *context) {
   consume_args(context, optind);
 
   const char *window_arg = "%1";
+  int parse_flags;
 
   if (!window_get_arg(context, 2, 0, &window_arg)) {
     fprintf(stderr, usage, cmd);
     return EXIT_FAILURE;
   }
 
-  if (context->argv[0][0] == 'x') {
-    windowmove.flags |= WINDOWMOVE_X_CURRENT;
-  } else {
-    /* Use percentage if given a percent. */
-    if (strchr(context->argv[0], '%')) {
-        is_width_percent = 1;
-    } else {
-        windowmove.x = (int)strtol(context->argv[0], NULL, 0);
-    }
-  }
-
-  if (context->argv[1][0] == 'y') {
-    windowmove.flags |= WINDOWMOVE_Y_CURRENT;
-  } else {
-    /* Use percentage if given a percent. */
-    if (strchr(context->argv[0], '%')) {
-        is_height_percent = 1;
-    } else {
-        windowmove.y = (int)strtol(context->argv[1], NULL, 0);
-    }
-  }
-
-  width = (unsigned int)strtoul(context->argv[0], NULL, 0);
-  height = (unsigned int)strtoul(context->argv[1], NULL, 0);
+  xarg = context->argv[0];
+  yarg = context->argv[1];
   consume_args(context, 2);
 
-  XWindowAttributes wattr;
-  unsigned int original_w, original_h;
-  unsigned int root_w, root_h; /* for percent */
-
   window_each(context, window_arg, {
-      if (is_width_percent || is_height_percent) {
-        Window root = 0;
-        XGetWindowAttributes(context->xdo->xdpy, window, &wattr);
-        root = wattr.root;
-        xdo_get_window_size(context->xdo, root, &root_w, &root_h);
+    xdo_get_window_location(context->xdo, window,
+                            (int *)&x, (int *)&y, NULL);
+    xdo_get_xy(context->xdo, window, xarg, yarg, &x, &y, &parse_flags);
 
-        if (is_width_percent) {
-          windowmove.x = (root_w * width / 100);
-        }
-
-        if (is_height_percent) {
-          windowmove.y = (root_h * height / 100);
-        }
-      }
-      windowmove.window = window;
-      _windowmove(context, &windowmove);
+    windowmove.x = x;
+    windowmove.y = y;
+    if (parse_flags & GETXY_ORIG_X) windowmove.flags |= WINDOWMOVE_X_CURRENT;
+    if (parse_flags & GETXY_ORIG_Y) windowmove.flags |= WINDOWMOVE_Y_CURRENT;
+    windowmove.window = window;
+    _windowmove(context, &windowmove);
     }); /* window_each(...) */
   return ret;
 }
