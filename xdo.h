@@ -900,4 +900,17 @@ int xdo_has_feature(xdo_t *xdo, int feature);
  */
 int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
                                 unsigned int *height, int screen);
+
+#define GETXY_ORIG_X    (1L << 0)
+#define GETXY_PERCENT_X (1L << 1)
+#define GETXY_ORIG_Y    (1L << 8)
+#define GETXY_PERCENT_Y (1L << 9)
+
+/**
+ * Calculate x/y from strings allowing for various percentages
+ *
+ */
+int xdo_get_xy(xdo_t *xdo, Window w, const char *xstr, const char *ystr,
+               unsigned int *x, unsigned int *y, int *flags);
+
 #endif /* ifndef _XDO_H_ */
