@@ -2040,7 +2040,7 @@ static int _xdo_get_dir(const char *str, const char dir_char,
                         unsigned int mon_val, int *flags)
 {
   *flags = 0;
-  unsigned int raw_val;
+  double raw_val;
   char *percent;
 
   /* Just passing the direction gets you the unmodified value */
@@ -2049,7 +2049,7 @@ static int _xdo_get_dir(const char *str, const char dir_char,
     return XDO_SUCCESS;
   }
 
-  raw_val = (unsigned int)strtoul(str, NULL, 0);
+  raw_val = strtod(str, NULL);
   percent = strchr(str, '%');
   if (percent) {
     *flags = GETXY_PERCENT_X;
