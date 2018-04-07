@@ -901,6 +901,14 @@ int xdo_has_feature(xdo_t *xdo, int feature);
 int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
                                 unsigned int *height, int screen);
 
+/**
+ * Query the viewport for a given window.
+ */
+int xdo_get_window_viewport_info(xdo_t *xdo, Window w,
+                                unsigned int *width, unsigned int *height,
+                                unsigned int *x, unsigned int *y,
+                                int *screen_num);
+
 #define GETXY_ORIG_X    (1L << 0)
 #define GETXY_PERCENT_X (1L << 1)
 #define GETXY_ORIG_Y    (1L << 8)

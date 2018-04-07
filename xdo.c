@@ -1974,6 +1974,56 @@ int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
   }
 }
 
+int xdo_get_window_viewport_info(xdo_t *xdo, Window w,
+                                unsigned int *width, unsigned int *height,
+                                unsigned int *x, unsigned int *y,
+                                int *screen_num)
+{
+  int dummy;
+
+  if (XineramaQueryExtension(xdo->xdpy, &dummy, &dummy) \
+      && XineramaIsActive(xdo->xdpy)) {
+    XineramaScreenInfo *info;
+    int screens, i, found;
+    int win_x, win_y;
+
+    /* Is there a better way to find the xinerama head for a window?
+     * Of course it could be spanning multiple heads, but look at it's
+     * tl
+     */
+    xdo_get_window_location(xdo,w, &win_x, &win_y, NULL);
+    info = XineramaQueryScreens(xdo->xdpy, &screens);
+
+    for (i = 0, found = -1; i < screens; i++) {
+      if (win_x >= info[i].x_org &&
+          win_y >= info[i].y_org &&
+          win_x < (info[i].x_org + info[i].width) &&
+          win_y < (info[i].y_org + info[i].height)) {
+        found = i;
+        break;
+      }
+    }
+    if (found != -1) {
+      if (width) *width = info[found].width;
+      if (height) *height = info[found].height;
+      if (x) *x = info[found].x_org;
+      if (y) *y = info[found].y_org;
+      if (screen_num) *screen_num = found;
+    }
+    XFree(info);
+    return found == -1 ? XDO_ERROR : XDO_SUCCESS;
+  } else {
+    /* Use the root window size if no xinerama */
+    /* Note we're using screen 0 here, we could extract it from attr */
+    Window root = RootWindow(xdo->xdpy, 0);
+    if (x) *x = 0;
+    if (y) *y = 0;
+    if (screen_num) *screen_num = 0;
+    return xdo_get_window_size(xdo, root, width, height);
+  }
+
+}
+
 /**
  *  Helper for xdo_get_dir that handles one directions
  *
