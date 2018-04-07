@@ -911,8 +911,10 @@ int xdo_get_window_viewport_info(xdo_t *xdo, Window w,
 
 #define GETXY_ORIG_X    (1L << 0)
 #define GETXY_PERCENT_X (1L << 1)
+#define GETXY_MON_X     (1L << 2)
 #define GETXY_ORIG_Y    (1L << 8)
 #define GETXY_PERCENT_Y (1L << 9)
+#define GETXY_MON_Y     (1L << 10)
 
 /**
  * Calculate x/y from strings allowing for various percentages

@@ -2036,10 +2036,12 @@ int xdo_get_window_viewport_info(xdo_t *xdo, Window w,
  *
  */
 static int _xdo_get_dir(const char *str, const char dir_char,
-                        unsigned int *val, unsigned int root_val, int *flags)
+                        unsigned int *val, unsigned int root_val,
+                        unsigned int mon_val, int *flags)
 {
   *flags = 0;
   unsigned int raw_val;
+  char *percent;
 
   /* Just passing the direction gets you the unmodified value */
   if (str[0] == dir_char) {
@@ -2048,9 +2050,16 @@ static int _xdo_get_dir(const char *str, const char dir_char,
   }
 
   raw_val = (unsigned int)strtoul(str, NULL, 0);
-  if (strchr(str, '%')) {
+  percent = strchr(str, '%');
+  if (percent) {
     *flags = GETXY_PERCENT_X;
-    *val = root_val * raw_val / 100;
+    if (percent[1]=='m') {
+      *val = mon_val * raw_val / 100.0;
+      *flags |= GETXY_MON_X;
+    } else {
+      *val = root_val * raw_val / 100.0;
+    }
+
   } else {
     *val = raw_val;
   }
@@ -2064,16 +2073,19 @@ int xdo_get_xy(xdo_t *xdo, Window w, const char *xstr, const char *ystr,
   Window root = 0;
   XWindowAttributes wattr;
   unsigned int root_w, root_h;
+  unsigned int monitor_w, monitor_h;
   int tmpflags;
 
   XGetWindowAttributes(xdo->xdpy, w, &wattr);
   root = wattr.root;
   xdo_get_window_size(xdo, root, &root_w, &root_h);
+  xdo_get_window_viewport_info(xdo, w, &monitor_w, &monitor_h, NULL,
+                               NULL, NULL);
 
-  if (_xdo_get_dir(xstr, 'x', x, root_w, flags) == XDO_ERROR) {
+  if (_xdo_get_dir(xstr, 'x', x, root_w, monitor_w, flags) == XDO_ERROR) {
     return XDO_ERROR;
   }
-  if (_xdo_get_dir(ystr, 'y', y, root_h, &tmpflags) == XDO_ERROR) {
+  if (_xdo_get_dir(ystr, 'y', y, root_h, monitor_h, &tmpflags) == XDO_ERROR) {
     return XDO_ERROR;
   }
   *flags |= tmpflags * (GETXY_ORIG_Y / GETXY_ORIG_X);
