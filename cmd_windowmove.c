@@ -74,6 +74,7 @@ int cmd_windowmove(context_t *context) {
 
   const char *window_arg = "%1";
   int parse_flags;
+  unsigned int monitor_x, monitor_y;
 
   if (!window_get_arg(context, 2, 0, &window_arg)) {
     fprintf(stderr, usage, cmd);
@@ -88,6 +89,18 @@ int cmd_windowmove(context_t *context) {
     xdo_get_window_location(context->xdo, window,
                             (int *)&x, (int *)&y, NULL);
     xdo_get_xy(context->xdo, window, xarg, yarg, &x, &y, &parse_flags);
+    xdo_get_window_viewport_info(context->xdo, window, NULL, NULL,
+                                 &monitor_x, &monitor_y, NULL);
+
+
+    if (!(windowmove.flags & WINDOWMOVE_RELATIVE) &&
+        !(parse_flags & GETXY_ORIG_X) && (parse_flags & GETXY_MON_X)) {
+      x += monitor_x;
+    };
+    if (!(windowmove.flags & WINDOWMOVE_RELATIVE) &&
+        !(parse_flags & GETXY_ORIG_Y) && (parse_flags & GETXY_MON_Y)) {
+      y += monitor_y;
+    };
 
     windowmove.x = x;
     windowmove.y = y;
