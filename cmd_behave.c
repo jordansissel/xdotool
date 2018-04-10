@@ -23,17 +23,26 @@ extern int context_execute(context_t *context);
 int cmd_behave(context_t *context) {
   int ret = 0;
   char *cmd = *context->argv;
+  int exit_on = -1;
 
   int c;
   typedef enum {
-    opt_unused, opt_help
+    opt_unused, opt_help, opt_exiton
   } optlist_t;
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
+    { "exit-on", required_argument, NULL, opt_exiton },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-    "Usage: %s window event action [args...]\n"
+    "Usage: %s [options] window event action [args...]\n"
+    "--exit-on CODE - Stop behave whenever the action returns with CODE,\n"
+    "                 where the latter is one of the following:\n"
+    "                   success  - success code returned by internal commands\n"
+    "                   failure  - error code returned by internal commands\n"
+    "                   NUM      - a numerical exit code (useful in conjunction\n"
+    "                              with the exec command)\n"
+    "\n"
     "The event is a window event, such as mouse-enter, resize, etc.\n"
     "The action is any valid xdotool command (chains OK here)\n"
     "\n"
@@ -56,6 +65,16 @@ int cmd_behave(context_t *context) {
         printf(usage, cmd);
         consume_args(context, context->argc);
         return EXIT_SUCCESS;
+        break;
+      case opt_exiton:
+        if (!strcmp(optarg, "success")) {
+          exit_on = XDO_SUCCESS;
+        } else if (!strcmp(optarg, "failure")) {
+          exit_on = XDO_ERROR;
+        } else {
+          exit_on = atoi(optarg);
+          /* XXX: do we want error handling here? */
+        }
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -121,6 +140,7 @@ int cmd_behave(context_t *context) {
     tmpcontext.windows = calloc(1, sizeof(Window));
     tmpcontext.nwindows = 1;
     Window hover; /* for LeaveNotify */
+    int ran_action = True;
     switch (e.type) {
       case LeaveNotify:
         /* LeaveNotify is confusing.
@@ -135,6 +155,7 @@ int cmd_behave(context_t *context) {
         xdo_get_window_at_mouse(context->xdo, &hover);
         if (hover == e.xcrossing.window) {
           //printf("Ignoring Leave, we're still in the window\n");
+          ran_action = False;
           break;
         }
         //printf("Window: %ld\n", e.xcrossing.window);
@@ -154,8 +175,7 @@ int cmd_behave(context_t *context) {
             *tmpcontext.windows = e.xfocus.window;
             ret = context_execute(&tmpcontext);
         } else {
-            /* Set to success to avoid "Command failed." */
-            ret = XDO_SUCCESS;
+            ran_action = False;
         }
         break;
       case ButtonRelease:
@@ -173,23 +193,35 @@ int cmd_behave(context_t *context) {
             *tmpcontext.windows = e.xany.window;
             ret = context_execute(&tmpcontext);
         } else {
-            /* Set to success to avoid "Command failed." */
-            ret = XDO_SUCCESS;
+            ran_action = False;
         }
         break;
       default:
-        printf("Unexpected event: %d\n", e.type);
+        /* There are a couple of events that we receive
+         * regardless of the chosen selection mask (e.g.
+         * MappingNotify) and we should not treat those
+         * as errors. */
+        xdotool_debug("Unexpected event: %d\n", e.type);
+        ran_action = False;
         break;
-    }
-
-    if (ret != XDO_SUCCESS) {
-      xdotool_output(context, "Command failed.");
     }
 
     if(tmpcontext.windows != NULL) {
         free(tmpcontext.windows);
     }
+
+    if (ran_action == True) {
+      if (exit_on == ret) {
+        break;
+      }
+
+      if (ret != XDO_SUCCESS) {
+        xdotool_debug(context, "Command failed.");
+      }
+    }
   }
+
+  consume_args(context, context->argc);
   return ret;
 }
 
