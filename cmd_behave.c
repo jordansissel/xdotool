@@ -172,10 +172,10 @@ int cmd_behave(context_t *context) {
          * we have to make sure we only fire on the type
          * that was requested. */
         if (e.type == eventtype) {
-            *tmpcontext.windows = e.xfocus.window;
-            ret = context_execute(&tmpcontext);
+          *tmpcontext.windows = e.xfocus.window;
+          ret = context_execute(&tmpcontext);
         } else {
-            ran_action = False;
+          ran_action = False;
         }
         break;
       case ButtonRelease:
@@ -190,10 +190,10 @@ int cmd_behave(context_t *context) {
       case GravityNotify:   /* caught by */
       case ReparentNotify:  /* StructureNotifyMask */
         if (e.type == eventtype) {
-            *tmpcontext.windows = e.xany.window;
-            ret = context_execute(&tmpcontext);
+          *tmpcontext.windows = e.xany.window;
+          ret = context_execute(&tmpcontext);
         } else {
-            ran_action = False;
+          ran_action = False;
         }
         break;
       default:
@@ -207,7 +207,7 @@ int cmd_behave(context_t *context) {
     }
 
     if(tmpcontext.windows != NULL) {
-        free(tmpcontext.windows);
+      free(tmpcontext.windows);
     }
 
     if (ran_action == True) {
