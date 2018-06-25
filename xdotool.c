@@ -370,7 +370,7 @@ int script_main(int argc, char **argv) {
     line += strspn(line, " \t");
 
     /* blanklines or line comment are ignored, too */
-    if (line[0] == '\n' || line[0] == '#') {
+    if (line[0] == '\0' || line[0] == '\n' || line[0] == '#') {
       continue;
     }
 
