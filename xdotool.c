@@ -408,6 +408,10 @@ int script_main(int argc, char **argv) {
         if (isdigit(line[0])) {
           /* get the position of this parameter in argv */ 
           pos = atoi(line) + 1; /* $1 is actually index 2 in the argv array */
+          if (pos < 0) {
+            fprintf (stderr, "%s: error: invalid argument position", line);
+            return EXIT_FAILURE;
+          }
 
           /* bail if no argument was given for this parameter */
           if (pos >= argc) {
