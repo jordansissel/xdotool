@@ -90,7 +90,7 @@ typedef struct xdo {
 
   /** @internal lowest keycode value */
   int keycode_low;  /* used by this X server */
-  
+
   /** @internal number of keysyms per keycode */
   int keysyms_per_keycode;
 
@@ -140,7 +140,7 @@ typedef struct xdo {
 #define SEARCH_ONLYVISIBLE  (1UL << 4)
 
 /**
- * Search only a specific screen. 
+ * Search only a specific screen.
  * @see xdo_search.screen
  * @see xdo_search_windows
  */
@@ -173,17 +173,17 @@ typedef struct xdo_search {
   int pid;            /** window pid (From window atom _NET_WM_PID) */
   long max_depth;     /** depth of search. 1 means only toplevel windows */
   int only_visible;   /** boolean; set true to search only visible windows */
-  int screen;         /** what screen to search, if any. If none given, search 
+  int screen;         /** what screen to search, if any. If none given, search
                          all screens */
 
   /** Should the tests be 'and' or 'or' ? If 'and', any failure will skip the
    * window. If 'or', any success will keep the window in search results. */
   enum { SEARCH_ANY, SEARCH_ALL } require;
-  
+
   /** bitmask of things you are searching for, such as SEARCH_NAME, etc.
    * @see SEARCH_NAME, SEARCH_CLASS, SEARCH_PID, SEARCH_CLASSNAME, etc
    */
-  unsigned int searchmask; 
+  unsigned int searchmask;
 
   /** What desktop to search, if any. If none given, search all screens. */
   long desktop;
@@ -286,7 +286,7 @@ int xdo_get_mouse_location(const xdo_t *xdo, int *x, int *y, int *screen_num);
 /**
  * Get the window the mouse is currently over
  *
- * @param window_ret Winter pointer where the window will be stored.
+ * @param window_ret Window pointer where the window will be stored.
  */
 int xdo_get_window_at_mouse(const xdo_t *xdo, Window *window_ret);
 
@@ -395,7 +395,7 @@ int xdo_send_keysequence_window_up(const xdo_t *xdo, Window window,
  */
 int xdo_send_keysequence_window_down(const xdo_t *xdo, Window window,
                          const char *keysequence, useconds_t delay);
-                         
+
 /**
  * Send a series of keystrokes.
  *
@@ -446,7 +446,7 @@ int xdo_move_window(const xdo_t *xdo, Window wid, int x, int y);
 /**
  * Apply a window's sizing hints (if any) to a given width and height.
  *
- * This function wraps XGetWMNormalHints() and applies any 
+ * This function wraps XGetWMNormalHints() and applies any
  * resize increment and base size to your given width and height values.
  *
  * @param window the window to use
@@ -614,7 +614,7 @@ int xdo_minimize_window(const xdo_t *xdo, Window wid);
  */
 int xdo_window_state(xdo_t *xdo, Window window, unsigned long action, const char *property);
 
-/** 
+/**
  * Reparents a window
  *
  * @param wid_source the window to reparent
@@ -735,7 +735,7 @@ int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
  *
  * @param window the window to query
  * @param atom the Atom to request
- * @param nitems the number of items 
+ * @param nitems the number of items
  * @param type the type of the return
  * @param size the size of the type
  * @return data consisting of 'nitems' items of size 'size' and type 'type'
@@ -749,7 +749,7 @@ unsigned char *xdo_get_window_property_by_atom(const xdo_t *xdo, Window window, 
  *
  * @param window the window to query
  * @param property the name of the atom
- * @param nitems the number of items 
+ * @param nitems the number of items
  * @param type the type of the return
  * @param size the size of the type
  * @return data consisting of 'nitems' items of size 'size' and type 'type'
@@ -791,7 +791,7 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
 
 /**
  * Send any events necessary to clear the active modifiers.
- * For example, if you are holding 'alt' when xdo_get_active_modifiers is 
+ * For example, if you are holding 'alt' when xdo_get_active_modifiers is
  * called, then this method will send a key-up for 'alt'
  */
 int xdo_clear_active_modifiers(const xdo_t *xdo, Window window,
@@ -811,7 +811,7 @@ int xdo_set_active_modifiers(const xdo_t *xdo, Window window,
  * Get the position of the current viewport.
  *
  * This is only relevant if your window manager supports
- * _NET_DESKTOP_VIEWPORT 
+ * _NET_DESKTOP_VIEWPORT
  */
 int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret);
 
@@ -855,9 +855,12 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
 /**
  * Get a window's name, if any.
  *
- * TODO(sissel): Document
+ * @param window window to get the name of.
+ * @param name_ret character pointer pointer where the address of the window name will be stored.
+ * @param name_len_ret integer pointer where the length of the window name will be stored.
+ * @param name_type integer pointer where the type (atom) of the window name will be stored.
  */
-int xdo_get_window_name(const xdo_t *xdo, Window window, 
+int xdo_get_window_name(const xdo_t *xdo, Window window,
                         unsigned char **name_ret, int *name_len_ret,
                         int *name_type);
 
@@ -866,7 +869,7 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
  *
  * This function is mainly used by libxdo itself, however, you may find it useful
  * in your own applications.
- * 
+ *
  * @see XDO_FEATURES
  */
 void xdo_disable_feature(xdo_t *xdo, int feature);
@@ -876,7 +879,7 @@ void xdo_disable_feature(xdo_t *xdo, int feature);
  *
  * This function is mainly used by libxdo itself, however, you may find it useful
  * in your own applications.
- * 
+ *
  * @see XDO_FEATURES
  */
 void xdo_enable_feature(xdo_t *xdo, int feature);
@@ -886,7 +889,7 @@ void xdo_enable_feature(xdo_t *xdo, int feature);
  *
  * This function is mainly used by libxdo itself, however, you may find it useful
  * in your own applications.
- * 
+ *
  * @see XDO_FEATURES
  */
 int xdo_has_feature(xdo_t *xdo, int feature);
