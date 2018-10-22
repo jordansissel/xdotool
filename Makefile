@@ -4,6 +4,7 @@ INSTALLBIN?=$(PREFIX)/bin
 INSTALLLIB?=$(PREFIX)/lib
 INSTALLMAN?=$(PREFIX)/man
 INSTALLINCLUDE?=$(PREFIX)/include
+INSTALLPC?=$(PREFIX)/lib/pkgconfig
 LDCONFIG?=ldconfig
 
 DPREFIX=$(DESTDIR)$(PREFIX)
@@ -11,6 +12,7 @@ DINSTALLBIN=$(DESTDIR)$(INSTALLBIN)
 DINSTALLLIB=$(DESTDIR)$(INSTALLLIB)
 DINSTALLMAN=$(DESTDIR)$(INSTALLMAN)
 DINSTALLINCLUDE=$(DESTDIR)$(INSTALLINCLUDE)
+DINSTALLPC=$(DESTDIR)$(INSTALLPC)
 
 MAJOR=$(shell sh version.sh --major)
 VERSION=$(shell sh version.sh)
@@ -69,7 +71,7 @@ xdotool.static: xdotool.o $(CMDOBJS) xdo.o xdo_search.o
 	$(CC) -o xdotool.static xdotool.o xdo.o xdo_search.o $(CMDOBJS) $(LDFLAGS)  -lm $(XDOTOOL_LIBS) $(LIBXDO_LIBS)
 
 .PHONY: install
-install: pre-install installlib installprog installman installheader post-install
+install: pre-install installlib installprog installman installheader installpc post-install
 
 .PHONY: pre-install
 pre-install:
@@ -99,6 +101,11 @@ installlib: libxdo.$(LIBSUFFIX)
 installheader: xdo.h
 	install -d $(DINSTALLINCLUDE)
 	install xdo.h $(DINSTALLINCLUDE)/xdo.h
+
+.PHONY: installpc
+installpc: libxdo.pc
+	install -d $(DINSTALLPC)
+	install libxdo.pc $(DINSTALLPC)/libxdo.pc
 
 .PHONY: installman
 installman: xdotool.1
@@ -141,6 +148,9 @@ libxdo.a: xdo.o xdo_search.o
 
 libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 	ln -s $< $@
+
+libxdo.pc:
+	sh pc.sh $(VERSION) $(INSTALLLIB) $(INSTALLINCLUDE) > libxdo.pc
 
 # xdotool the binary requires libX11 now for XSelectInput and friends.
 # This requirement will go away once more things are refactored into
