@@ -1491,8 +1491,10 @@ int _xdo_ewmh_is_supported(const xdo_t *xdo, const char *feature) {
 
   results = (Atom *) xdo_get_window_property_by_atom(xdo, root, request, &nitems, &type, &size);
   for (i = 0L; i < nitems; i++) {
-    if (results[i] == feature_atom)
+    if (results[i] == feature_atom) {
+      free(results);
       return True;
+    }
   }
   free(results);
 
