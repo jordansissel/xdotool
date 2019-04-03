@@ -1881,6 +1881,14 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
   return 0;
 }
 
+int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **name_ret) {
+  XClassHint classhint;
+  XGetClassHint(xdo->xdpy, window, &classhint);
+  XFree(classhint.res_name);
+  *name_ret = (char*) classhint.res_class;
+  return 0;
+}
+
 int xdo_window_state(xdo_t *xdo, Window window, unsigned long action, const char *property) {
   int ret;
   XEvent xev;

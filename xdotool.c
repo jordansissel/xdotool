@@ -223,6 +223,7 @@ struct dispatch {
   { "getactivewindow", cmd_getactivewindow, },
   { "getwindowfocus", cmd_getwindowfocus, },
   { "getwindowname", cmd_getwindowname, },
+  { "getwindowclassname", cmd_getwindowclassname},
   { "getwindowpid", cmd_getwindowpid, },
   { "getwindowgeometry", cmd_getwindowgeometry, },
   { "getdisplaygeometry", cmd_get_display_geometry, },
