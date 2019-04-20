@@ -205,6 +205,7 @@ int cmd_type(context_t *context) {
   free(data);
 
   consume_args(context, args_count);
+  printf("\n");
   return ret > 0;
 }
 
