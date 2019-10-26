@@ -25,7 +25,7 @@ int cmd_mousemove(context_t *context) {
   mousemove.clear_modifiers = 0;
   mousemove.polar_coordinates = 0;
   mousemove.opsync = 0;
-  mousemove.screen = 0;
+  mousemove.screen = DefaultScreen(context->xdo->xdpy);
   mousemove.x = 0;
   mousemove.y = 0;
   mousemove.step = 0;
