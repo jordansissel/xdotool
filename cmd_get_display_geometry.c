@@ -5,7 +5,7 @@ int cmd_get_display_geometry(context_t *context) {
   char *cmd = context->argv[0];
 
   int c;
-  int screen = 0;
+  int screen = DefaultScreen(context->xdo->xdpy);
   int shell_output = False;
 
   typedef enum { 
