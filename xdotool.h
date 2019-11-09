@@ -51,6 +51,7 @@ int cmd_getwindowfocus(context_t *context);
 int cmd_getwindowname(context_t *context);
 int cmd_getwindowpid(context_t *context);
 int cmd_getwindowgeometry(context_t *context);
+int cmd_getwindowstacklen(context_t *context);
 int cmd_help(context_t *context);
 int cmd_key(context_t *context);
 int cmd_mousedown(context_t *context);

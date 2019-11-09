@@ -543,6 +543,10 @@ Output values suitable for 'eval' in a shell.
 
 =back
 
+=item B<getwindowstacklen>
+
+Output the length of window stack. See L<WINDOW STACK> for more details.
+
 =item B<getwindowfocus> [-f]
 
 Prints the window id of the currently focused window. Saves the result to the
