@@ -172,7 +172,9 @@ int cmd_search(context_t *context) {
       search.searchmask |= SEARCH_CLASSNAME;
       search.winclassname = context->argv[0];
     }
-    consume_args(context, 1);
+    if (search_title || search_name || search_class || search_classname) {
+      consume_args(context, 1);
+    }
   }
 
   do {
