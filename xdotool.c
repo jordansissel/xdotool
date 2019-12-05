@@ -449,6 +449,11 @@ int script_main(int argc, char **argv) {
           exit(EXIT_FAILURE);
         }
         script_argv[script_argc] = (char *) calloc(strlen(token) + 1, sizeof(char));
+        if (script_argv[script_argc] == NULL) {
+          fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
+                  argv[0], argv[1]);
+          exit(EXIT_FAILURE);
+        }
 
         //printf("arg %d: %s\n", script_argc, token);
         strcpy(script_argv[script_argc], token);      
