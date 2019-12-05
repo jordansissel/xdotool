@@ -58,9 +58,7 @@ void consume_args(context_t *context, int argc) {
 } /* void consume_args(context_t *, int) */
 
 void window_save(context_t *context, Window window) {
-  if (context->windows != NULL) {
-    free(context->windows);
-  }
+  free(context->windows);
 
   context->windows = calloc(1, sizeof(Window));
   context->nwindows = 1;
@@ -528,9 +526,7 @@ int script_main(int argc, char **argv) {
        * Free the allocated memory for tokens.
        */
       for(int j = 0; j < script_argc + 1; j++){
-        if(*(script_argv + j) != NULL){
-          free(*(script_argv + j));
-        }
+        free(*(script_argv + j));
         *(script_argv + j) = NULL;
       }
       script_argc = 0;
@@ -540,9 +536,7 @@ int script_main(int argc, char **argv) {
 
 
   xdo_free(context.xdo);
-  if (context.windows != NULL) {
-    free(context.windows);
-  }
+  free(context.windows);
 
   for(int i=0; i<script_argc+1; ++i) {
       free(script_argv[i]);
@@ -611,9 +605,7 @@ int args_main(int argc, char **argv) {
   ret = context_execute(&context);
 
   xdo_free(context.xdo);
-  if (context.windows != NULL) {
-    free(context.windows);
-  }
+  free(context.windows);
 
   return ret;
 } /* int args_main(int, char **) */

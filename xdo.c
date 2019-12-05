@@ -160,10 +160,8 @@ void xdo_free(xdo_t *xdo) {
   if (xdo == NULL)
     return;
 
-  if (xdo->display_name)
-    free(xdo->display_name);
-  if (xdo->charcodes)
-    free(xdo->charcodes);
+  free(xdo->display_name);
+  free(xdo->charcodes);
   if (xdo->xdpy && xdo->close_display_when_freed)
     XCloseDisplay(xdo->xdpy);
 
@@ -1038,9 +1036,7 @@ int _xdo_send_keysequence_window_do(const xdo_t *xdo, Window window, const char 
   }
 
   ret = xdo_send_keysequence_window_list_do(xdo, window, keys, nkeys, pressed, modifier, delay);
-  if (keys != NULL) {
-    free(keys);
-  }
+  free(keys);
 
   return ret;
 }
