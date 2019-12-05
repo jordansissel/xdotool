@@ -5,7 +5,7 @@
  * getwindowfocus contributed by Lee Pumphret
  * keyup/down contributed by Lee Pumphret
  *
- * vim:expandtab shiftwidth=2 softtabstop=2
+ * vi: expandtab shiftwidth=2 softtabstop=2
  */
 
 #define _GNU_SOURCE 1
@@ -323,13 +323,22 @@ int script_main(int argc, char **argv) {
    * args_main().
    */
 
+  int result = XDO_SUCCESS;
   FILE *input = NULL;
-  const char *path = argv[1];
   char buffer[4096];
-
-  char **script_argv = (char **) calloc(1, sizeof(char *));
   int script_argc = 0;
   int script_argc_max = 0;
+  size_t token_len, total_len = 0;
+  char *token = NULL;
+  const char *path = argv[1];
+  char **script_argv = (char **) calloc(1, sizeof(char *));
+  int continues_next_buffer = 0;
+
+  if (script_argv == NULL) {
+    fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
+            argv[0], argv[1]);
+    exit(EXIT_FAILURE);
+  }
 
   /* determine whether reading from a file or from stdin */
   if (!strcmp(path, "-")) {
@@ -355,31 +364,25 @@ int script_main(int argc, char **argv) {
     return 1;
   }
   context.xdo->debug = context.debug;
-  
+
   /* read input... */
-  int pos;
-  char *token;
-  int result = XDO_SUCCESS;
 
-  while (fgets(buffer, 4096, input) != NULL) {
+  while (fgets(buffer, sizeof(buffer), input) != NULL) {
     char *line = buffer;
-    token = NULL;
+    const size_t end = strcspn(line, "\n");
 
-    /* Ignore leading whitespace */
-    line += strspn(line, " \t");
-
-    /* blanklines or line comment are ignored, too */
-    if (line[0] == '\n' || line[0] == '#') {
-      continue;
-    }
-
-    /* replace newline with null */
-    if (line[strlen(line)-1] == '\n') 
-      line[strlen(line)-1] = '\0'; 
+    /* replace newline with nul */
+    line[end] = '\0';
 
     /* tokenize line into script_argv... */
-    while (strlen(line)) {
-      token = NULL;
+    while (*line != '\0') {
+      /* skip leading whitespace */
+      line += strspn(line, " \t");
+      /* ignore comment lines */
+      if (line[0] == '#') {
+        line += strlen(line);
+        continue;
+      }
 
       /* modify line to contain the current token. Tokens are
        * separated by whitespace, or quoted with single/double quotes.
@@ -402,10 +405,11 @@ int script_main(int argc, char **argv) {
       */
       if (line[0] == '$') {
         /* ignore dollar sign */
-        line++; 
-      
+        line++;
+
         if (isdigit(line[0])) {
-          /* get the position of this parameter in argv */ 
+          int pos;
+          /* get the position of this parameter in argv */
           pos = atoi(line) + 1; /* $1 is actually index 2 in the argv array */
 
           /* bail if no argument was given for this parameter */
@@ -430,52 +434,92 @@ int script_main(int argc, char **argv) {
           }
         }
       }
-      else { 
+      else {
         /* use the verbatim token */
         token = line;
-      }      
+      }
+
+      token_len = strlen(token);
+      if (token_len == 0) {
+        continue; /* nothing there */
+      }
 
       /* append token */
-      if (token != NULL) {
 
-        if(script_argc + 1 > script_argc_max){
-          script_argv = realloc(script_argv, (script_argc + 1) * sizeof(char *));
-          script_argc_max++;
-        }
-
+      /* allocate memory for the new token if needed */
+      if (script_argc + 1 > script_argc_max) {
+        script_argv = realloc(script_argv, (script_argc + 1) * sizeof(char *));
         if (script_argv == NULL) {
-          fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n", 
-                  argv[0], argv[1]);
-          exit(EXIT_FAILURE);
-        }
-        script_argv[script_argc] = (char *) calloc(strlen(token) + 1, sizeof(char));
-        if (script_argv[script_argc] == NULL) {
           fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
                   argv[0], argv[1]);
           exit(EXIT_FAILURE);
         }
-
-        //printf("arg %d: %s\n", script_argc, token);
-        strcpy(script_argv[script_argc], token);      
-        script_argc++;
+        script_argv[script_argc] = NULL;
+        script_argc_max++;
       }
-      
+
+      script_argv[script_argc] = realloc(script_argv[script_argc],
+          (total_len + token_len + 1) * sizeof(char)
+      );
+
+      if (script_argv[script_argc] == NULL) {
+        fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
+                argv[0], argv[1]);
+        exit(EXIT_FAILURE);
+      }
+
+      /* We _know_ that token fits and hence use strcpy */
+      strcpy(script_argv[script_argc] + total_len, token);
+
       /* advance line to the next token */
-      line += strlen(line) + 1;
-      line += strspn(line, " \t");
+      line += token_len;
+      total_len += token_len;
+
+      /* we did not do exact byte-counting, so simply look at the buffer */
+      /* did we reach the end of the buffer? */
+      if (line == &buffer[sizeof(buffer) - 1]) {
+        /* yes. The remainder of the command/arg is in the next buffer */
+        continues_next_buffer = 1;
+
+        //if (context.debug) {
+        //  fprintf(stderr, "token so far (continues): %s\n", token);
+        //}
+      } else {
+        /* no, get next argument */
+        line++; /* skip past current '\0' */
+        script_argc++;
+        total_len = 0;
+        continues_next_buffer = 0;
+
+        //if (context.debug) {
+        //  fprintf(stderr, "token: %s\n", token);
+        //}
+      }
     } /* while line being tokenized */
 
-    /* 
-     * Add NULL at the end and reallocate memory if necessary.
+    /*
+     * Reallocate memory if needed for the final NULL at the end.
      */
     if(script_argc_max <= script_argc){
       script_argv = realloc(script_argv, (script_argc+1) * sizeof(char *));
       /* TODO(sissel): STOPPED HERE */
+      if (script_argv == NULL) {
+        fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
+                argv[0], argv[1]);
+        exit(EXIT_FAILURE);
+      }
+      script_argv[script_argc] = NULL;
       script_argc_max++;
     }
-    *(script_argv + script_argc) = NULL;
 
-    if(script_argc > 0){
+    /* continues_next_buffer is true if a command or argument continues
+     * in the next buffer.
+     * Think: printf "mousemove%4107s" "--polar -- 0 0 sleep 0.1" > /tmp/i
+     *        xdotool - < /tmp/i
+     * should ideally parse until we see a supported command, i.e.
+     * do not break "--p" "olar" in half but continue reading until "sleep".
+     */
+    if(!continues_next_buffer && script_argc > 0){
       context.argc = script_argc;
       context.argv = script_argv;
       result = context_execute(&context);
@@ -483,14 +527,13 @@ int script_main(int argc, char **argv) {
       /*
        * Free the allocated memory for tokens.
        */
-      for(int j = 0; j < script_argc; j++){
+      for(int j = 0; j < script_argc + 1; j++){
         if(*(script_argv + j) != NULL){
           free(*(script_argv + j));
         }
+        *(script_argv + j) = NULL;
       }
-
       script_argc = 0;
-      *script_argv = NULL;
     }
   }
   fclose(input);
