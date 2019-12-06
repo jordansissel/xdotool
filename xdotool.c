@@ -38,7 +38,6 @@ void window_list(context_t *context, const char *window_arg,
                  const int add_to_list);
 int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
                    const char **window_arg);
-int window_is_valid(context_t *context, const char *window_arg);
 int is_command(char* cmd);
 void xdotool_debug(context_t *context, const char *format, ...);
 void xdotool_output(context_t *context, const char *format, ...);
@@ -65,7 +64,7 @@ void window_save(context_t *context, Window window) {
   context->windows[0] = window;
 } /* void window_save(context_t *, Window) */
 
-int window_is_valid(context_t *context, const char *window_arg) {
+static int window_is_valid(context_t *context, const char *window_arg) {
   if (window_arg == NULL) {
     return True;
   }
