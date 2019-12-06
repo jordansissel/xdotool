@@ -13,9 +13,6 @@ struct events {
   { NULL, 0 },
 };
 
-/* So we can invoke xdotool from within this command */
-extern int context_execute(context_t *context);
-
 int cmd_behave(context_t *context) {
   int ret = 0;
   char *cmd = *context->argv;

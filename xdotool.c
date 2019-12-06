@@ -27,10 +27,10 @@
 
 #include "xdo.h"
 #include "xdotool.h"
+#include "xdo_cmd.h"
 
 static int script_main(int argc, char **argv);
 static int args_main(int argc, char **argv);
-int context_execute(context_t *context);
 void consume_args(context_t *context, int argc);
 void window_save(context_t *context, Window window);
 void window_list(context_t *context, const char *window_arg,
