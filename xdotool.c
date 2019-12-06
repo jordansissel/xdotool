@@ -31,16 +31,6 @@
 
 static int script_main(int argc, char **argv);
 static int args_main(int argc, char **argv);
-void consume_args(context_t *context, int argc);
-void window_save(context_t *context, Window window);
-void window_list(context_t *context, const char *window_arg,
-                 Window **windowlist_ret, int *nwindows_ret,
-                 const int add_to_list);
-int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
-                   const char **window_arg);
-int is_command(char* cmd);
-void xdotool_debug(context_t *context, const char *format, ...);
-void xdotool_output(context_t *context, const char *format, ...);
 
 void consume_args(context_t *context, int argc) {
   if (argc > context->argc) {
