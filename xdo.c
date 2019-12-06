@@ -107,13 +107,20 @@ xdo_t* xdo_new(const char *display_name) {
   return xdo_new_with_opened_display(xdpy, display_name, 1);
 }
 
+/* Output error on stderr, without formatting.
+ * Might be called in low-memory conditions so no printf */
+static void early_error(const char *msg) {
+  const size_t len = strlen(msg);
+  write(STDERR_FILENO, msg, len);
+}
+
 xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
                                    int close_display_when_freed) {
   xdo_t *xdo = NULL;
 
   if (xdpy == NULL) {
     /* Can't use _xdo_eprintf yet ... */
-    fprintf(stderr, "xdo_new: xdisplay I was given is a null pointer\n");
+    early_error("xdo_new: xdisplay I was given is a null pointer\n");
     return NULL;
   }
 
@@ -126,10 +133,11 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
     //return NULL;
   //}
 
-
-  /* XXX: Check for NULL here */
-  xdo = malloc(sizeof(xdo_t));
-  memset(xdo, 0, sizeof(xdo_t));
+  xdo = calloc(1, sizeof(xdo_t));
+  if (xdo == NULL) {
+    early_error("xdo_new: out of memory allocating the main context\n");
+    return NULL;
+  }
 
   xdo->xdpy = xdpy;
   xdo->close_display_when_freed = close_display_when_freed;
