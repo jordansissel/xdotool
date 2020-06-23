@@ -212,7 +212,7 @@ int xdo_get_window_location(const xdo_t *xdo, Window wid,
       y = attr.y;
     } else {
       XTranslateCoordinates(xdo->xdpy, wid, attr.root,
-                            attr.x, attr.y, &x, &y, &unused_child);
+                            0, 0, &x, &y, &unused_child);
     }
 
     if (x_ret != NULL) {
