@@ -1260,6 +1260,14 @@ static KeySym _xdo_keysym_from_char(const xdo_t *xdo, wchar_t key) {
 static void _xdo_charcodemap_from_char(const xdo_t *xdo, charcodemap_t *key) {
   KeySym keysym = _xdo_keysym_from_char(xdo, key->key);
   _xdo_charcodemap_from_keysym(xdo, key, keysym);
+
+  /* If the character is an uppercase character within the Basic Latin or Latin-1 code block,
+   * then sending the capital character keycode will not work.
+   * We have to also send the shift modifier.
+   * There are only three ranges of capital letters to worry about */
+  if ((key->key >= 0x41 && key->key <= 0x5A) || (key->key >= 0xC0 && key->key <= 0xD6) || (key->key >= 0xD8 && key->key <= 0xDE)) {
+    key->modmask = ShiftMask;
+  }
 }
 
 static void _xdo_charcodemap_from_keysym(const xdo_t *xdo, charcodemap_t *key, KeySym keysym) {
