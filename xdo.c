@@ -1800,18 +1800,21 @@ int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret) {
             "Got unexpected type returned from _NET_DESKTOP_VIEWPORT."
             " Expected CARDINAL, got %s\n",
             XGetAtomName(xdo->xdpy, type));
+    free(data);
     return XDO_ERROR;
   }
 
   if (nitems != 2) {
     fprintf(stderr, "Expected 2 items for _NET_DESKTOP_VIEWPORT, got %ld\n",
             nitems);
+    free(data);
     return XDO_ERROR;
   }
 
   int *viewport_data = (int *)data;
   *x_ret = viewport_data[0];
   *y_ret = viewport_data[1];
+  free(data);
 
   return XDO_SUCCESS;
 }
