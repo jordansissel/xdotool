@@ -107,15 +107,12 @@ int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
             context->argc, min_arg);
     return False;
   } else if (context->argc == min_arg) {
-    //fprintf(stderr, "Using default arg\n");
     /* nothing, keep default */
   } else if (context->argc > min_arg) {
     if (is_command(context->argv[min_arg])) {
-      //fprintf(stderr, "arg is command, using default\n");
       /* keep default */
     } else {
       /* got enough args, let's use the window you asked for */
-      //fprintf(stderr, "got enough args\n");
       *window_arg = context->argv[window_arg_pos];
       consume_args(context, 1);
     }
@@ -521,10 +518,6 @@ int args_main(int argc, char **argv) {
     cmd_help(NULL);
     exit(1);
   }
-  
-  //for(i = 0; i<argc; i++) {
-    //fprintf(stderr, "argv[%d] = \"%s\"\n", i, argv[i]);
-  //}
 
   while ((opt = getopt_long_only(argc, argv, "++hv", long_options, &option_index)) != -1) {
     switch (opt) {
