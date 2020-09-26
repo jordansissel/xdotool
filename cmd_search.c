@@ -148,7 +148,7 @@ int cmd_search(context_t *context) {
   }
 
   if (context->argc > 0) {
-    if (!search_title && !search_name && !search_class && !search_classname) {
+    if (!search.pid && !search_title && !search_name && !search_class && !search_classname) {
       fprintf(stderr, "Defaulting to search window name, class, and classname\n");
       search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
       search_name = 1;
@@ -172,7 +172,9 @@ int cmd_search(context_t *context) {
       search.searchmask |= SEARCH_CLASSNAME;
       search.winclassname = context->argv[0];
     }
-    consume_args(context, 1);
+    if (search_title || search_name || search_class || search_classname) {
+      consume_args(context, 1);
+    }
   }
 
   do {
