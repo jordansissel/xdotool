@@ -452,6 +452,10 @@ For example:
  google-chrome &
  xdotool search --sync --onlyvisible --class "google-chrome"
 
+=item B<--syncsleep N>
+
+Delay in milliseconds between searches when using --sync. Default 500ms.
+
 =back
 
 =item B<selectwindow>
