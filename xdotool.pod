@@ -365,8 +365,8 @@ Patterns are POSIX extended regular expressions (ERE), e. g. "Chrom(e|ium)$" for
 windows ending in "Chrome" or "Chromium". See L<regex(7)> for syntax details.
 Matches are case-insensitive.
 
-The default options are C<--name --class --classname> (unless you specify one or
-more of --name, --class or --classname).
+The default options are C<--name --class --classname --role>
+(unless you specify one or more of --name, --class, --classname, or --role).
 
 The options available are:
 
@@ -379,6 +379,10 @@ Match against the window class.
 =item B<--classname>
 
 Match against the window classname.
+
+=item B<--rolw>
+
+Match against the window role.
 
 =item B<--maxdepth> N
 
