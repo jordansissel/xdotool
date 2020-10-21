@@ -698,6 +698,12 @@ Close a window. This action will destroy the window, but will not try
 to kill the client controlling it. If no window is given, %1 is the
 default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
 
+=item B<windowquit> I<[window]>
+
+Close a window gracefully. This action sends a request, allowing the
+application to apply close confirmation mechanics. If no window is given, %1
+is the default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
+
 =item B<windowkill> I<[window]>
 
 Kill a window. This action will destroy the window and kill the client

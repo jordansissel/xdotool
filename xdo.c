@@ -1851,6 +1851,29 @@ int xdo_close_window(const xdo_t *xdo, Window window) {
   return _is_success("XDestroyWindow", ret == 0, xdo);
 }
 
+int xdo_quit_window(const xdo_t *xdo, Window window) {
+  XEvent xev;
+  int ret;
+  Window root = RootWindow(xdo->xdpy, 0);
+
+  memset(&xev, 0, sizeof(xev));
+  xev.type = ClientMessage;
+  xev.xclient.serial = 0;
+  xev.xclient.send_event = True;
+  xev.xclient.display = xdo->xdpy;
+  xev.xclient.window = window;
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_CLOSE_WINDOW", False);
+  xev.xclient.format = 32;
+
+  ret = XSendEvent(xdo->xdpy, root, False,
+                   SubstructureNotifyMask | SubstructureRedirectMask,
+                   &xev);
+
+  /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
+   * Manpage says it will only generate BadWindow or BadValue errors */
+  return _is_success("XSendEvent[_NET_CLOSE_WINDOW]", ret == 0, xdo);
+}
+
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
                         unsigned char **name_ret, int *name_len_ret,
                         int *name_type) {
