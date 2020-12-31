@@ -443,11 +443,20 @@ default. For example:
 This will match any windows owned by pid 1424 or windows with name "Hello
 World"
 
-=item B<--sync >
+=item B<--sync [T [A]]>
 
-Block until there are results. This is useful when you are launching an
-application and want to wait until the application window is visible.
-For example:
+Block infiniteley until there are any results found. Command takes optional 
+parammeters: 
+ T - sync waiting time till next search attempt, default: 0.5
+ A - attempt count, 0 means infinity, default: 0.
+
+In total sync blocking time is T * A seconds until a search command result 
+is resolved.
+
+This is useful when you are launching an application and want to wait for some 
+defined time interval and/or until the application window is found.
+
+For example this makes xdotool to wait infiniteley till application is visible:
 
  google-chrome &
  xdotool search --sync --onlyvisible --class "google-chrome"
