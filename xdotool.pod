@@ -260,6 +260,8 @@ Same as B<click>, except only a mouse up is sent.
 Outputs the x, y, screen, and window id of the mouse cursor. Screen numbers will
 be nonzero if you have multiple monitors and are not using Xinerama.
 
+This command updates the window stack with the window id of the window directly underneath the mouse.
+
 =over
 
 =item B<--shell>

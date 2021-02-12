@@ -52,7 +52,11 @@ int cmd_getmouselocation(context_t *context) {
     xdotool_output(context, "%sSCREEN=%d", out_prefix, screen_num);
     xdotool_output(context, "%sWINDOW=%d", out_prefix, window);
   } else {
-    xdotool_output(context, "x:%d y:%d screen:%d window:%ld", x, y, screen_num, window);
+    /* only print if we're the last command */
+    if (context->argc == 0) {
+      xdotool_output(context, "x:%d y:%d screen:%d window:%ld", x, y, screen_num, window);
+    }
+    window_save(context, window);
   }
   return ret;
 }
