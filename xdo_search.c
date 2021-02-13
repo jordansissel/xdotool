@@ -17,6 +17,7 @@ static int compile_re(const char *pattern, regex_t *re);
 static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *search);
 static int _xdo_match_window_class(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_match_window_classname(const xdo_t *xdo, Window window, regex_t *re);
+static int _xdo_match_window_role(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_match_window_name(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_match_window_title(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_match_window_pid(const xdo_t *xdo, Window window, int pid);
@@ -165,6 +166,36 @@ static int _xdo_match_window_classname(const xdo_t *xdo, Window window, regex_t 
   return False;
 } /* int _xdo_match_window_classname */
 
+static int _xdo_match_window_role(const xdo_t *xdo, Window window, regex_t *re) {
+  int status;
+  int ret = False;
+  int i;
+  int count = 0;
+  char **list = NULL;
+  XTextProperty tp;
+
+  status = XGetTextProperty(xdo->xdpy, window, &tp,
+                            XInternAtom(xdo->xdpy, "WM_WINDOW_ROLE", False));
+  if (status && tp.nitems > 0) {
+    Xutf8TextPropertyToTextList(xdo->xdpy, &tp, &list, &count);
+    for (i = 0; i < count; i++) {
+      if (regexec(re, list[i], 0, NULL, 0) == 0) {
+        ret = True;
+      }
+    }
+  } else {
+    /* Treat windows with no role as empty strings */
+    if (regexec(re, "", 0, NULL, 0) == 0) {
+      ret = True;
+    }
+  }
+  if(status) {
+    XFreeStringList(list);
+    XFree(tp.value);
+  }
+  return ret;
+} /* int _xdo_match_window_role */
+
 static int _xdo_match_window_pid(const xdo_t *xdo, Window window, const int pid) {
   int window_pid;
 
@@ -206,17 +237,20 @@ static int check_window_match(const xdo_t *xdo, Window wid,
   regex_t class_re;
   regex_t classname_re;
   regex_t name_re;
+  regex_t role_re;
 
 
   if (!compile_re(search->title, &title_re) \
       || !compile_re(search->winclass, &class_re) \
       || !compile_re(search->winclassname, &classname_re) \
+      || !compile_re(search->winrole, &role_re) \
       || !compile_re(search->winname, &name_re)) {
 
     regfree(&title_re);
     regfree(&class_re);
     regfree(&classname_re);
     regfree(&name_re);
+    regfree(&role_re);
 
     return False;
   }
@@ -226,6 +260,7 @@ static int check_window_match(const xdo_t *xdo, Window wid,
 
   int visible_ok, pid_ok, title_ok, name_ok, class_ok, classname_ok, desktop_ok;
   int visible_want, pid_want, title_want, name_want, class_want, classname_want, desktop_want;
+  int role_ok, role_want;
 
   visible_ok = pid_ok = title_ok = name_ok = class_ok = classname_ok = desktop_ok = True;
     //(search->require == SEARCH_ANY ? False : True);
@@ -237,6 +272,8 @@ static int check_window_match(const xdo_t *xdo, Window wid,
   name_want = search->searchmask & SEARCH_NAME;
   class_want = search->searchmask & SEARCH_CLASS;
   classname_want = search->searchmask & SEARCH_CLASSNAME;
+  role_ok = True;
+  role_want = search->searchmask & SEARCH_ROLE;
 
   do {
     if (desktop_want) {
@@ -287,12 +324,18 @@ static int check_window_match(const xdo_t *xdo, Window wid,
       if (debug) fprintf(stderr, "skip %ld winclassname\n", wid);
       classname_ok = False;
     }
+
+    if (role_want && !_xdo_match_window_role(xdo, wid, &role_re)) {
+      if (debug) fprintf(stderr, "skip %ld winrole\n", wid);
+      role_ok = False;
+    }
   } while (0);
 
   regfree(&title_re);
   regfree(&class_re);
   regfree(&classname_re);
   regfree(&name_re);
+  regfree(&role_re);
 
   if (debug) {
     fprintf(stderr, "win: %ld, pid:%d, title:%d, name:%d, class:%d, visible:%d\n",
@@ -301,11 +344,13 @@ static int check_window_match(const xdo_t *xdo, Window wid,
 
   switch (search->require) {
     case SEARCH_ALL:
-      return visible_ok && pid_ok && title_ok && name_ok && class_ok && classname_ok && desktop_ok;
+      return visible_ok && pid_ok && title_ok && name_ok && class_ok \
+             && classname_ok && desktop_ok && role_ok;
       break;
     case SEARCH_ANY:
       return visible_ok && ((pid_want && pid_ok) || (title_want && title_ok) \
                             || (name_want && name_ok) \
+                            || (role_want && role_ok) \
                             || (class_want && class_ok) \
                             || (classname_want && classname_ok)) \
                          && desktop_ok;

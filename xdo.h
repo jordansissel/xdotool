@@ -159,6 +159,11 @@ typedef struct xdo {
  */
 #define SEARCH_DESKTOP (1UL << 7)
 
+/**
+ * Search only window role.
+ * @see xdo_search
+ */
+#define SEARCH_ROLE (1UL << 8)
 
 /**
  * The window search query structure.
@@ -170,6 +175,7 @@ typedef struct xdo_search {
   const char *winclass;     /** pattern to test against a window class */
   const char *winclassname; /** pattern to test against a window class */
   const char *winname;      /** pattern to test against a window name */
+  const char *winrole;      /** pattern to test against a window role */
   int pid;            /** window pid (From window atom _NET_WM_PID) */
   long max_depth;     /** depth of search. 1 means only toplevel windows */
   int only_visible;   /** boolean; set true to search only visible windows */
