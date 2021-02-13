@@ -1,5 +1,6 @@
 *.o
 *.so*
 *.1
+libxdo.pc
 xdo_version.h
 xdotool
