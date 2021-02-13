@@ -1,10 +1,10 @@
 #!/bin/sh
 
-osxver=`sw_vers -productVersion 2> /dev/null`
-if [ $? -eq 0 ] ; then
-  minor=`echo "$osxver" | cut -d. -f2`
-  if [ "$minor" -le 11 ] ; then
-    # Versions of OSX before 10.12 (aka "macOS Sierra") did not have clock_gettime()
+system=`uname -s`
+if [ "$system" = "Darwin" ] ; then
+  major=`uname -r | cut -d. -f1`
+  if [ "$major" -le 15 ] ; then
+    # OS X 10.11 El Capitan (Darwin 15) and earlier did not have clock_gettime()
     echo "-DMISSING_CLOCK_GETTIME"
   fi
 fi
