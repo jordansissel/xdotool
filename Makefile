@@ -100,7 +100,7 @@ installlib: libxdo.$(LIBSUFFIX)
 .PHONY: installheader
 installheader: xdo.h
 	install -d $(DINSTALLINCLUDE)
-	install xdo.h $(DINSTALLINCLUDE)/xdo.h
+	install -m 0644 xdo.h $(DINSTALLINCLUDE)/xdo.h
 
 .PHONY: installpc
 installpc: libxdo.pc
