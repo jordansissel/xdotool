@@ -202,7 +202,12 @@ int cmd_type(context_t *context) {
     }
   }); /* window_each(...) */
 
-  free(data);
+  if (file != NULL)
+    free(data);
+  else {
+    for (i = 0; i < data_count; i++)
+      free(data[i]);
+  }
 
   consume_args(context, args_count);
   return ret > 0;
