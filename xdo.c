@@ -1065,7 +1065,7 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
 
   /* Find a keycode that is unused for scratchspace */
   for (i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
-    int j = 0;
+    int j;
     int key_is_empty = 1;
     for (j = 0; j < keysyms_per_keycode; j++) {
       /*char *symname;*/
@@ -1298,16 +1298,11 @@ static void _xdo_charcodemap_from_char(const xdo_t *xdo, charcodemap_t *key) {
 }
 
 static void _xdo_charcodemap_from_keysym(const xdo_t *xdo, charcodemap_t *key, KeySym keysym) {
-  int i = 0;
-  int len = xdo->charcodes_len;
+  int i;
 
-  key->code = 0;
   key->symbol = keysym;
-  key->group = 0;
-  key->modmask = 0;
-  key->needs_binding = 1;
 
-  for (i = 0; i < len; i++) {
+  for (i = 0; i < xdo->charcodes_len; i++) {
     if (xdo->charcodes[i].symbol == keysym) {
       key->code = xdo->charcodes[i].code;
       key->group = xdo->charcodes[i].group;
@@ -1316,6 +1311,10 @@ static void _xdo_charcodemap_from_keysym(const xdo_t *xdo, charcodemap_t *key, K
       return;
     }
   }
+  key->code = 0;
+  key->group = 0;
+  key->modmask = 0;
+  key->needs_binding = 1;
 }
 
 static int _xdo_has_xtest(const xdo_t *xdo) {
@@ -1436,7 +1435,7 @@ int _xdo_send_keysequence_window_to_keycode_list(const xdo_t *xdo, const char *k
     (*nkeys)++;
     if (*nkeys == keys_size) {
       keys_size *= 2;
-      *keys = realloc(*keys, keys_size * sizeof(KeyCode));
+      *keys = realloc(*keys, keys_size * sizeof(charcodemap_t));
     }
   }
 
