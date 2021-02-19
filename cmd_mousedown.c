@@ -73,6 +73,7 @@ int cmd_mousedown(context_t *context) {
   }); /* window_each(...) */
 
   consume_args(context, 1);
+  free(window_arg);
 
   return ret;
 }

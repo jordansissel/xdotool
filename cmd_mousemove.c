@@ -131,6 +131,8 @@ int cmd_mousemove(context_t *context) {
     }
   }); /* window_each(...) */
 
+  free(window_arg);
+
   return ret;
 }
 

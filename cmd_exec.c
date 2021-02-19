@@ -118,9 +118,7 @@ int cmd_exec(context_t *context) {
   }
 
   consume_args(context, command_count);
-  if (terminator != NULL) {
-    free(terminator);
-  }
+  free(terminator);
 
   for (i=0; i < command_count; i++) {
     free(command[i]);
