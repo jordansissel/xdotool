@@ -365,6 +365,10 @@ int xdo_set_window_class (const xdo_t *xdo, Window wid, const char *name,
                          const char *_class) {
   int ret = 0;
   XClassHint *hint = XAllocClassHint();
+  if (hint == NULL) {
+    fprintf(stderr, "error: failed to allocate ClassHint\n");
+    return 1;
+  }
   XGetClassHint(xdo->xdpy, wid, hint);
   if (name != NULL)
     hint->res_name = (char*)name;
@@ -382,6 +386,10 @@ int xdo_set_window_urgency (const xdo_t *xdo, Window wid, int urgency) {
   XWMHints *hint = XGetWMHints(xdo->xdpy, wid);
   if (hint == NULL)
     hint = XAllocWMHints();
+  if (hint == NULL) {
+    fprintf(stderr, "error: failed to allocate WMHints\n");
+    return 1;
+  }
 
   if (urgency)
     hint->flags = hint->flags | XUrgencyHint;
@@ -1341,6 +1349,10 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
                      * xdo->keysyms_per_keycode;
 
   xdo->charcodes = calloc(keycodes_length, sizeof(charcodemap_t));
+  if (xdo->charcodes == NULL) {
+    fprintf(stderr, "error: failed to allocate charcodes\n");
+    exit(EXIT_FAILURE);
+  }
   XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllClientInfoMask, XkbUseCoreKbd);
 
   for (keycode = xdo->keycode_low; keycode <= xdo->keycode_high; keycode++) {
@@ -1397,6 +1409,12 @@ int _xdo_send_keysequence_window_to_keycode_list(const xdo_t *xdo, const char *k
   *nkeys = 0;
   *keys = calloc(keys_size, sizeof(charcodemap_t));
   keyseq_copy = strptr = strdup(keyseq);
+  if (*keys == NULL || keyseq_copy == NULL) {
+    fprintf(stderr, "error: failed to allocate keys\n");
+    free(*keys);
+    free(keyseq_copy);
+    return False;
+  }
   while ((tok = strtok_r(strptr, "+", &tokctx)) != NULL) {
     KeySym sym;
     KeyCode key;
@@ -1436,6 +1454,11 @@ int _xdo_send_keysequence_window_to_keycode_list(const xdo_t *xdo, const char *k
     if (*nkeys == keys_size) {
       keys_size *= 2;
       *keys = realloc(*keys, keys_size * sizeof(charcodemap_t));
+      if (*keys == NULL) {
+        fprintf(stderr, "error: failed to allocate keys\n");
+        free(keyseq_copy);
+        return False;
+      }
     }
   }
 
@@ -1661,6 +1684,11 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
   XModifierKeymap *modifiers = XGetModifierMapping(xdo->xdpy);
   *nkeys = 0;
   *keys = malloc(keys_size * sizeof(charcodemap_t));
+  if (*keys == NULL) {
+    fprintf(stderr, "error: failed to allocate keys\n");
+    XFreeModifiermap(modifiers);
+    return False;
+  }
 
   XQueryKeymap(xdo->xdpy, keymap);
 
@@ -1683,10 +1711,15 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
         if (*nkeys == keys_size) {
           keys_size *= 2;
           *keys = realloc(keys, keys_size * sizeof(charcodemap_t));
+          if (*keys == NULL) {
+            fprintf(stderr, "error: failed to allocate keys\n");
+            XFreeModifiermap(modifiers);
+            return False;
+          }
         }
       }
     }
-  } 
+  }
 
   XFreeModifiermap(modifiers);
 
