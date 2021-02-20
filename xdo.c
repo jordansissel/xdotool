@@ -1471,6 +1471,18 @@ unsigned char *xdo_get_window_property_by_atom(const xdo_t *xdo, Window window, 
   unsigned char *prop;
   int status;
 
+  if (nitems != NULL) {
+    *nitems = 0;
+  }
+
+  if (type != NULL) {
+    *type = 0;
+  }
+
+  if (size != NULL) {
+    *size = 0;
+  }
+
   status = XGetWindowProperty(xdo->xdpy, window, atom, 0, (~0L),
                               False, AnyPropertyType, &actual_type,
                               &actual_format, &_nitems, &bytes_after,
