@@ -318,14 +318,7 @@ int script_main(int argc, char **argv) {
   size_t token_len, total_len = 0;
   char *token = NULL;
   const char *path = argv[1];
-  char **script_argv = (char **) calloc(1, sizeof(char *));
-  int continues_next_buffer = 0;
-
-  if (script_argv == NULL) {
-    fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
-            argv[0], argv[1]);
-    exit(EXIT_FAILURE);
-  }
+  char **script_argv = NULL;
 
   /* determine whether reading from a file or from stdin */
   if (!strcmp(path, "-")) {
@@ -348,7 +341,8 @@ int script_main(int argc, char **argv) {
 
   if (context.xdo == NULL) {
     fprintf(stderr, "Failed creating new xdo instance\n");
-    return 1;
+    fclose(input);
+    return EXIT_FAILURE;
   }
   context.xdo->debug = context.debug;
 
@@ -404,6 +398,13 @@ int script_main(int argc, char **argv) {
             fprintf (stderr, "%s: error: `%s' needs at least %d %s; only %d given\n",
                      argv[0], argv[1], pos - 1, pos == 2 ? "argument" : "arguments",
                      argc - 2);
+            fclose(input);
+            xdo_free(context.xdo);
+            free(context.windows);
+            for (int i=0; i<script_argc; ++i) {
+              free(script_argv[i]);
+            }
+            free(script_argv);
             return EXIT_FAILURE;
           }
           /* use command line argument */
@@ -417,6 +418,13 @@ int script_main(int argc, char **argv) {
              * present, let's abort */
             fprintf(stderr, "%s: error: environment variable $%s is not set.\n",
                     argv[0], line);
+            fclose(input);
+            xdo_free(context.xdo);
+            free(context.windows);
+            for (int i=0; i<script_argc; ++i) {
+              free(script_argv[i]);
+            }
+            free(script_argv);
             return EXIT_FAILURE;
           }
         }
@@ -433,25 +441,35 @@ int script_main(int argc, char **argv) {
 
       /* append token */
 
-      /* allocate memory for the new token if needed */
+      /* allocate memory for the new token and final NULL if needed */
       if (script_argc + 1 > script_argc_max) {
-        script_argv = realloc(script_argv, (script_argc + 1) * sizeof(char *));
+        script_argv = realloc(script_argv, (script_argc + 2) * sizeof(char *));
         if (script_argv == NULL) {
           fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
                   argv[0], argv[1]);
+          fclose(input);
+          xdo_free(context.xdo);
+          free(context.windows);
           exit(EXIT_FAILURE);
         }
-        script_argv[script_argc] = NULL;
-        script_argc_max++;
+        script_argc_max = script_argc + 2;
+        script_argv[script_argc+0] = NULL;
+        script_argv[script_argc+1] = NULL; /* argv terminating NULL */
       }
 
       script_argv[script_argc] = realloc(script_argv[script_argc],
           (total_len + token_len + 1) * sizeof(char)
       );
-
       if (script_argv[script_argc] == NULL) {
         fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
                 argv[0], argv[1]);
+        fclose(input);
+        xdo_free(context.xdo);
+        free(context.windows);
+        for (int i=0; i<script_argc; ++i) {
+          free(script_argv[i]);
+        }
+        free(script_argv);
         exit(EXIT_FAILURE);
       }
 
@@ -464,49 +482,23 @@ int script_main(int argc, char **argv) {
 
       /* we did not do exact byte-counting, so simply look at the buffer */
       /* did we reach the end of the buffer? */
-      if (line == &buffer[sizeof(buffer) - 1]) {
-        /* yes. The remainder of the command/arg is in the next buffer */
-        continues_next_buffer = 1;
-
-        //if (context.debug) {
-        //  fprintf(stderr, "token so far (continues): %s\n", token);
-        //}
-      } else {
+      if (line != &buffer[sizeof(buffer) - 1]) {
         /* no, get next argument */
         line++; /* skip past current '\0' */
         script_argc++;
         total_len = 0;
-        continues_next_buffer = 0;
-
         //if (context.debug) {
         //  fprintf(stderr, "token: %s\n", token);
         //}
       }
     } /* while line being tokenized */
 
-    /*
-     * Reallocate memory if needed for the final NULL at the end.
+    /* If we saw a newline in the midst of buffer then we most likely have
+     * some complete commands to run.
+     * But if there was no newline yet we are probably missing some
+     * required arguments still so fetch some more.
      */
-    if(script_argc_max <= script_argc){
-      script_argv = realloc(script_argv, (script_argc+1) * sizeof(char *));
-      /* TODO(sissel): STOPPED HERE */
-      if (script_argv == NULL) {
-        fprintf(stderr, "%s: error: failed to allocate memory while parsing `%s'.\n",
-                argv[0], argv[1]);
-        exit(EXIT_FAILURE);
-      }
-      script_argv[script_argc] = NULL;
-      script_argc_max++;
-    }
-
-    /* continues_next_buffer is true if a command or argument continues
-     * in the next buffer.
-     * Think: printf "mousemove%4107s" "--polar -- 0 0 sleep 0.1" > /tmp/i
-     *        xdotool - < /tmp/i
-     * should ideally parse until we see a supported command, i.e.
-     * do not break "--p" "olar" in half but continue reading until "sleep".
-     */
-    if(!continues_next_buffer && script_argc > 0){
+    if (end < sizeof(buffer) - 1 && script_argc > 0){
       context.argc = script_argc;
       context.argv = script_argv;
       result = context_execute(&context);
@@ -514,21 +506,20 @@ int script_main(int argc, char **argv) {
       /*
        * Free the allocated memory for tokens.
        */
-      for(int j = 0; j < script_argc + 1; j++){
-        free(*(script_argv + j));
-        *(script_argv + j) = NULL;
+      for(int i = 0; i <= script_argc; i++){
+        free(script_argv[i]);
+        *(script_argv + i) = NULL;
       }
       script_argc = 0;
     }
   }
   fclose(input);
 
-
   xdo_free(context.xdo);
   free(context.windows);
 
-  for(int i=0; i<script_argc+1; ++i) {
-      free(script_argv[i]);
+  for(int i=0; i<script_argc; ++i) {
+    free(script_argv[i]);
   }
   free(script_argv);
   return result;
