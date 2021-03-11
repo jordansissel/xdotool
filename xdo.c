@@ -2017,3 +2017,122 @@ int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
     return xdo_get_window_size(xdo, root, width, height);
   }
 }
+
+int xdo_get_window_viewport_info(xdo_t *xdo, Window w,
+                                unsigned int *width, unsigned int *height,
+                                unsigned int *x, unsigned int *y,
+                                int *screen_num)
+{
+  int dummy;
+
+  if (XineramaQueryExtension(xdo->xdpy, &dummy, &dummy) \
+      && XineramaIsActive(xdo->xdpy)) {
+    XineramaScreenInfo *info;
+    int screens, i, found;
+    int win_x, win_y;
+
+    /* Is there a better way to find the xinerama head for a window?
+     * Of course it could be spanning multiple heads, but look at it's
+     * tl
+     */
+    xdo_get_window_location(xdo,w, &win_x, &win_y, NULL);
+    info = XineramaQueryScreens(xdo->xdpy, &screens);
+
+    for (i = 0, found = -1; i < screens; i++) {
+      if (win_x >= info[i].x_org &&
+          win_y >= info[i].y_org &&
+          win_x < (info[i].x_org + info[i].width) &&
+          win_y < (info[i].y_org + info[i].height)) {
+        found = i;
+        break;
+      }
+    }
+    if (found != -1) {
+      if (width) *width = info[found].width;
+      if (height) *height = info[found].height;
+      if (x) *x = info[found].x_org;
+      if (y) *y = info[found].y_org;
+      if (screen_num) *screen_num = found;
+    }
+    XFree(info);
+    return found == -1 ? XDO_ERROR : XDO_SUCCESS;
+  } else {
+    /* Use the root window size if no xinerama */
+    /* Note we're using screen 0 here, we could extract it from attr */
+    Window root = RootWindow(xdo->xdpy, 0);
+    if (x) *x = 0;
+    if (y) *y = 0;
+    if (screen_num) *screen_num = 0;
+    return xdo_get_window_size(xdo, root, width, height);
+  }
+
+}
+
+/**
+ *  Helper for xdo_get_dir that handles one directions
+ *
+ *  @param str the argument to parse
+ *  @param dir_char a character representing the direction
+ *  @param val A pointer to return the result in, originally
+ *             pointing to the original size/width
+ *  @param root_val The value for the root window
+ *  @param flags returned flags (see GETXY_*) - always returned for X
+ *
+ */
+static int _xdo_get_dir(const char *str, const char dir_char,
+                        unsigned int *val, unsigned int root_val,
+                        unsigned int mon_val, int *flags)
+{
+  *flags = 0;
+  double raw_val;
+  char *percent;
+
+  /* Just passing the direction gets you the unmodified value */
+  if (str[0] == dir_char) {
+    *flags = GETXY_ORIG_X;
+    return XDO_SUCCESS;
+  }
+
+  raw_val = strtod(str, NULL);
+  percent = strchr(str, '%');
+  if (percent) {
+    *flags = GETXY_PERCENT_X;
+    if (percent[1]=='m') {
+      *val = mon_val * raw_val / 100.0;
+      *flags |= GETXY_MON_X;
+    } else {
+      *val = root_val * raw_val / 100.0;
+    }
+
+  } else {
+    *val = raw_val;
+  }
+
+  return XDO_SUCCESS;
+}
+
+int xdo_get_xy(xdo_t *xdo, Window w, const char *xstr, const char *ystr,
+               unsigned int *x, unsigned int *y, int *flags)
+{
+  Window root = 0;
+  XWindowAttributes wattr;
+  unsigned int root_w, root_h;
+  unsigned int monitor_w, monitor_h;
+  int tmpflags;
+
+  XGetWindowAttributes(xdo->xdpy, w, &wattr);
+  root = wattr.root;
+  xdo_get_window_size(xdo, root, &root_w, &root_h);
+  xdo_get_window_viewport_info(xdo, w, &monitor_w, &monitor_h, NULL,
+                               NULL, NULL);
+
+  if (_xdo_get_dir(xstr, 'x', x, root_w, monitor_w, flags) == XDO_ERROR) {
+    return XDO_ERROR;
+  }
+  if (_xdo_get_dir(ystr, 'y', y, root_h, monitor_h, &tmpflags) == XDO_ERROR) {
+    return XDO_ERROR;
+  }
+  *flags |= tmpflags * (GETXY_ORIG_Y / GETXY_ORIG_X);
+  return XDO_SUCCESS;
+}
+
