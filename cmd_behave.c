@@ -4,13 +4,17 @@
 struct events {
   const char * const name;
   int mask;
+  int type
 } events[] = {
-  { "mouse-enter", EnterWindowMask },
-  { "mouse-leave", LeaveWindowMask },
-  { "focus", FocusChangeMask },
-  { "blur", FocusChangeMask },
-  { "mouse-click", ButtonReleaseMask },
-  { NULL, 0 },
+  { "mouse-enter", EnterWindowMask, EnterNotify },
+  { "mouse-leave", LeaveWindowMask, LeaveNotify },
+  { "focus", FocusChangeMask, FocusIn },
+  { "blur", FocusChangeMask, FocusOut },
+  { "mouse-click", ButtonReleaseMask, ButtonRelease },
+  { "destroy", StructureNotifyMask, DestroyNotify },
+  { "map", StructureNotifyMask, MapNotify },
+  { "unmap", StructureNotifyMask, UnmapNotify },
+  { NULL, 0, 0 },
 };
 
 /* So we can invoke xdotool from within this command */
@@ -19,17 +23,26 @@ extern int context_execute(context_t *context);
 int cmd_behave(context_t *context) {
   int ret = 0;
   char *cmd = *context->argv;
+  int exit_on = -1;
 
   int c;
   typedef enum {
-    opt_unused, opt_help
+    opt_unused, opt_help, opt_exiton
   } optlist_t;
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
+    { "exit-on", required_argument, NULL, opt_exiton },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-    "Usage: %s window event action [args...]\n"
+    "Usage: %s [options] window event action [args...]\n"
+    "--exit-on CODE - Stop behave whenever the action returns with CODE,\n"
+    "                 where the latter is one of the following:\n"
+    "                   success  - success code returned by internal commands\n"
+    "                   failure  - error code returned by internal commands\n"
+    "                   NUM      - a numerical exit code (useful in conjunction\n"
+    "                              with the exec command)\n"
+    "\n"
     "The event is a window event, such as mouse-enter, resize, etc.\n"
     "The action is any valid xdotool command (chains OK here)\n"
     "\n"
@@ -38,7 +51,10 @@ int cmd_behave(context_t *context) {
     "  mouse-leave      - When the mouse leaves a window\n"
     "  mouse-click      - Fired when the mouse button is released\n"
     "  focus            - When the window gets focus\n"
-    "  blur             - When the window loses focus\n";
+    "  blur             - When the window loses focus\n"
+    "  destroy          - When the window gets destroyed\n"
+    "  map              - When the window is mapped\n"
+    "  unmap            - When the window is unmapped\n";
 
   int option_index;
   while ((c = getopt_long_only(context->argc, context->argv, "+h",
@@ -49,6 +65,16 @@ int cmd_behave(context_t *context) {
         printf(usage, cmd);
         consume_args(context, context->argc);
         return EXIT_SUCCESS;
+        break;
+      case opt_exiton:
+        if (!strcmp(optarg, "success")) {
+          exit_on = XDO_SUCCESS;
+        } else if (!strcmp(optarg, "failure")) {
+          exit_on = XDO_ERROR;
+        } else {
+          exit_on = atoi(optarg);
+          /* XXX: do we want error handling here? */
+        }
         break;
       default:
         fprintf(stderr, usage, cmd);
@@ -75,12 +101,14 @@ int cmd_behave(context_t *context) {
   /* The remainder of args are supposed to be what to run on the action */
 
   long selectmask = 0;
+  int eventtype = 0;
   int i;
   for (i = 0; events[i].name != NULL; i++) {
     //printf("%s vs %s\n", events[i].name, event);
     if (!strcmp(events[i].name, event)) {
       xdotool_debug(context, "Adding mask for event '%s': 0x%lx", event, events[i].mask);
       selectmask |= events[i].mask;
+      eventtype = events[i].type;
     }
   }
 
@@ -109,8 +137,10 @@ int cmd_behave(context_t *context) {
     // Copy context
     context_t tmpcontext = *context;
 
+    tmpcontext.windows = calloc(1, sizeof(Window));
     tmpcontext.nwindows = 1;
     Window hover; /* for LeaveNotify */
+    int ran_action = True;
     switch (e.type) {
       case LeaveNotify:
         /* LeaveNotify is confusing.
@@ -125,6 +155,7 @@ int cmd_behave(context_t *context) {
         xdo_get_window_at_mouse(context->xdo, &hover);
         if (hover == e.xcrossing.window) {
           //printf("Ignoring Leave, we're still in the window\n");
+          ran_action = False;
           break;
         }
         //printf("Window: %ld\n", e.xcrossing.window);
@@ -132,27 +163,65 @@ int cmd_behave(context_t *context) {
 
         /* fall through */
       case EnterNotify:
-        tmpcontext.windows = &(e.xcrossing.window);
+        *tmpcontext.windows = e.xcrossing.window;
         ret = context_execute(&tmpcontext);
         break;
       case FocusIn:
       case FocusOut:
-        tmpcontext.windows = &(e.xfocus.window);
-        ret = context_execute(&tmpcontext);
+        /* As both events are selected by the same mask,
+         * we have to make sure we only fire on the type
+         * that was requested. */
+        if (e.type == eventtype) {
+          *tmpcontext.windows = e.xfocus.window;
+          ret = context_execute(&tmpcontext);
+        } else {
+          ran_action = False;
+        }
         break;
       case ButtonRelease:
-        tmpcontext.windows = &(e.xbutton.window);
+        *tmpcontext.windows = e.xbutton.window;
         ret = context_execute(&tmpcontext);
         break;
+      case DestroyNotify:
+      case MapNotify:
+      case UnmapNotify:
+      case CirculateNotify: /* these four*/
+      case ConfigureNotify: /* are also */
+      case GravityNotify:   /* caught by */
+      case ReparentNotify:  /* StructureNotifyMask */
+        if (e.type == eventtype) {
+          *tmpcontext.windows = e.xany.window;
+          ret = context_execute(&tmpcontext);
+        } else {
+          ran_action = False;
+        }
+        break;
       default:
-        printf("Unexpected event: %d\n", e.type);
+        /* There are a couple of events that we receive
+         * regardless of the chosen selection mask (e.g.
+         * MappingNotify) and we should not treat those
+         * as errors. */
+        xdotool_debug("Unexpected event: %d\n", e.type);
+        ran_action = False;
         break;
     }
 
-    if (ret != XDO_SUCCESS) {
-      xdotool_output(context, "Command failed.");
+    if(tmpcontext.windows != NULL) {
+      free(tmpcontext.windows);
+    }
+
+    if (ran_action == True) {
+      if (exit_on == ret) {
+        break;
+      }
+
+      if (ret != XDO_SUCCESS) {
+        xdotool_debug(context, "Command failed.");
+      }
     }
   }
+
+  consume_args(context, context->argc);
   return ret;
 }
 
