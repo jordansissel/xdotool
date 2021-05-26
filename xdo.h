@@ -14,6 +14,10 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @mainpage
  *
@@ -912,4 +916,9 @@ int xdo_has_feature(xdo_t *xdo, int feature);
  */
 int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
                                 unsigned int *height, int screen);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* ifndef _XDO_H_ */
