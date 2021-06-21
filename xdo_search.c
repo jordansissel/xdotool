@@ -364,6 +364,27 @@ static int check_window_match(const xdo_t *xdo, Window wid,
   return False;
 } /* int check_window_match */
 
+static int ignore_badwindow(Display *dpy, XErrorEvent *xerr) {
+#define ERROR_BUF_SIZE 256
+  char buf[ERROR_BUF_SIZE];
+  char request[ERROR_BUF_SIZE];
+
+  if (xerr->error_code == BadWindow)
+    return 0;
+
+  XGetErrorText(dpy, xerr->error_code, buf, sizeof(buf));
+  fprintf(stderr, "X Error of failed request: %s\n", buf);
+
+  /* Intentionally ignore errors from protocol extensions, they are not used in
+   * this file. */
+  snprintf(request, sizeof(request), "%d", xerr->request_code);
+  XGetErrorDatabaseText(dpy, "XRequest", request, "", buf,
+      sizeof(buf));
+  fprintf(stderr, "Major opcode: %d (%s)\n",
+      xerr->request_code, buf);
+  exit(1);
+}
+
 static void find_matching_windows(const xdo_t *xdo, Window window, 
                                   const xdo_search_t *search,
                                   Window **windowlist_ret,
@@ -379,8 +400,9 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
    */
 
   Window dummy;
-  Window *children;
+  Window *children = NULL;
   unsigned int i, nchildren;
+  int (*old_error_handler)(Display *dpy, XErrorEvent *xerr);
 
   /* Break early, if we have enough windows already. */
   if (search->limit > 0 && *nwindows_ret >= search->limit) {
@@ -391,6 +413,9 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
   if (search->max_depth != -1 && current_depth > search->max_depth) {
     return;
   }
+
+  /* Don't crash if window dissappear in the meantime */
+  old_error_handler = XSetErrorHandler(ignore_badwindow);
 
   /* Break if XQueryTree fails.
    * TODO(sissel): report an error? */
@@ -422,6 +447,7 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
                                 *windowlist_size * sizeof(Window));
     }
   } /* for (i in children) ... */
+  XSetErrorHandler(old_error_handler);
 
   /* Now check children-children */
   if (search->max_depth == -1 || (current_depth + 1) <= search->max_depth) {
