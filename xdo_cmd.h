@@ -14,6 +14,10 @@
 #include "xdo.h"
 #include "xdotool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define HELP_SEE_WINDOW_STACK \
   "If no window is given, %1 is used. See WINDOW STACK in xdotool(1)\n"
 #define HELP_CHAINING_ENDS \
@@ -34,5 +38,9 @@ extern int window_get_arg(context_t *context, int min_arg, int window_arg_pos,
 
 extern void xdotool_debug(context_t *context, const char *format, ...);
 extern void xdotool_output(context_t *context, const char *format, ...);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _XDO_CMD_H_ */

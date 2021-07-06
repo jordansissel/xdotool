@@ -1,6 +1,10 @@
 #ifndef _XDOTOOL_H_
 #define _XDOTOOL_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* TODO(sissel): use proper printf format depending on the storage
  * size of Window (could be 4 or 8 bytes depending on platform */
 #define window_print(window) (printf("%ld\n", window))
@@ -86,5 +90,9 @@ int cmd_get_desktop_for_window(context_t *context);
 int cmd_set_desktop_viewport(context_t *context);
 int cmd_get_desktop_viewport(context_t *context);
 int cmd_get_display_geometry(context_t *context);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _XDOTOOL_H_ */
