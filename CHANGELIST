@@ -8,6 +8,12 @@ KNOWN ISSUES:
 
 FOR TODO LIST, SEE TODO FILE :)
 
+3.20180106.1
+  - added 'return' -> 'Return', 'enter' -> 'Return'  mappings in xdo_util
+    to eliminate user gotchas not in man page.
+    removed extraneous '+' chars in version.sh; already present in DATE_FMT
+    (CSylvain)
+
 3.20160805.1
   - Fix release tool problem. cflags.sh was missing from the previous two
     releases. 
