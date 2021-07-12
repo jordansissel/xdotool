@@ -4,6 +4,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+int cmd_exec_sync(char **command);
+void cmd_exec_detached(char **command);
+
 int cmd_exec(context_t *context) {
   char *cmd = *context->argv;
   char **command = NULL;
@@ -101,20 +104,10 @@ int cmd_exec(context_t *context) {
   }
   command[i] = NULL;
   
-  pid_t child;
-  child = fork();
-  if (child == 0) { /* child */
-    execvp(command[0], command);
-
-    /* if we get here, there was an error */
-    perror("execvp failed");
-    exit(errno);
-  } else { /* parent */
-    if (opsync) {
-      int status = 0;
-      waitpid(child, &status, 0);
-      ret = WEXITSTATUS(status);
-    }
+  if (opsync) {
+    ret = cmd_exec_sync(command);
+  } else {
+    cmd_exec_detached(command);
   }
 
   consume_args(context, command_count);
@@ -127,4 +120,41 @@ int cmd_exec(context_t *context) {
   }
   free(command);
   return ret;
+}
+
+int cmd_exec_sync(char **command) {
+  pid_t child = fork();
+
+  if (child == 0) { /* child */
+    execvp(command[0], command);
+
+    /* if we get here, there was an error */
+    perror("execvp failed");
+    exit(errno);
+  } else { /* parent */
+    int status = 0;
+    waitpid(child, &status, 0);
+    return WEXITSTATUS(status);
+  }
+}
+
+void cmd_exec_detached(char **command) {
+  pid_t child = fork();
+
+  if (child == 0) { /* child */
+    pid_t grandchild = fork();
+    if (grandchild == 0) { /* grandchild */
+      execvp(command[0], command);
+
+      /* if we get here, there was an error */
+      perror("execvp failed");
+      exit(errno);
+    } else { /* child */
+      /* don't wait for the grandchild, immediately exit */
+      exit(-1);
+    }
+  } else { /* parent */
+    /* wait for the child to exit (which should be immediate) */
+    waitpid(child, NULL, 0);
+  }
 }
