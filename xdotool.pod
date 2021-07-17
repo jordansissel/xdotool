@@ -382,7 +382,7 @@ Match against the window class.
 
 Match against the window classname.
 
-=item B<--rolw>
+=item B<--role>
 
 Match against the window role.
 
