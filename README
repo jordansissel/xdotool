@@ -1,3 +1,6 @@
+Unfortunately wayland is incompatible in almost every way with xdotool. Even attempting to write a similar tool for Wayland may not be possible
+because similar capabilities do not exist in Wayland or its ecosystem :(
+
 xdotool: Fake input from the mouse and keyboard very easily.
   Also supports window manager actions such as moving, activating, and other
   actions on windows.
