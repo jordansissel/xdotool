@@ -317,6 +317,75 @@ int xdotool_main(int argc, char **argv) {
   return args_main(argc, argv);
 }
 
+/*
+ * @DESCRIPTION:
+ *   Function that null-terminates and unescapes quoted tag. When value is
+ *   unescaped remaining memory buffer's ptr_buf content is moved to beginning.
+ * @PARAMS:
+ *   ptr - pointer to string buffer where to null-terminate tag. It must start
+ *         with quote.
+ * @RETURN:
+ *   returns pointer to tag start within ptr buffer; continious buffer content
+ *   remains after null character so buffer size must be known from the calling
+ *   code.
+ */
+char *null_terminate_quoted(char *ptr_buf);
+char *null_terminate_quoted(char *ptr_buf){
+  size_t len;
+  char *ptr_quote;
+  char needle[3] = "'\\";
+  /* flag for state - if memory buffer contents should be moved */
+  char flg_move;
+
+  ptr_quote = ptr_buf + 1;
+  *needle = *ptr_buf;
+
+  while(*ptr_quote){
+    ptr_quote += strcspn(ptr_quote, needle);
+    /* closing string found */
+    if(*ptr_quote == *ptr_buf){
+      *ptr_quote = 0;
+    }
+    else if(*ptr_quote == 0){
+      /* 
+       * We don't have pre-parsing state nowhere, so it is not possible to give
+       * more detailed error.
+       */
+      fprintf(stderr, "WARNING: Quote not closed within parsed script. " 
+        "Resulting argument is: `%s`.\n", ptr_buf
+      );
+    }
+    /* escaping slash found */
+    else{
+      flg_move = 0;
+      switch(*(ptr_quote + 1)){
+        /* Nothing to be done for slash, because it is the same anyways. */
+        case '\\':
+          flg_move = 1;
+          break;
+        /* Escaped quotes become quotes */
+        case '\'':
+        case '"':
+          *ptr_quote = *(ptr_quote + 1);
+          flg_move = 1;
+          break;
+        /* Here could add more single byte escape sequences if necessary. */
+      }
+
+      if(flg_move){
+        len = strlen(ptr_quote);
+        memmove(ptr_quote, ptr_quote + 1, strlen(ptr_quote));
+        /* Because escaping character is moved, buffer becomes shorter. */
+        *(ptr_quote + len - 1) = 0;
+        /* Because escaped char was handled by case statement */
+        ptr_quote++;
+      }
+    }
+  }
+
+  return ++ptr_buf;
+}
+
 int script_main(int argc, char **argv) {
   /* Tokenize the input file while expanding positional parameters and
    * environment variables. Pass the resulting argument list to
@@ -385,12 +454,10 @@ int script_main(int argc, char **argv) {
        * separated by whitespace, or quoted with single/double quotes.
        */
       if (line[0] == '"') {
-        line++;
-        line[strcspn(line, "\"")] = '\0';
+        line = null_terminate_quoted(line);
       }
       else if (line[0] == '\'') {
-        line++;
-        line[strcspn(line, "\'")] = '\0';
+        line = null_terminate_quoted(line);
       }
       else {
         line[strcspn(line, " \t")] = '\0';
@@ -450,7 +517,7 @@ int script_main(int argc, char **argv) {
         }
         script_argv[script_argc] = (char *) calloc(strlen(token) + 1, sizeof(char));
 
-        //printf("arg %d: %s\n", script_argc, token);
+        // printf("arg %d: %s\n", script_argc, token);
         strncpy(script_argv[script_argc], token, strlen(token)+1);      
         script_argc++;
       }
