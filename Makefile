@@ -4,7 +4,7 @@ INSTALLBIN?=$(PREFIX)/bin
 INSTALLLIB?=$(PREFIX)/lib
 INSTALLMAN?=$(PREFIX)/man
 INSTALLINCLUDE?=$(PREFIX)/include
-INSTALLPC?=$(PREFIX)/lib/pkgconfig
+INSTALLPC?=$(INSTALLLIB)/pkgconfig
 LDCONFIG?=ldconfig
 
 DPREFIX=$(DESTDIR)$(PREFIX)
@@ -105,7 +105,7 @@ installheader: xdo.h
 .PHONY: installpc
 installpc: libxdo.pc
 	install -d $(DINSTALLPC)
-	install libxdo.pc $(DINSTALLPC)/libxdo.pc
+	install -m 0644 libxdo.pc $(DINSTALLPC)/libxdo.pc
 
 .PHONY: installman
 installman: xdotool.1
