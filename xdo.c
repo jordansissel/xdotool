@@ -28,6 +28,7 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/Xinerama.h>
+#include <X11/extensions/XInput2.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
 
@@ -83,14 +84,23 @@ static Atom atom_UTF8_STRING = -1;
 xdo_t* xdo_new(const char *display_name) {
   Display *xdpy;
 
-  if ((xdpy = XOpenDisplay(display_name)) == NULL) {
-    /* Can't use _xdo_eprintf yet ... */
-    fprintf(stderr, "Error: Can't open display: %s\n", display_name);
+  if (display_name == NULL) {
+    display_name = XDisplayName(display_name);
+  }
+
+#define DISPLAY_HINT "Is there an Xorg or other X server running? You can try setting 'export DISPLAY=:0' and trying again."
+  if (display_name == NULL) {
+    fprintf(stderr, "Error: No DISPLAY environment variable is set. " DISPLAY_HINT "\n");
     return NULL;
   }
 
-  if (display_name == NULL) {
-    display_name = getenv("DISPLAY");
+  if (*display_name == '\0') {
+    fprintf(stderr, "Error: DISPLAY environment variable is empty. " DISPLAY_HINT "\n");
+    return NULL;
+  }
+
+  if ((xdpy = XOpenDisplay(display_name)) == NULL) {
+    return NULL;
   }
 
   return xdo_new_with_opened_display(xdpy, display_name, 1);
@@ -105,6 +115,14 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
     fprintf(stderr, "xdo_new: xdisplay I was given is a null pointer\n");
     return NULL;
   }
+
+  // This library and xdotool do not work correctly on Wayland/XWayland.
+  // Try to detect XWayland and warn the user about problems.
+  if (appears_to_be_wayland(xdpy)) {
+    fprintf(stderr, "The X server at %s appears to be XWayland. Unfortunately, XWayland does not correctly support the features used by libxdo and xdotool.\n", display);
+    return NULL;
+  }
+
 
   /* XXX: Check for NULL here */
   xdo = malloc(sizeof(xdo_t));
@@ -2016,4 +2034,24 @@ int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
     Window root = RootWindow(xdo->xdpy, screen);
     return xdo_get_window_size(xdo, root, width, height);
   }
+}
+
+int appears_to_be_wayland(Display *xdpy) {
+  // XWayland leaks its presence in two extensions (at time of writing, August 2021)
+  // First: the name of input devices "xwayland-pointer"
+  // Second: in the Vendor string of XFree86-VidModeExtension
+
+  int count;
+  XDeviceInfo *devices = XListInputDevices(xdpy, &count);
+  for (int i = 0; i < count; i++) {
+    // fprintf(stderr, "Device %d: %s\n", i, devices[i].name);
+    // If the input device name starts with "xwayland-", 
+    // there's a good chance we're running on XWayland.
+    if (strstr(devices[i].name, "xwayland-") == devices[i].name) {
+      return 1; // Running on wayland
+    }
+  }
+  XFreeDeviceList(devices);
+
+  return 0;
 }
