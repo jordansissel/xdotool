@@ -521,6 +521,14 @@ int args_main(int argc, char **argv) {
     exit(1);
   }
 
+  if (!strcasecmp(argv[1], "help")) {
+    cmd_help(NULL);
+    exit(EXIT_SUCCESS);
+  } else if (!strcasecmp(argv[1], "version")) {
+    cmd_version(NULL);
+    exit(EXIT_SUCCESS);
+  }
+
   while ((opt = getopt_long_only(argc, argv, "++hv", long_options, &option_index)) != -1) {
     switch (opt) {
       case 'h':
@@ -547,7 +555,7 @@ int args_main(int argc, char **argv) {
   context.debug = (getenv("DEBUG") != NULL);
 
   if (context.xdo == NULL) {
-    fprintf(stderr, "Failed creating new xdo instance\n");
+    fprintf(stderr, "Failed creating new xdo instance.\n");
     return 1;
   }
   context.xdo->debug = context.debug;
