@@ -4,7 +4,7 @@
 
 ⚠ Note: If you are using Wayland, please be aware this software will not work correctly. ⚠
 
-This tool, you can search for windows and move, resize, hide, and modify
+With xdotool, you can search for windows and move, resize, hide, and modify
 window properties like the title. If your window manager supports it, you can
 use xdotool to switch desktops, move windows between desktops, and change the
 number of desktops.
