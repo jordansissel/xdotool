@@ -36,8 +36,8 @@ DEFAULT_LIBS=-L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXtst -lXinerama -lxkbcomm
 DEFAULT_INC=-I/usr/X11R6/include -I/usr/local/include
 
 XDOTOOL_LIBS=$(shell pkg-config --libs x11 2> /dev/null || echo "$(DEFAULT_LIBS)")  $(shell sh platform.sh extralibs)
-LIBXDO_LIBS=$(shell pkg-config --libs x11 xtst xinerama xkbcommon 2> /dev/null || echo "$(DEFAULT_LIBS)")
-INC=$(shell pkg-config --cflags x11 xtst xinerama xkbcommon 2> /dev/null || echo "$(DEFAULT_INC)")
+LIBXDO_LIBS=$(shell pkg-config --libs xi x11 xtst xinerama xkbcommon 2> /dev/null || echo "$(DEFAULT_LIBS)")
+INC=$(shell pkg-config --cflags xi x11 xtst xinerama xkbcommon 2> /dev/null || echo "$(DEFAULT_INC)")
 CFLAGS+=-std=c99 $(INC)
 
 CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
@@ -195,7 +195,7 @@ test: xdotool libxdo.$(VERLIBSUFFIX)
 	fi
 	SHELL=$(WITH_SHELL) $(MAKE) -C t
 
-xdo_version.h:
+xdo_version.h: VERSION
 	sh version.sh --header > $@
 
 VERSION:
