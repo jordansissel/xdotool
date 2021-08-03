@@ -195,7 +195,7 @@ test: xdotool libxdo.$(VERLIBSUFFIX)
 	fi
 	SHELL=$(WITH_SHELL) $(MAKE) -C t
 
-xdo_version.h:
+xdo_version.h: VERSION
 	sh version.sh --header > $@
 
 VERSION:
