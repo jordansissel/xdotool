@@ -296,7 +296,7 @@ int xdo_get_mouse_location(const xdo_t *xdo, int *x, int *y, int *screen_num);
 /**
  * Get the window the mouse is currently over
  *
- * @param window_ret Winter pointer where the window will be stored.
+ * @param window_ret Window pointer where the window will be stored.
  */
 int xdo_get_window_at_mouse(const xdo_t *xdo, Window *window_ret);
 
@@ -871,7 +871,10 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
 /**
  * Get a window's name, if any.
  *
- * TODO(sissel): Document
+ * @param window window to get the name of.
+ * @param name_ret character pointer pointer where the address of the window name will be stored.
+ * @param name_len_ret integer pointer where the length of the window name will be stored.
+ * @param name_type integer pointer where the type (atom) of the window name will be stored.
  */
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
                         unsigned char **name_ret, int *name_len_ret,
