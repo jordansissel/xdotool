@@ -2048,6 +2048,7 @@ int appears_to_be_wayland(Display *xdpy) {
     // If the input device name starts with "xwayland-", 
     // there's a good chance we're running on XWayland.
     if (strstr(devices[i].name, "xwayland-") == devices[i].name) {
+      XFreeDeviceList(devices);
       return 1; // Running on wayland
     }
   }
