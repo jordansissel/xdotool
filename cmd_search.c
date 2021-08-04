@@ -16,12 +16,11 @@ int cmd_search(context_t *context) {
   int search_class = 0;
   int search_classname = 0;
   int search_role = 0;
-  typedef enum {
+  enum {
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_shell, opt_prefix, opt_class, opt_maxdepth,
     opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname, opt_desktop,
-    opt_limit, opt_sync
-    ,opt_role
-  } optlist_t;
+    opt_limit, opt_sync, opt_role
+  };
   struct option longopts[] = {
     { "all", no_argument, NULL, opt_all },
     { "any", no_argument, NULL, opt_any },

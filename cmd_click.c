@@ -13,10 +13,10 @@ int cmd_click(context_t *context) {
   int repeat = 1;
 
   int c;
-  typedef enum { 
+  enum { 
     opt_unused, opt_help, opt_clearmodifiers, opt_window, opt_delay,
     opt_repeat
-  } optlist_t;
+  };
   static struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, opt_clearmodifiers },
     { "help", no_argument, NULL, opt_help },
