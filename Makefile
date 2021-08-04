@@ -206,11 +206,11 @@ pre-create-package:
 	rm -f VERSION xdo_version.h
 
 .PHONY: create-package
-create-package: pre-create-package VERSION xdo_version.h
+create-package: pre-create-package VERSION xdo_version.h libxdo.pc
 	@NAME=xdotool-$(VERSION); \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
-	rsync --exclude '.*' -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* version.sh platform.sh cflags.sh VERSION Doxyfile 2> /dev/null` $${NAME}/; \
+	rsync --exclude '.*' -a `ls -d *.pod COPYRIGHT *.c *.h *.pc examples t CHANGELIST README.md Makefile* version.sh platform.sh cflags.sh VERSION Doxyfile 2> /dev/null` $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -r $${NAME}
 	rm VERSION
