@@ -5,8 +5,41 @@ KNOWN ISSUES:
     report reserved window extents in the property list of the root window
     (say, for the OS X menu bar), but OS X's default X11 wm does not do this.
     If this affects you, please let me know and I will attempt to fix it.
+  - Wayland: Wayland is an alternative to X11 as a graphical system.
+    Unfortunately, there seem to be no common and stable way to do whatjjjjkkj
+    xdotool does *on* Wayland, so xdotool does not work correctly under Wayland.
 
-FOR TODO LIST, SEE TODO FILE :)
+3.20210804.1
+  - xdotool and libxdo will now reject if it is running under Wayland/XWayland.
+    If XWayland is detected, the program will fail. This is because XWayland
+    doesn't allow xdotool or libxdo to work correctly. (#342, Jordan Sissel)
+  - New command `windowstate` which can be used to modify properties of windows.
+    For example, to full-screen the current window, use:
+      xdotool getactivewindow windowstate --add FULLSCREEN
+    (#158 by Zhai Zhao Xuan)
+  - New command `windowquit`  which is used to ask the windowed application to
+    terminate. (#306, Antonio Russo)
+  - New command `getwindowclassname` to print the window's class name.
+    (#247, Dominic Mueller)
+  - When sending keystrokes, `enter` and `return` now are synonyms for the
+    `Return` key symbol (CSylvain)
+  - getmouselocation now updates the window stack with the window the cursor is
+    currently over. (#118, Jordan Sissel)
+  - search command now supports searching by window role with `--role` flag (#305, altblue)
+  - search command should now no longer report BadWindow errors (#335, Marek Marczykowski-Górecki)
+  - get_window_location now reports correct value (#289, Edwin Heerschap)
+  - Uppercase Latin-1/Basic Latin are now typed correctly (#283, Hasan)
+  - Document the regular expressions (POSIX Extended) supported by xdotool
+    (#???, Lucas Werkmeister)
+  - Use the default X11 Screen instead of assuming 0 (#265, Miroslav Koškár)
+  - Wrap header files with `extern "C"` to enable easier C++ use of libxdo.
+    (#331, easyaspi314)
+  - Install pkgconfig file when running `make install` (#229, Joakim Repomaa)
+  - Set permissions correctly when installing `xdo.h` (#324, Dan Church)
+  - Fix memory leak (#241, Andrew McDermott)
+  - Fix memory leak (#299, orcNo and longqi)
+  - Fixed some documentation typos (#161, Vincent Legoll; #336, yjqg6666)
+  - Fix all compiler warnings during `make` (#344, Jordan Sissel)
 
 3.20160805.1
   - Fix release tool problem. cflags.sh was missing from the previous two

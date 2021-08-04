@@ -815,6 +815,49 @@ Output the current active window. This command is often more reliable than
 getwindowfocus. The result is saved to the window stack. See L<WINDOW STACK>
 for more details.
 
+=item B<windowstate> I<[--add PROPERTY]> I<[--remove PROPERTY]> I<[--toggle PROPERTY]> I<[window]>
+
+Change a property on a window. 
+
+Some properties may have no effect some windows or in some window managers.
+
+Properties can be any of:
+
+=over
+
+=item MODAL - makes the window into a modal
+
+=item STICKY - makes the window appear on all workspaces
+
+=item MAXIMIZED_VERT - sizes the window maximized vertically
+
+=item MAXIMIZED_HORZ - sizes the window maximized horizontally
+
+=item ABOVE - Show window above all others (always on top)
+
+=item BELOW - Show window below all others
+
+=item SKIP_TASKBAR - hides the window from the taskbar
+
+=item SKIP_PAGER - hides the window from the window pager
+
+=item FULLSCREEN - makes window fullscreen
+
+=item HIDDEN - unmaps the window
+
+=item SHADED - rolls the window up
+
+=item DEMANDS_ATTENTION - marks window urgent or needing attention
+
+=back
+
+This feature requires a window manager which supports EWMH. Most window managers
+probably support this :)
+
+=item B<getwindowclassname> I<[window]>
+
+Prints the class name for the window.
+
 =item B<set_num_desktops> I<number>
 
 Changes the number of desktops or workspaces.
