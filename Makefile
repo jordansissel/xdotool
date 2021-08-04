@@ -125,7 +125,7 @@ uninstall:
 .PHONY: clean
 clean:
 	rm -f *.o xdotool xdotool.static xdotool.1 xdotool.html xdo_version.h \
-	      libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) libxdo.a || true
+	      libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) libxdo.a libxdo.pc
 
 xdo.o: xdo.c xdo_version.h
 	$(CC) $(CFLAGS) -fPIC -c xdo.c
@@ -206,11 +206,11 @@ pre-create-package:
 	rm -f VERSION xdo_version.h
 
 .PHONY: create-package
-create-package: pre-create-package VERSION xdo_version.h
+create-package: pre-create-package VERSION xdo_version.h libxdo.pc
 	@NAME=xdotool-$(VERSION); \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
-	rsync --exclude '.*' -a `ls -d *.pod COPYRIGHT *.c *.h examples t CHANGELIST README Makefile* version.sh platform.sh cflags.sh VERSION Doxyfile 2> /dev/null` $${NAME}/; \
+	rsync --exclude '.*' -a `ls -d *.pod COPYRIGHT *.c *.h *.pc examples t CHANGELIST README.md Makefile* version.sh platform.sh cflags.sh VERSION Doxyfile 2> /dev/null` $${NAME}/; \
 	tar -zcf $${NAME}.tar.gz $${NAME}/; \
 	rm -r $${NAME}
 	rm VERSION
