@@ -85,7 +85,6 @@ post-install:
 		  || echo "Failed running 'ldconfig'. Maybe you need to be root?"; \
 	fi
 
-
 .PHONY: installprog
 installprog: xdotool
 	install -d $(DINSTALLBIN)
@@ -124,7 +123,7 @@ uninstall:
 
 .PHONY: clean
 clean:
-	rm -f *.o xdotool xdotool.static xdotool.1 xdotool.html xdo_version.h \
+	rm -f *.o xdotool xdotool.static xdotool.1 xdotool.html \
 	      libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) libxdo.a libxdo.pc
 
 xdo.o: xdo.c xdo_version.h
@@ -180,6 +179,11 @@ xdotool.html: xdotool.pod
 .PHONY: package
 package: test-package-build create-package create-package-deb
 
+.PHONY: update-version
+update-version:
+	rm -f VERSION
+	make VERSION xdo_version.h
+
 .PHONY: package-deb
 package-deb: test-package-build create-package-deb
 
@@ -201,12 +205,8 @@ xdo_version.h: VERSION
 VERSION:
 	sh version.sh --shell > $@
 
-.PHONY: pre-create-package
-pre-create-package:
-	rm -f VERSION xdo_version.h
-
 .PHONY: create-package
-create-package: pre-create-package VERSION xdo_version.h libxdo.pc
+create-package: xdo_version.h libxdo.pc
 	@NAME=xdotool-$(VERSION); \
 	echo "Creating package: $$NAME"; \
 	mkdir $${NAME}; \
@@ -217,15 +217,16 @@ create-package: pre-create-package VERSION xdo_version.h libxdo.pc
 
 # Make sure the package we're building compiles.
 .PHONY: test-package-build
+test-package-build: NAME=xdotool-$(VERSION)
 test-package-build: create-package
-	@NAME=xdotool-$(VERSION) && \
-	echo "Testing package $$NAME" && \
-	tar -zxf $${NAME}.tar.gz && \
-	make -C $${NAME} && \
-	make -C $${NAME} docs && \
-	make -C $${NAME} test && \
-	echo "Package ready: $${NAME}"; \
-	rm -rf $${NAME}
+	echo "Testing package $(NAME)"
+	tar -zxf $(NAME).tar.gz
+	make -C ./$(NAME)
+	make -C ./$(NAME) docs
+	make -C ./$(NAME) install DESTDIR=$(NAME)/install-test/ LDCONFIG=:
+	make -C ./$(NAME) test
+	rm -rf ./$(NAME)
+	echo "Package ready: $(NAME)";
 
 
 ### Build .deb packages for xdotool. The target 'create-package-deb' will
