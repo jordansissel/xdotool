@@ -28,10 +28,10 @@ int cmd_type(context_t *context) {
   int clear_modifiers = 0;
   useconds_t delay = 12000; /* 12ms between keystrokes default */
 
-  typedef enum {
+  enum {
     opt_unused, opt_clearmodifiers, opt_delay, opt_help, opt_window, opt_args,
     opt_terminator, opt_file
-  } optlist_t;
+  };
 
   struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, opt_clearmodifiers },

@@ -10,9 +10,7 @@ int cmd_sleep(context_t *context) {
   int c;
   double duration_usec;
 
-  typedef enum {
-    opt_unused, opt_help
-  } optlist_t;
+  enum { opt_unused, opt_help };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { 0, 0, 0, 0 },

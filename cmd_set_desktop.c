@@ -6,9 +6,7 @@ int cmd_set_desktop(context_t *context) {
   int relative = False;
 
   int c;
-  typedef enum {
-    opt_unused, opt_help, opt_relative
-  } optlist_t;
+  enum { opt_unused, opt_help, opt_relative };
 
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },

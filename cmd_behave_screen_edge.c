@@ -48,9 +48,7 @@ int cmd_behave_screen_edge(context_t *context) {
   enum { quiesce_start, quiesce_ing, quiesce_done } quiesce_state = quiesce_start;
 
   int c;
-  typedef enum {
-    opt_unused, opt_help, opt_delay, opt_quiesce
-  } optlist_t;
+  enum { opt_unused, opt_help, opt_delay, opt_quiesce };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { "delay", required_argument, NULL, opt_delay },

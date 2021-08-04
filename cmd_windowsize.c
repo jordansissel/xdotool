@@ -9,9 +9,7 @@ int cmd_windowsize(context_t *context) {
   int opsync = 0;
 
   int use_hints = 0;
-  typedef enum {
-    opt_unused, opt_help, opt_usehints, opt_sync
-  } optlist_t;
+  enum { opt_unused, opt_help, opt_usehints, opt_sync };
   struct option longopts[] = {
     { "usehints", 0, NULL, opt_usehints },
     { "help", no_argument, NULL, opt_help },

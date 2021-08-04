@@ -30,9 +30,7 @@ int cmd_windowmove(context_t *context) {
   windowmove.flags = 0;
 
   int c;
-  typedef enum {
-    opt_unused, opt_help, opt_sync, opt_relative
-  } optlist_t;
+  enum { opt_unused, opt_help, opt_sync, opt_relative };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { "sync", no_argument, NULL, opt_sync },
@@ -106,7 +104,6 @@ int cmd_windowmove(context_t *context) {
   consume_args(context, 2);
 
   XWindowAttributes wattr;
-  unsigned int original_w, original_h;
   unsigned int root_w, root_h; /* for percent */
 
   window_each(context, window_arg, {

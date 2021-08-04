@@ -70,6 +70,7 @@ static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_
 static int _is_success(const char *funcname, int code, const xdo_t *xdo);
 static void _xdo_debug(const xdo_t *xdo, const char *format, ...);
 static void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...);
+static int appears_to_be_wayland(Display *xdpy);
 
 /* context-free functions */
 static wchar_t _keysym_to_char(KeySym keysym);
@@ -388,7 +389,7 @@ int xdo_set_window_property(const xdo_t *xdo, Window wid, const char *property, 
   
   char netwm_property[256] = "_NET_";
   int ret = 0;
-  strncat(netwm_property, property, strlen(property));
+  strcat(netwm_property, property);
 
   // Change the property
   ret = XChangeProperty(xdo->xdpy, wid, 
@@ -1937,7 +1938,7 @@ int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **na
   XClassHint classhint;
   XGetClassHint(xdo->xdpy, window, &classhint);
   XFree(classhint.res_name);
-  *name_ret = (char*) classhint.res_class;
+  *name_ret = (unsigned char*) classhint.res_class;
   return 0;
 }
 
@@ -2036,7 +2037,7 @@ int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
   }
 }
 
-int appears_to_be_wayland(Display *xdpy) {
+static int appears_to_be_wayland(Display *xdpy) {
   // XWayland leaks its presence in two extensions (at time of writing, August 2021)
   // First: the name of input devices "xwayland-pointer"
   // Second: in the Vendor string of XFree86-VidModeExtension

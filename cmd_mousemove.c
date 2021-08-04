@@ -31,10 +31,10 @@ int cmd_mousemove(context_t *context) {
   mousemove.step = 0;
 
   int c;
-  typedef enum {
+  enum {
     opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_polar,
     opt_screen, opt_step, opt_delay, opt_window
-  } optlist_t;
+  };
   static struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, opt_clearmodifiers },
     { "help", no_argument, NULL, opt_help},

@@ -14,9 +14,7 @@ int cmd_exec(context_t *context) {
   char *terminator = NULL;
   int c, i;
 
-  typedef enum {
-    opt_unused, opt_help, opt_sync, opt_args, opt_terminator
-  } optlist_t;
+  enum { opt_unused, opt_help, opt_sync, opt_args, opt_terminator };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { "sync", no_argument, NULL, opt_sync },

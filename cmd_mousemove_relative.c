@@ -13,9 +13,9 @@ int cmd_mousemove_relative(context_t *context) {
   charcodemap_t *active_mods = NULL;
   int active_mods_n;
   int c;
-  typedef enum {
+  enum {
     opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_polar
-  } optlist_t;
+  };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { "sync", no_argument, NULL, opt_sync },

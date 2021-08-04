@@ -359,7 +359,7 @@ int script_main(int argc, char **argv) {
   /* read input... */
   int pos;
   char *token;
-  int result;
+  int result = XDO_SUCCESS;
 
   while (fgets(buffer, 4096, input) != NULL) {
     char *line = buffer;
@@ -451,7 +451,7 @@ int script_main(int argc, char **argv) {
         script_argv[script_argc] = (char *) calloc(strlen(token) + 1, sizeof(char));
 
         //printf("arg %d: %s\n", script_argc, token);
-        strncpy(script_argv[script_argc], token, strlen(token)+1);      
+        strcpy(script_argv[script_argc], token);      
         script_argc++;
       }
       

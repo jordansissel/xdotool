@@ -21,9 +21,7 @@ int cmd_behave(context_t *context) {
   char *cmd = *context->argv;
 
   int c;
-  typedef enum {
-    opt_unused, opt_help
-  } optlist_t;
+  enum { opt_unused, opt_help };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { 0, 0, 0, 0 },
