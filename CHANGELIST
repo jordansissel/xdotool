@@ -6,7 +6,7 @@ KNOWN ISSUES:
     (say, for the OS X menu bar), but OS X's default X11 wm does not do this.
     If this affects you, please let me know and I will attempt to fix it.
   - Wayland: Wayland is an alternative to X11 as a graphical system.
-    Unfortunately, there seem to be no common and stable way to do whatjjjjkkj
+    Unfortunately, there seem to be no common and stable way to do what
     xdotool does *on* Wayland, so xdotool does not work correctly under Wayland.
 
 3.20210804.1
