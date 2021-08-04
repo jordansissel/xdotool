@@ -9,6 +9,9 @@ KNOWN ISSUES:
     Unfortunately, there seem to be no common and stable way to do what
     xdotool does *on* Wayland, so xdotool does not work correctly under Wayland.
 
+3.20210804.2
+  - Fix some packaging problems from the previous release.
+
 3.20210804.1
   - xdotool and libxdo will now reject if it is running under Wayland/XWayland.
     If XWayland is detected, the program will fail. This is because XWayland
