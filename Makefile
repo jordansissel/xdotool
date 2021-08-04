@@ -206,14 +206,13 @@ VERSION:
 	sh version.sh --shell > $@
 
 .PHONY: create-package
+create-package: NAME=xdotool-$(VERSION)
 create-package: xdo_version.h libxdo.pc
-	@NAME=xdotool-$(VERSION); \
-	echo "Creating package: $$NAME"; \
-	mkdir $${NAME}; \
-	rsync --exclude '.*' -a `ls -d *.pod COPYRIGHT *.c *.h *.pc examples t CHANGELIST README.md Makefile* version.sh platform.sh cflags.sh VERSION Doxyfile 2> /dev/null` $${NAME}/; \
-	tar -zcf $${NAME}.tar.gz $${NAME}/; \
-	rm -r $${NAME}
-	rm VERSION
+	echo "Creating package: $(NAME)"
+	mkdir "$(NAME)"
+	rsync --exclude '.*' -a `ls -d *.pod COPYRIGHT *.c *.h *.pc examples t CHANGELIST README.md Makefile* version.sh platform.sh cflags.sh VERSION Doxyfile 2> /dev/null` "$(NAME)/"
+	tar -zcf "$(NAME).tar.gz" "$(NAME)"
+	rm -r "$(NAME)"
 
 # Make sure the package we're building compiles.
 .PHONY: test-package-build
