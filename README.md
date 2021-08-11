@@ -20,7 +20,7 @@ You may find xdotool in your distribution packaging:
 * Debian and Ubuntu: `apt-get install xdotool`
 * Fedora: `dnf install xdotool`
 * FreeBSD: `pkg install xdotool`
-* OSX: `brew install xdotool`
+* macOS: `brew install xdotool` or `sudo port install xdotool`
 * OpenSUSE: `zypper install xdotool`
 
 ## Basic Usage
