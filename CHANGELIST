@@ -9,6 +9,11 @@ KNOWN ISSUES:
     Unfortunately, there seem to be no common and stable way to do what
     xdotool does *on* Wayland, so xdotool does not work correctly under Wayland.
 
+3.20210903.1
+  - Revert XWayland detection. Some parts of xdotool do not work under XWayland. However,
+    many features *do* work on XWayland, and rejecting XWayland caused problems for several
+    folks who were otherwise happily using xdotool under Wayland/XWayland. (#346, #355)
+
 3.20210804.1
   - xdotool and libxdo will now reject if it is running under Wayland/XWayland.
     If XWayland is detected, the program will fail. This is because XWayland
