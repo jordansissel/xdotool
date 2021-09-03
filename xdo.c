@@ -119,10 +119,12 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
 
   // This library and xdotool do not work correctly on Wayland/XWayland.
   // Try to detect XWayland and warn the user about problems.
-  if (appears_to_be_wayland(xdpy)) {
-    fprintf(stderr, "The X server at %s appears to be XWayland. Unfortunately, XWayland does not correctly support the features used by libxdo and xdotool.\n", display);
-    return NULL;
-  }
+  // TODO(sissel): This was disabled due to issue #346
+  //  -- xdotool works on XWayland for some operations, so it isn't helpful to refuse all usage on XWayland.
+  //if (appears_to_be_wayland(xdpy)) {
+    //fprintf(stderr, "The X server at %s appears to be XWayland. Unfortunately, XWayland does not correctly support the features used by libxdo and xdotool.\n", display);
+    //return NULL;
+  //}
 
 
   /* XXX: Check for NULL here */
