@@ -3,3 +3,5 @@
 *.1
 libxdo.pc
 xdotool
+deb-build
+*.deb
