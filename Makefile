@@ -235,7 +235,7 @@ test-package-build: create-package
 # tarballs.
 
 DEBDIR=deb-build
-create-package-deb: pre-create-package VERSION xdo_version.h
+create-package-deb: VERSION xdo_version.h
 	[ -d $(DEBDIR) ] && rm -r $(DEBDIR) || true
 	$(MAKE) xdotool.deb xdotool-doc.deb libxdo$(MAJOR).deb libxdo$(MAJOR)-dev.deb
 
@@ -270,18 +270,18 @@ $(DEBDIR)/%/control.tar.gz: $(DEBDIR)/%/control $(DEBDIR)/%/md5sums
 	tar -C $(DEBDIR)/$* -zcf $(DEBDIR)/$*/control.tar.gz control md5sums 
 
 # Build a tarball for xdotool files
-$(DEBDIR)/xdotool/data.tar.gz: $(DEBDIR)/xdotool/
+$(DEBDIR)/xdotool/data.tar.gz: $(DEBDIR)/xdotool
 	tar -C $(DEBDIR) -zcf $@ usr/bin
 
 # Build a tarball for libxdo# files
-$(DEBDIR)/libxdo$(MAJOR)/data.tar.gz: $(DEBDIR)/libxdo$(MAJOR)/
+$(DEBDIR)/libxdo$(MAJOR)/data.tar.gz: $(DEBDIR)/libxdo$(MAJOR)
 	tar -C $(DEBDIR) -zcf $@ usr/lib
 
 # Build a tarball for libxdo#-dev files
-$(DEBDIR)/libxdo$(MAJOR)-dev/data.tar.gz: $(DEBDIR)/libxdo$(MAJOR)-dev/
+$(DEBDIR)/libxdo$(MAJOR)-dev/data.tar.gz: $(DEBDIR)/libxdo$(MAJOR)-dev
 	tar -C $(DEBDIR) -zcf $@ usr/include
 
 # Build a tarball for xdotool-doc files
-$(DEBDIR)/xdotool-doc/data.tar.gz: $(DEBDIR)/xdotool-doc/
+$(DEBDIR)/xdotool-doc/data.tar.gz: $(DEBDIR)/xdotool-doc
 	tar -C $(DEBDIR) -zcf $@ usr/share
 
