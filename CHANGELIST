@@ -9,6 +9,9 @@ KNOWN ISSUES:
     Unfortunately, there seem to be no common and stable way to do what
     xdotool does *on* Wayland, so xdotool does not work correctly under Wayland.
 
+3.20211022.1
+  - Fix a bug causing `make create-package-deb` to fail. (#362)
+
 3.20210903.1
   - Revert XWayland detection. Some parts of xdotool do not work under XWayland. However,
     many features *do* work on XWayland, and rejecting XWayland caused problems for several
