@@ -149,7 +149,7 @@ libxdo.a: xdo.o xdo_search.o
 libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 	ln -s $< $@
 
-libxdo.pc:
+libxdo.pc: VERSION
 	sh pc.sh $(VERSION) $(INSTALLLIB) $(INSTALLINCLUDE) > libxdo.pc
 
 # xdotool the binary requires libX11 now for XSelectInput and friends.
