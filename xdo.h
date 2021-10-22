@@ -619,6 +619,13 @@ int xdo_minimize_window(const xdo_t *xdo, Window wid);
 #define _NET_WM_STATE_TOGGLE        2    /* toggle property  */
 
 /**
+ * Get window classname
+ * @param window the window
+ * @param class_ret Pointer to the window classname WM_CLASS
+ */
+int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **class_ret);
+
+/**
  * Change window state
  * @param action the _NET_WM_STATE action
  */

@@ -86,10 +86,18 @@ int cmd_type(context_t *context) {
         break;
       case opt_terminator:
         terminator = strdup(optarg);
+        if (terminator == NULL) {
+          fprintf(stderr, "type: error: failed to allocate memory\n");
+          return EXIT_FAILURE;
+        }
         break;
       case opt_file:
-	file = strdup(optarg);
-	break;
+        file = strdup(optarg);
+        if (file == NULL) {
+          fprintf(stderr, "type: error: failed to allocate memory\n");
+          return EXIT_FAILURE;
+        }
+        break;
       default:
         fprintf(stderr, usage, cmd);
         return EXIT_FAILURE;
@@ -101,7 +109,7 @@ int cmd_type(context_t *context) {
   if (context->argc == 0 && file == NULL) {
     fprintf(stderr, "You specified the wrong number of args.\n");
     fprintf(stderr, usage, cmd);
-    return 1;
+    return EXIT_FAILURE;
   }
 
   if (arity > 0 && terminator != NULL) {
@@ -117,6 +125,10 @@ int cmd_type(context_t *context) {
 
   if (file != NULL) {
     data = calloc(1 + context->argc, sizeof(char *));
+    if (data == NULL) {
+      fprintf(stderr, "Failure allocating for '%s': %s\n", file, strerror(errno));
+      return EXIT_FAILURE;
+    }
 
     /* determine whether reading from a file or from stdin */
     if (!strcmp(file, "-")) {
@@ -157,6 +169,10 @@ int cmd_type(context_t *context) {
   }
   else {
     data = calloc(context->argc, sizeof(char *));
+    if (data == NULL) {
+      fprintf(stderr, "type: error: failed to allocate memory\n");
+      return EXIT_FAILURE;
+    }
   }
 
   /* Apply any --arity or --terminator */
@@ -174,6 +190,17 @@ int cmd_type(context_t *context) {
     }
 
     data[data_count] = strdup(context->argv[i]);
+    if (data[data_count] == NULL) {
+      fprintf(stderr, "type: error: failed to allocate memory\n");
+      ret = 0; /* EXIT_FAILURE */
+      for (i = 0; i < data_count; i++)
+        free(data[i]);
+      free(data);
+      free(file);
+      free(terminator);
+      return EXIT_FAILURE;
+    }
+
     xdotool_debug(context, "Exec arg[%d]: %s", i, data[data_count]);
     data_count++;
     args_count++;
@@ -202,9 +229,14 @@ int cmd_type(context_t *context) {
     }
   }); /* window_each(...) */
 
-  free(data);
-
   consume_args(context, args_count);
+
+  for (i = 0; i < data_count; i++)
+    free(data[i]);
+  free(data);
+  free(file);
+  free(terminator);
+
   return ret > 0;
 }
 

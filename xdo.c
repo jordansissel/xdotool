@@ -107,13 +107,20 @@ xdo_t* xdo_new(const char *display_name) {
   return xdo_new_with_opened_display(xdpy, display_name, 1);
 }
 
+/* Output error on stderr, without formatting.
+ * Might be called in low-memory conditions so no printf */
+static void early_error(const char *msg) {
+  const size_t len = strlen(msg);
+  write(STDERR_FILENO, msg, len);
+}
+
 xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
                                    int close_display_when_freed) {
   xdo_t *xdo = NULL;
 
   if (xdpy == NULL) {
     /* Can't use _xdo_eprintf yet ... */
-    fprintf(stderr, "xdo_new: xdisplay I was given is a null pointer\n");
+    early_error("xdo_new: xdisplay I was given is a null pointer\n");
     return NULL;
   }
 
@@ -126,10 +133,11 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
     //return NULL;
   //}
 
-
-  /* XXX: Check for NULL here */
-  xdo = malloc(sizeof(xdo_t));
-  memset(xdo, 0, sizeof(xdo_t));
+  xdo = calloc(1, sizeof(xdo_t));
+  if (xdo == NULL) {
+    early_error("xdo_new: out of memory allocating the main context\n");
+    return NULL;
+  }
 
   xdo->xdpy = xdpy;
   xdo->close_display_when_freed = close_display_when_freed;
@@ -160,10 +168,8 @@ void xdo_free(xdo_t *xdo) {
   if (xdo == NULL)
     return;
 
-  if (xdo->display_name)
-    free(xdo->display_name);
-  if (xdo->charcodes)
-    free(xdo->charcodes);
+  free(xdo->display_name);
+  free(xdo->charcodes);
   if (xdo->xdpy && xdo->close_display_when_freed)
     XCloseDisplay(xdo->xdpy);
 
@@ -359,6 +365,10 @@ int xdo_set_window_class (const xdo_t *xdo, Window wid, const char *name,
                          const char *_class) {
   int ret = 0;
   XClassHint *hint = XAllocClassHint();
+  if (hint == NULL) {
+    fprintf(stderr, "error: failed to allocate ClassHint\n");
+    return 1;
+  }
   XGetClassHint(xdo->xdpy, wid, hint);
   if (name != NULL)
     hint->res_name = (char*)name;
@@ -376,6 +386,10 @@ int xdo_set_window_urgency (const xdo_t *xdo, Window wid, int urgency) {
   XWMHints *hint = XGetWMHints(xdo->xdpy, wid);
   if (hint == NULL)
     hint = XAllocWMHints();
+  if (hint == NULL) {
+    fprintf(stderr, "error: failed to allocate WMHints\n");
+    return 1;
+  }
 
   if (urgency)
     hint->flags = hint->flags | XUrgencyHint;
@@ -1038,9 +1052,7 @@ int _xdo_send_keysequence_window_do(const xdo_t *xdo, Window window, const char 
   }
 
   ret = xdo_send_keysequence_window_list_do(xdo, window, keys, nkeys, pressed, modifier, delay);
-  if (keys != NULL) {
-    free(keys);
-  }
+  free(keys);
 
   return ret;
 }
@@ -1061,7 +1073,7 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
 
   /* Find a keycode that is unused for scratchspace */
   for (i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
-    int j = 0;
+    int j;
     int key_is_empty = 1;
     for (j = 0; j < keysyms_per_keycode; j++) {
       /*char *symname;*/
@@ -1203,6 +1215,7 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
   Window dummy, parent, *children = NULL;
   unsigned int nchildren;
   Atom atom_wmstate = XInternAtom(xdo->xdpy, "WM_STATE", False);
+  unsigned char *data;
 
   int done = False;
   while (!done) {
@@ -1212,7 +1225,8 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
 
     long items;
     _xdo_debug(xdo, "get_window_property on %lu", window);
-    xdo_get_window_property_by_atom(xdo, window, atom_wmstate, &items, NULL, NULL);
+    data = xdo_get_window_property_by_atom(xdo, window, atom_wmstate, &items, NULL, NULL);
+    XFree(data);
 
     if (items == 0) {
       /* This window doesn't have WM_STATE property, keep searching. */
@@ -1292,16 +1306,11 @@ static void _xdo_charcodemap_from_char(const xdo_t *xdo, charcodemap_t *key) {
 }
 
 static void _xdo_charcodemap_from_keysym(const xdo_t *xdo, charcodemap_t *key, KeySym keysym) {
-  int i = 0;
-  int len = xdo->charcodes_len;
+  int i;
 
-  key->code = 0;
   key->symbol = keysym;
-  key->group = 0;
-  key->modmask = 0;
-  key->needs_binding = 1;
 
-  for (i = 0; i < len; i++) {
+  for (i = 0; i < xdo->charcodes_len; i++) {
     if (xdo->charcodes[i].symbol == keysym) {
       key->code = xdo->charcodes[i].code;
       key->group = xdo->charcodes[i].group;
@@ -1310,6 +1319,10 @@ static void _xdo_charcodemap_from_keysym(const xdo_t *xdo, charcodemap_t *key, K
       return;
     }
   }
+  key->code = 0;
+  key->group = 0;
+  key->modmask = 0;
+  key->needs_binding = 1;
 }
 
 static int _xdo_has_xtest(const xdo_t *xdo) {
@@ -1336,6 +1349,10 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
                      * xdo->keysyms_per_keycode;
 
   xdo->charcodes = calloc(keycodes_length, sizeof(charcodemap_t));
+  if (xdo->charcodes == NULL) {
+    fprintf(stderr, "error: failed to allocate charcodes\n");
+    exit(EXIT_FAILURE);
+  }
   XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllClientInfoMask, XkbUseCoreKbd);
 
   for (keycode = xdo->keycode_low; keycode <= xdo->keycode_high; keycode++) {
@@ -1365,7 +1382,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
     }
   }
   xdo->charcodes_len = idx;
-  XkbFreeClientMap(desc, 0, 1);
+  XkbFreeKeyboard(desc, 0, 1);
   XFreeModifiermap(modmap);
 }
 
@@ -1392,6 +1409,12 @@ int _xdo_send_keysequence_window_to_keycode_list(const xdo_t *xdo, const char *k
   *nkeys = 0;
   *keys = calloc(keys_size, sizeof(charcodemap_t));
   keyseq_copy = strptr = strdup(keyseq);
+  if (*keys == NULL || keyseq_copy == NULL) {
+    fprintf(stderr, "error: failed to allocate keys\n");
+    free(*keys);
+    free(keyseq_copy);
+    return False;
+  }
   while ((tok = strtok_r(strptr, "+", &tokctx)) != NULL) {
     KeySym sym;
     KeyCode key;
@@ -1430,7 +1453,12 @@ int _xdo_send_keysequence_window_to_keycode_list(const xdo_t *xdo, const char *k
     (*nkeys)++;
     if (*nkeys == keys_size) {
       keys_size *= 2;
-      *keys = realloc(*keys, keys_size * sizeof(KeyCode));
+      *keys = realloc(*keys, keys_size * sizeof(charcodemap_t));
+      if (*keys == NULL) {
+        fprintf(stderr, "error: failed to allocate keys\n");
+        free(keyseq_copy);
+        return False;
+      }
     }
   }
 
@@ -1465,6 +1493,18 @@ unsigned char *xdo_get_window_property_by_atom(const xdo_t *xdo, Window window, 
   unsigned long bytes_after; /* unused */
   unsigned char *prop;
   int status;
+
+  if (nitems != NULL) {
+    *nitems = 0;
+  }
+
+  if (type != NULL) {
+    *type = 0;
+  }
+
+  if (size != NULL) {
+    *size = 0;
+  }
 
   status = XGetWindowProperty(xdo->xdpy, window, atom, 0, (~0L),
                               False, AnyPropertyType, &actual_type,
@@ -1644,6 +1684,11 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
   XModifierKeymap *modifiers = XGetModifierMapping(xdo->xdpy);
   *nkeys = 0;
   *keys = malloc(keys_size * sizeof(charcodemap_t));
+  if (*keys == NULL) {
+    fprintf(stderr, "error: failed to allocate keys\n");
+    XFreeModifiermap(modifiers);
+    return False;
+  }
 
   XQueryKeymap(xdo->xdpy, keymap);
 
@@ -1666,10 +1711,15 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
         if (*nkeys == keys_size) {
           keys_size *= 2;
           *keys = realloc(keys, keys_size * sizeof(charcodemap_t));
+          if (*keys == NULL) {
+            fprintf(stderr, "error: failed to allocate keys\n");
+            XFreeModifiermap(modifiers);
+            return False;
+          }
         }
       }
     }
-  } 
+  }
 
   XFreeModifiermap(modifiers);
 
@@ -1936,12 +1986,16 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
   return 0;
 }
 
-int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **name_ret) {
+int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **class_ret) {
   XClassHint classhint;
-  XGetClassHint(xdo->xdpy, window, &classhint);
-  XFree(classhint.res_name);
-  *name_ret = (unsigned char*) classhint.res_class;
-  return 0;
+  Status ret = XGetClassHint(xdo->xdpy, window, &classhint);
+
+  if (ret) {
+    XFree(classhint.res_name);
+    *class_ret = (unsigned char*) classhint.res_class;
+  } else
+    *class_ret = NULL;
+  return _is_success("XGetClassHint[WM_CLASS]", ret == 0, xdo);
 }
 
 int xdo_window_state(xdo_t *xdo, Window window, unsigned long action, const char *property) {

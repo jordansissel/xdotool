@@ -81,6 +81,10 @@ int cmd_exec(context_t *context) {
   }
 
   command = calloc(context->argc + 1, sizeof(char *));
+  if (command == NULL) {
+    fprintf(stderr, "%s: error: failed to allocate memory\n", cmd);
+    return EXIT_FAILURE;
+  }
 
   for (i=0; i < context->argc; i++) {
     if (arity > 0 && i == arity) {
@@ -94,6 +98,15 @@ int cmd_exec(context_t *context) {
     }
 
     command[i] = strdup(context->argv[i]);
+    if (command[i] == NULL) {
+      fprintf(stderr, "exec: error: failed to allocate memory\n");
+      for (;i;i--) {
+        free(command[i]);
+      }
+      free(terminator);
+      free(command);
+      return EXIT_FAILURE;
+    }
     command_count = i + 1; /* i starts at 0 */
     xdotool_debug(context, "Exec arg[%d]: %s", i, command[i]);
   }
@@ -116,9 +129,7 @@ int cmd_exec(context_t *context) {
   }
 
   consume_args(context, command_count);
-  if (terminator != NULL) {
-    free(terminator);
-  }
+  free(terminator);
 
   for (i=0; i < command_count; i++) {
     free(command[i]);

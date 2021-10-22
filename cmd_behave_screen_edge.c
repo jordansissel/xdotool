@@ -195,6 +195,10 @@ int cmd_behave_screen_edge(context_t *context) {
     /* Only create a context copy if we need one */
     if (need_new_context) {
       tmpcontext = calloc(1, sizeof(context_t));
+      if (tmpcontext == NULL) {
+        fprintf(stderr, "%s: error: failed to allocate memory\n", cmd);
+        exit(EXIT_FAILURE);
+      }
       memcpy(tmpcontext, context, sizeof(context_t));
     }
 
@@ -304,9 +308,7 @@ int cmd_behave_screen_edge(context_t *context) {
       } /* if quiesce */
     } /* if trigger == True */
 
-    if (tmpcontext != NULL) {
-      free(tmpcontext);
-    }
+    free(tmpcontext);
 
     if (ret != XDO_SUCCESS) {
       printf("Command failed.\n");
