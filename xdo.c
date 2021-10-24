@@ -1939,8 +1939,9 @@ int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **cl
   if (ret) {
     XFree(classhint.res_name);
     *class_ret = (unsigned char*) classhint.res_class;
-  } else
+  } else {
     *class_ret = NULL;
+  }
   return _is_success("XGetClassHint[WM_CLASS]", ret == 0, xdo);
 }
 
