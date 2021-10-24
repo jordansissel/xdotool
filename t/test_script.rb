@@ -27,6 +27,13 @@ class XdotoolScriptTests < MiniTest::Test
     xdotool_script_ok [ "# comment", "mousemove 0 0" ]
     xdotool_script_ok [ "mousemove 0 0", "mousemove 0 0" ]
     xdotool_script_ok [ "mousemove 0 0", "", "mousemove 0 0" ]
+
   end # def test_expected_failures
+
+  def test_long
+    # Create a really long chained command that is longer than a single 4096byte read
+    # xdotool's script_main reads the input 4096 bytes at a time.
+    xdotool_script_ok [ "mousemove 0 0 " * 1000 ]
+  end
 end # class XdotoolCommandWindowFocusTests
 
