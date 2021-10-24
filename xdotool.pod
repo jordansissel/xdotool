@@ -570,7 +570,7 @@ Percentages are valid for width and height. They are relative to the geometry
 of the screen the window is on. For example, to make a window the full width of
 the screen, but half height:
 
- xdotool windowsize I<window> 100% 50%
+ xdotool windowsize <window> 100% 50%
 
 Percentages are valid with --usehints and still mean pixel-width relative to
 the screen size.
@@ -598,7 +598,7 @@ necessary to the requested size.
 =back
 
 Example: To set a terminal to be 80x24 characters, you would use:
- xdotool windowsize --usehints I<some_windowid> 80 24
+ xdotool windowsize --usehints <some_windowid> 80 24
 
 =item B<windowmove> I<[options]> I<[window]> I<x> I<y>
 
@@ -619,7 +619,7 @@ Percentages are valid for width and height. They are relative to the geometry
 of the screen the window is on. For example, to make a window the full width of
 the screen, but half height:
 
- xdotool windowmove I<window> 100% 50%
+ xdotool windowmove <window> 100% 50%
 
 =over
 

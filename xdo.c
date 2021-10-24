@@ -160,10 +160,8 @@ void xdo_free(xdo_t *xdo) {
   if (xdo == NULL)
     return;
 
-  if (xdo->display_name)
-    free(xdo->display_name);
-  if (xdo->charcodes)
-    free(xdo->charcodes);
+  free(xdo->display_name);
+  free(xdo->charcodes);
   if (xdo->xdpy && xdo->close_display_when_freed)
     XCloseDisplay(xdo->xdpy);
 
@@ -1038,9 +1036,7 @@ int _xdo_send_keysequence_window_do(const xdo_t *xdo, Window window, const char 
   }
 
   ret = xdo_send_keysequence_window_list_do(xdo, window, keys, nkeys, pressed, modifier, delay);
-  if (keys != NULL) {
-    free(keys);
-  }
+  free(keys);
 
   return ret;
 }
@@ -1936,12 +1932,16 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
   return 0;
 }
 
-int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **name_ret) {
+int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **class_ret) {
   XClassHint classhint;
-  XGetClassHint(xdo->xdpy, window, &classhint);
-  XFree(classhint.res_name);
-  *name_ret = (unsigned char*) classhint.res_class;
-  return 0;
+  Status ret = XGetClassHint(xdo->xdpy, window, &classhint);
+
+  if (ret) {
+    XFree(classhint.res_name);
+    *class_ret = (unsigned char*) classhint.res_class;
+  } else
+    *class_ret = NULL;
+  return _is_success("XGetClassHint[WM_CLASS]", ret == 0, xdo);
 }
 
 int xdo_window_state(xdo_t *xdo, Window window, unsigned long action, const char *property) {

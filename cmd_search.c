@@ -190,9 +190,7 @@ int cmd_search(context_t *context) {
   }
 
   do {
-    if (list != NULL) {
-      free(list);
-    }
+    free(list);
 
     xdo_search_windows(context->xdo, &search, &list, &nwindows);
 
@@ -214,9 +212,7 @@ int cmd_search(context_t *context) {
   } while (op_sync && nwindows == 0);
 
   /* Free old list as it's malloc'd by xdo_search_windows */
-  if (context->windows != NULL) {
-    free(context->windows);
-  }
+  free(context->windows);
   context->windows = list;
   context->nwindows = nwindows;
 
