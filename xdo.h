@@ -928,11 +928,6 @@ int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
                                 unsigned int *height, int screen);
 
 
-/**
- * Get the classname of a given Window.
- */
-int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **name_ret);
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
