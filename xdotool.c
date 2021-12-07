@@ -661,6 +661,7 @@ void xdotool_debug(context_t *context, const char *format, ...) {
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
   }
+  va_end(args);
 } /* xdotool_debug */
 
 void xdotool_output(context_t *context, const char *format, ...) {
@@ -671,4 +672,5 @@ void xdotool_output(context_t *context, const char *format, ...) {
   vfprintf(stdout, format, args);
   fprintf(stdout, "\n");
   fflush(stdout);
+  va_end(args);
 } /* xdotool_output */
