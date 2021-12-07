@@ -348,7 +348,7 @@ int script_main(int argc, char **argv) {
 
   if (context.xdo == NULL) {
     fprintf(stderr, "Failed creating new xdo instance\n");
-    return 1;
+    return EXIT_FAILURE;
   }
   context.xdo->debug = context.debug;
 
