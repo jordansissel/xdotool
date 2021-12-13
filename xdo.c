@@ -38,8 +38,6 @@
 #include "xdo_util.h"
 #include "xdo_version.h"
 
-#define DEFAULT_DELAY 12
-
 /**
  * The number of tries to check for a wait condition before aborting.
  * TODO(sissel): Make this tunable at runtime?
@@ -943,23 +941,23 @@ int xdo_get_mouse_location2(const xdo_t *xdo, int *x_ret, int *y_ret,
   return _is_success("XQueryPointer", ret == False, xdo);
 }
 
-int xdo_click_window(const xdo_t *xdo, Window window, int button) {
+int xdo_click_window(const xdo_t *xdo, Window window, int button, useconds_t mouse_up_delay) {
   int ret = 0;
   ret = xdo_mouse_down(xdo, window, button);
   if (ret != XDO_SUCCESS) {
     fprintf(stderr, "xdo_mouse_down failed, aborting click.\n");
     return ret;
   }
-  usleep(DEFAULT_DELAY);
+  usleep(mouse_up_delay);
   ret = xdo_mouse_up(xdo, window, button);
   return ret;
 }
 
 int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button,
-                       int repeat, useconds_t delay) {
+                       int repeat, useconds_t delay, useconds_t mouse_up_delay) {
   int ret = 0;
   while (repeat > 0) {
-    ret = xdo_click_window(xdo, window, button);
+    ret = xdo_click_window(xdo, window, button, mouse_up_delay);
     if (ret != XDO_SUCCESS) {
       fprintf(stderr, "click failed with %d repeats remaining\n", repeat);
       return ret;
