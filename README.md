@@ -2,7 +2,7 @@
 
 `xdotool` lets you simulate keyboard input and mouse activity, move and resize windows, etc. It does this using X11’s XTEST extension and other Xlib functions.
 
-⚠ Note: If you are using Wayland, please be aware this software will not work correctly. ⚠
+⚠ Note: If you are using Wayland, please be aware this software will not work correctly. Try [ydotool](https://github.com/ReimuNotMoe/ydotool) ⚠
 
 With xdotool, you can search for windows and move, resize, hide, and modify
 window properties like the title. If your window manager supports it, you can
