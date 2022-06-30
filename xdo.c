@@ -1987,6 +1987,7 @@ void _xdo_debug(const xdo_t *xdo, const char *format, ...) {
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
   }
+  va_end(args);
 } /* _xdo_debug */
 
 /* Used for printing things conditionally based on xdo->quiet */
@@ -2000,6 +2001,7 @@ void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...) {
 
   vfprintf(stderr, format, args);
   fprintf(stderr, "\n");
+  va_end(args);
 } /* _xdo_eprintf */
 
 void xdo_enable_feature(xdo_t *xdo, int feature) {
