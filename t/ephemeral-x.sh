@@ -168,7 +168,7 @@ if [ ! -z "$WINMGR" -a "$WINMGR" != "none" ] ; then
   for i in 1 2 3 4 5 6 7 8 9 10 ABORT ; do 
     # A good signal that the WM has started is that the WM_STATE property is
     # set or that any NETWM/ICCCM property is set.
-    if xprop -root | egrep -q 'WM_STATE|^_NET' ; then
+    if xprop -root | grep -qE 'WM_STATE|^_NET' ; then
       quiet || echo "$WINMGRNAME looks healthy. Moving on."
       break;
     fi
