@@ -43,6 +43,11 @@ See also: L<SENDEVENT NOTES> and L<WINDOW STACK>
 
 Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
 
+=item B<--aftermodifiers>
+
+Wait for the user to release modifier keys before sending keystrokes.
+See L<AFTERMODIFIERS> below.
+
 =item B<--delay milliseconds>
 
 Delay between keystrokes. Default is 12ms.
@@ -104,6 +109,11 @@ Delay between keystrokes. Default is 12ms.
 =item B<--clearmodifiers>
 
 Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
+
+=item B<--aftermodifiers>
+
+Wait for the user to release modifier keys before sending keystrokes.
+See L<AFTERMODIFIERS> below.
 
 =back
 
@@ -168,6 +178,10 @@ The origin defaults to the center of the current screen. If you specify a
 
 See L<CLEARMODIFIERS>
 
+=item B<--aftermodifiers>
+
+See L<AFTERMODIFIERS>
+
 =item B<--sync>
 
 After sending the mouse move request, wait until the mouse is actually
@@ -210,6 +224,10 @@ in the general case than waiting for a specific target.
 
 See L<CLEARMODIFIERS>
 
+=item B<--aftermodifiers>
+
+See L<AFTERMODIFIERS>
+
 =back
 
 =item B<click> I<[options]> I<button>
@@ -225,6 +243,10 @@ wheel up is 4, wheel down is 5.
 =item B<--clearmodifiers>
 
 Clear modifiers before clicking. See L<CLEARMODIFIERS> below.
+
+=item B<--aftermodifiers>
+
+Wait for modifiers to be released before clicking. See L<AFTERMODIFIERS> below.
 
 =item B<--repeat> REPEAT
 
@@ -1037,7 +1059,7 @@ The order of operations if you hold shift while running 'xdotool key --clearmodi
 
 =back
 
-The I<--clearmodifiers> flag can currently clear of the following:
+The I<--clearmodifiers> flag can currently clear the following:
 
 =over
 
@@ -1050,6 +1072,17 @@ The I<--clearmodifiers> flag can currently clear of the following:
 
 
 =back
+
+=head1 AFTERMODIFIERS
+
+Any command taking the I<--aftermodifiers> flag will wait until any currently
+pressed modifier keys have been released before performing the action. It solves a
+similar problem to I<--clearmodifiers>, but does not attempt to restore the
+modifier state afterward.
+
+I<--aftermodifiers> only waits for modifier keys, not mouse buttons or caps lock.
+If you use both I<--aftermodifiers> and I<--clearmodifiers>, the mouse buttons
+and caps lock state will still be cleared as described above.
 
 =head1 SENDEVENT NOTES
 

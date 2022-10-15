@@ -7,6 +7,7 @@ int cmd_mousemove_relative(context_t *context) {
   char *cmd = *context->argv;
   int polar_coordinates = 0;
   int clear_modifiers = 0;
+  int after_modifiers = 0;
   int opsync = 0;
   int origin_x = -1, origin_y = -1;
 
@@ -14,18 +15,20 @@ int cmd_mousemove_relative(context_t *context) {
   int active_mods_n;
   int c;
   enum {
-    opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_polar
+    opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_aftermodifiers, opt_polar
   };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { "sync", no_argument, NULL, opt_sync },
     { "polar", no_argument, NULL, opt_polar },
     { "clearmodifiers", no_argument, NULL, opt_clearmodifiers },
+    { "aftermodifiers", no_argument, NULL, opt_aftermodifiers },
     { 0, 0, 0, 0 },
   };
   static const char *usage =
       "Usage: %s [options] <x> <y>\n"
-      "-c, --clearmodifiers      - reset active modifiers (alt, etc) while typing\n"
+      "-c, --clearmodifiers      - reset active modifiers (alt, etc) while moving\n"
+      "-a, --aftermodifiers      - wait for modifiers to be released before moving\n"
       "-p, --polar               - Use polar coordinates. X as an angle, Y as distance\n"
       "--sync                    - only exit once the mouse has moved\n"
       "\n"
@@ -39,7 +42,7 @@ int cmd_mousemove_relative(context_t *context) {
       "   %s 100 140\n";
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "+cph",
+  while ((c = getopt_long_only(context->argc, context->argv, "+cpah",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
@@ -57,6 +60,10 @@ int cmd_mousemove_relative(context_t *context) {
         break;
       case 'c':
       case opt_clearmodifiers:
+        clear_modifiers = 1;
+        break;
+      case 'a':
+      case opt_aftermodifiers:
         clear_modifiers = 1;
         break;
       default:
@@ -95,6 +102,9 @@ int cmd_mousemove_relative(context_t *context) {
     y = (-sin(radians) * distance);
   }
  
+  if (after_modifiers) {
+    xdo_wait_for_modifier_release(context->xdo);
+  }
   if (clear_modifiers) {
     xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
     xdo_clear_active_modifiers(context->xdo, CURRENTWINDOW, active_mods, active_mods_n);

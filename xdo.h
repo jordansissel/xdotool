@@ -807,6 +807,11 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
                              int *nkeys);
 
 /**
+ * Wait for any currently pressed modifier keys to be released.
+ */
+void xdo_wait_for_modifier_release(const xdo_t *xdo);
+
+/**
  * Send any events necessary to clear the active modifiers.
  * For example, if you are holding 'alt' when xdo_get_active_modifiers is 
  * called, then this method will send a key-up for 'alt'

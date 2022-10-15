@@ -1682,6 +1682,17 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
   return XDO_SUCCESS;
 }
 
+void xdo_wait_for_modifier_release(const xdo_t *xdo) {
+  int active_mods_n;
+  for (;;) {
+    xdo_get_active_modifiers(xdo, NULL, &active_mods_n);
+    if (active_mods_n == 0) {
+      return;
+    }
+    usleep(30000);
+  }
+}
+
 unsigned int xdo_get_input_state(const xdo_t *xdo) {
   Window root, dummy;
   int root_x, root_y, win_x, win_y;

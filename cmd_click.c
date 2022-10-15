@@ -6,6 +6,7 @@ int cmd_click(context_t *context) {
   char *cmd = context->argv[0];
   int ret = 0;
   int clear_modifiers = 0;
+  int after_modifiers = 0;
   charcodemap_t *active_mods = NULL;
   int active_mods_n;
   char *window_arg = NULL;
@@ -14,11 +15,12 @@ int cmd_click(context_t *context) {
 
   int c;
   enum { 
-    opt_unused, opt_help, opt_clearmodifiers, opt_window, opt_delay,
+    opt_unused, opt_help, opt_clearmodifiers, opt_aftermodifiers, opt_window, opt_delay,
     opt_repeat
   };
   static struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, opt_clearmodifiers },
+    { "aftermodifiers", no_argument, NULL, opt_aftermodifiers },
     { "help", no_argument, NULL, opt_help },
     { "window", required_argument, NULL, opt_window },
     { "delay", required_argument, NULL, opt_delay },
@@ -27,7 +29,8 @@ int cmd_click(context_t *context) {
   };
   static const char *usage = 
             "Usage: %s [options] <button>\n"
-            "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
+            "--clearmodifiers       - reset active modifiers (alt, etc) while moving\n"
+            "--aftermodifiers       - wait for modifiers to be released before typing\n"
             "--window WINDOW        - specify a window to send click to\n"
             "--repeat REPEATS       - number of times to click. Default is 1\n"
             "--delay MILLISECONDS   - delay in milliseconds between clicks.\n"
@@ -38,7 +41,7 @@ int cmd_click(context_t *context) {
             "right = 3, wheel up = 4, wheel down = 5\n";
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "+cw:h",
+  while ((c = getopt_long_only(context->argc, context->argv, "+caw:h",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'h':
@@ -50,6 +53,10 @@ int cmd_click(context_t *context) {
       case 'c':
       case opt_clearmodifiers:
         clear_modifiers = 1;
+        break;
+      case 'a':
+      case opt_aftermodifiers:
+        after_modifiers = 1;
         break;
       case 'w':
       case opt_window:
@@ -86,6 +93,9 @@ int cmd_click(context_t *context) {
   button = atoi(context->argv[0]);
 
   window_each(context, window_arg, {
+    if (after_modifiers) {
+      xdo_wait_for_modifier_release(context->xdo);
+    }
     if (clear_modifiers) {
       xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
       xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);

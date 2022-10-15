@@ -187,13 +187,7 @@ int cmd_type(context_t *context) {
 
   window_each(context, window_arg, {
     if (after_modifiers) {
-      for (;;) {
-	xdo_get_active_modifiers(context->xdo, NULL, &active_mods_n);
-	if (active_mods_n == 0) {
-	  break;
-	}
-	usleep(30000);
-      }
+      xdo_wait_for_modifier_release(context->xdo);
     }
     if (clear_modifiers) {
       xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
