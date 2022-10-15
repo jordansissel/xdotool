@@ -1631,7 +1631,10 @@ void _xdo_send_modifier(const xdo_t *xdo, int modmask, int is_press) {
 int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
                                     int *nkeys) {
   /* For each keyboard device, if an active key is a modifier,
-   * then add the keycode to the keycode list */
+   * then add the keycode to the keycode list.
+   * 
+   * If keys is null, only count the number of modifiers pressed,
+   * without recording them. */
 
   char keymap[32]; /* keycode map: 256 bits */
   int keys_size = 10;
@@ -1639,7 +1642,9 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
   int mod_index, mod_key;
   XModifierKeymap *modifiers = XGetModifierMapping(xdo->xdpy);
   *nkeys = 0;
-  *keys = malloc(keys_size * sizeof(charcodemap_t));
+  if (keys) {
+    *keys = malloc(keys_size * sizeof(charcodemap_t));
+  }
 
   XQueryKeymap(xdo->xdpy, keymap);
 
@@ -1654,15 +1659,20 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
          * 'xdotool key --clearmodifiers ...' sometimes failed trying
          * to clear modifiers that didn't exist since charcodemap_t's modmask was
          * uninitialized */
-        memset(*keys + *nkeys, 0, sizeof(charcodemap_t));
+	if (keys) {
+	  memset(*keys + *nkeys, 0, sizeof(charcodemap_t));
 
-        (*keys)[*nkeys].code = keycode;
-        (*nkeys)++;
+	  (*keys)[*nkeys].code = keycode;
+	  (*nkeys)++;
 
-        if (*nkeys == keys_size) {
-          keys_size *= 2;
-          *keys = realloc(keys, keys_size * sizeof(charcodemap_t));
-        }
+	  if (*nkeys == keys_size) {
+	    keys_size *= 2;
+	    *keys = realloc(keys, keys_size * sizeof(charcodemap_t));
+	  }
+	}
+	else {
+	  (*nkeys)++;
+	}
       }
     }
   } 
