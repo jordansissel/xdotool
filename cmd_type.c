@@ -26,17 +26,17 @@ int cmd_type(context_t *context) {
 
   /* Options */
   int clear_modifiers = 0;
-  int after_modifiers = 0;
+  int after_keys = 0;
   useconds_t delay = 12000; /* 12ms between keystrokes default */
 
   enum {
-    opt_unused, opt_clearmodifiers, opt_aftermodifiers, opt_delay, opt_help,
+    opt_unused, opt_clearmodifiers, opt_afterkeys, opt_delay, opt_help,
     opt_window, opt_args, opt_terminator, opt_file
   };
 
   struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, opt_clearmodifiers },
-    { "aftermodifiers", no_argument, NULL, opt_aftermodifiers },
+    { "afterkeys", no_argument, NULL, opt_afterkeys },
     { "delay", required_argument, NULL, opt_delay },
     { "help", no_argument, NULL, opt_help },
     { "window", required_argument, NULL, opt_window },
@@ -52,7 +52,7 @@ int cmd_type(context_t *context) {
     "--window <windowid>    - specify a window to send keys to\n"
     "--delay <milliseconds> - delay between keystrokes\n"
     "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
-    "--aftermodifiers       - wait for modifiers to be released before typing\n"
+    "--afterkeys            - wait for all keys to be released before typing\n"
     "--args N  - how many arguments to expect in the exec command. This is\n"
     "            useful for ending an exec and continuing with more xdotool\n"
     "            commands\n"
@@ -79,8 +79,8 @@ int cmd_type(context_t *context) {
       case opt_clearmodifiers:
         clear_modifiers = 1;
         break;
-      case opt_aftermodifiers:
-        after_modifiers = 1;
+      case opt_afterkeys:
+        after_keys = 1;
         break;
       case opt_help:
         printf(usage, cmd);
@@ -186,8 +186,8 @@ int cmd_type(context_t *context) {
   }
 
   window_each(context, window_arg, {
-    if (after_modifiers) {
-      xdo_wait_for_modifier_release(context->xdo);
+    if (after_keys) {
+      xdo_wait_for_key_release(context->xdo);
     }
     if (clear_modifiers) {
       xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);

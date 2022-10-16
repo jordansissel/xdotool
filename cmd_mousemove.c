@@ -5,7 +5,7 @@
 struct mousemove {
   Window window;
   int clear_modifiers;
-  int after_modifiers;
+  int after_keys;
   int opsync;
   int polar_coordinates;
   int x;
@@ -33,12 +33,12 @@ int cmd_mousemove(context_t *context) {
 
   int c;
   enum {
-    opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_aftermodifiers, opt_polar,
+    opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_afterkeys, opt_polar,
     opt_screen, opt_step, opt_delay, opt_window
   };
   static struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, opt_clearmodifiers },
-    { "aftermodifiers", no_argument, NULL, opt_aftermodifiers },
+    { "afterkeys", no_argument, NULL, opt_afterkeys },
     { "help", no_argument, NULL, opt_help},
     { "polar", no_argument, NULL, opt_polar },
     { "screen", required_argument, NULL, opt_screen },
@@ -51,7 +51,7 @@ int cmd_mousemove(context_t *context) {
   static const char *usage = 
       "Usage: %s [options] <x> <y>\n"
       "-c, --clearmodifiers      - reset active modifiers (alt, etc) while moving\n"
-      "-a, --aftermodifiers      - wait for modifiers to be released before moving\n"
+      "-a, --afterkeys           - wait for all keys to be released before moving\n"
 
       //"-d, --delay <MS>          - sleeptime in milliseconds between steps.\n"
       //"--step <STEP>             - pixels to move each time along path to x,y.\n" "-p, --polar               - Use polar coordinates. X as an angle, Y as distance\n"
@@ -68,8 +68,8 @@ int cmd_mousemove(context_t *context) {
         mousemove.clear_modifiers = 1;
         break;
       case 'a':
-      case opt_aftermodifiers:
-        mousemove.after_modifiers = 1;
+      case opt_afterkeys:
+        mousemove.after_keys = 1;
         break;
       case 'h':
       case opt_help:
@@ -195,8 +195,8 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
   int mx, my, mscreen;
   xdo_get_mouse_location(context->xdo, &mx, &my, &mscreen);
 
-  if (mousemove->after_modifiers) {
-    xdo_wait_for_modifier_release(context->xdo);
+  if (mousemove->after_keys) {
+    xdo_wait_for_key_release(context->xdo);
   }
 
   if (mousemove->clear_modifiers) {

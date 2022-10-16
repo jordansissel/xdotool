@@ -1631,10 +1631,7 @@ void _xdo_send_modifier(const xdo_t *xdo, int modmask, int is_press) {
 int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
                                     int *nkeys) {
   /* For each keyboard device, if an active key is a modifier,
-   * then add the keycode to the keycode list.
-   * 
-   * If keys is null, only count the number of modifiers pressed,
-   * without recording them. */
+   * then add the keycode to the keycode list */
 
   char keymap[32]; /* keycode map: 256 bits */
   int keys_size = 10;
@@ -1642,9 +1639,7 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
   int mod_index, mod_key;
   XModifierKeymap *modifiers = XGetModifierMapping(xdo->xdpy);
   *nkeys = 0;
-  if (keys) {
-    *keys = malloc(keys_size * sizeof(charcodemap_t));
-  }
+  *keys = malloc(keys_size * sizeof(charcodemap_t));
 
   XQueryKeymap(xdo->xdpy, keymap);
 
@@ -1659,20 +1654,15 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
          * 'xdotool key --clearmodifiers ...' sometimes failed trying
          * to clear modifiers that didn't exist since charcodemap_t's modmask was
          * uninitialized */
-	if (keys) {
-	  memset(*keys + *nkeys, 0, sizeof(charcodemap_t));
+        memset(*keys + *nkeys, 0, sizeof(charcodemap_t));
 
-	  (*keys)[*nkeys].code = keycode;
-	  (*nkeys)++;
+        (*keys)[*nkeys].code = keycode;
+        (*nkeys)++;
 
-	  if (*nkeys == keys_size) {
-	    keys_size *= 2;
-	    *keys = realloc(keys, keys_size * sizeof(charcodemap_t));
-	  }
-	}
-	else {
-	  (*nkeys)++;
-	}
+        if (*nkeys == keys_size) {
+          keys_size *= 2;
+          *keys = realloc(keys, keys_size * sizeof(charcodemap_t));
+        }
       }
     }
   } 
@@ -1682,13 +1672,19 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
   return XDO_SUCCESS;
 }
 
-void xdo_wait_for_modifier_release(const xdo_t *xdo) {
-  int active_mods_n;
+void xdo_wait_for_key_release(const xdo_t *xdo) {
+  char keymap[32]; /* keycode map: 256 bits */
   for (;;) {
-    xdo_get_active_modifiers(xdo, NULL, &active_mods_n);
-    if (active_mods_n == 0) {
-      return;
+    XQueryKeymap(xdo->xdpy, keymap);
+    int any_key_down = 0;
+    for (size_t i = 0; i < sizeof(keymap); i++) {
+      if (keymap[i]) {
+        any_key_down = 1;
+        break;
+      }        
     }
+    if (!any_key_down)
+      return;          
     usleep(30000);
   }
 }

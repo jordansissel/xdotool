@@ -7,7 +7,7 @@ int cmd_mousemove_relative(context_t *context) {
   char *cmd = *context->argv;
   int polar_coordinates = 0;
   int clear_modifiers = 0;
-  int after_modifiers = 0;
+  int after_keys = 0;
   int opsync = 0;
   int origin_x = -1, origin_y = -1;
 
@@ -15,20 +15,20 @@ int cmd_mousemove_relative(context_t *context) {
   int active_mods_n;
   int c;
   enum {
-    opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_aftermodifiers, opt_polar
+    opt_unused, opt_help, opt_sync, opt_clearmodifiers, opt_afterkeys, opt_polar
   };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { "sync", no_argument, NULL, opt_sync },
     { "polar", no_argument, NULL, opt_polar },
     { "clearmodifiers", no_argument, NULL, opt_clearmodifiers },
-    { "aftermodifiers", no_argument, NULL, opt_aftermodifiers },
+    { "afterkeys", no_argument, NULL, opt_afterkeys },
     { 0, 0, 0, 0 },
   };
   static const char *usage =
       "Usage: %s [options] <x> <y>\n"
       "-c, --clearmodifiers      - reset active modifiers (alt, etc) while moving\n"
-      "-a, --aftermodifiers      - wait for modifiers to be released before moving\n"
+      "-a, --afterkeys           - wait for all keys to be released before moving\n"
       "-p, --polar               - Use polar coordinates. X as an angle, Y as distance\n"
       "--sync                    - only exit once the mouse has moved\n"
       "\n"
@@ -63,7 +63,7 @@ int cmd_mousemove_relative(context_t *context) {
         clear_modifiers = 1;
         break;
       case 'a':
-      case opt_aftermodifiers:
+      case opt_afterkeys:
         clear_modifiers = 1;
         break;
       default:
@@ -102,8 +102,8 @@ int cmd_mousemove_relative(context_t *context) {
     y = (-sin(radians) * distance);
   }
  
-  if (after_modifiers) {
-    xdo_wait_for_modifier_release(context->xdo);
+  if (after_keys) {
+    xdo_wait_for_key_release(context->xdo);
   }
   if (clear_modifiers) {
     xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);

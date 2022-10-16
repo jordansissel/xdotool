@@ -809,7 +809,7 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
 /**
  * Wait for any currently pressed modifier keys to be released.
  */
-void xdo_wait_for_modifier_release(const xdo_t *xdo);
+void xdo_wait_for_key_release(const xdo_t *xdo);
 
 /**
  * Send any events necessary to clear the active modifiers.

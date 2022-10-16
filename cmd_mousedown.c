@@ -8,13 +8,13 @@ int cmd_mousedown(context_t *context) {
   charcodemap_t *active_mods = NULL;
   int active_mods_n;
   int clear_modifiers = 0;
-  int after_modifiers = 0;
+  int after_keys = 0;
   char *window_arg = NULL;
 
   int c;
   static struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, 'c' },
-    { "aftermodifiers", no_argument, NULL, 'a' },
+    { "afterkeys", no_argument, NULL, 'a' },
     { "help", no_argument, NULL, 'h' },
     { "window", required_argument, NULL, 'w' },
     { 0, 0, 0, 0 },
@@ -23,7 +23,7 @@ int cmd_mousedown(context_t *context) {
             "Usage: %s [--clearmodifiers] [--window WINDOW] <button>\n"
             "--window <windowid>    - specify a window to send keys to\n"
             "--clearmodifiers       - reset active modifiers (alt, etc) while clicking\n"
-            "--aftermodifiers       - wait for modifiers to be released before clicking\n";
+            "--afterkeys            - wait for all keys to be released before clicking\n";
 
   int option_index;
 
@@ -34,7 +34,7 @@ int cmd_mousedown(context_t *context) {
         clear_modifiers = 1;
         break;
       case 'a':
-        after_modifiers = 1;
+        after_keys = 1;
         break;
       case 'h':
         printf(usage, cmd);
@@ -61,8 +61,8 @@ int cmd_mousedown(context_t *context) {
   button = atoi(context->argv[0]);
 
   window_each(context, window_arg, {
-    if (after_modifiers) {
-      xdo_wait_for_modifier_release(context->xdo);
+    if (after_keys) {
+      xdo_wait_for_key_release(context->xdo);
     }
     if (clear_modifiers) {
       xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);

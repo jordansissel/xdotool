@@ -43,10 +43,10 @@ See also: L<SENDEVENT NOTES> and L<WINDOW STACK>
 
 Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
 
-=item B<--aftermodifiers>
+=item B<--afterkeys>
 
-Wait for the user to release modifier keys before sending keystrokes.
-See L<AFTERMODIFIERS> below.
+Wait for the user to release all keys before sending keystrokes.
+See L<AFTERKEYS> below.
 
 =item B<--delay milliseconds>
 
@@ -110,10 +110,10 @@ Delay between keystrokes. Default is 12ms.
 
 Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
 
-=item B<--aftermodifiers>
+=item B<--afterkeys>
 
-Wait for the user to release modifier keys before sending keystrokes.
-See L<AFTERMODIFIERS> below.
+Wait for the user to release all keys before sending keystrokes.
+See L<AFTERKEYS> below.
 
 =back
 
@@ -178,9 +178,9 @@ The origin defaults to the center of the current screen. If you specify a
 
 See L<CLEARMODIFIERS>
 
-=item B<--aftermodifiers>
+=item B<--afterkeys>
 
-See L<AFTERMODIFIERS>
+See L<AFTERKEYS>
 
 =item B<--sync>
 
@@ -224,9 +224,9 @@ in the general case than waiting for a specific target.
 
 See L<CLEARMODIFIERS>
 
-=item B<--aftermodifiers>
+=item B<--afterkeys>
 
-See L<AFTERMODIFIERS>
+See L<AFTERKEYS>
 
 =back
 
@@ -244,9 +244,9 @@ wheel up is 4, wheel down is 5.
 
 Clear modifiers before clicking. See L<CLEARMODIFIERS> below.
 
-=item B<--aftermodifiers>
+=item B<--afterkeys>
 
-Wait for modifiers to be released before clicking. See L<AFTERMODIFIERS> below.
+Wait for keys to be released before clicking. See L<AFTERKEYS> below.
 
 =item B<--repeat> REPEAT
 
@@ -1073,16 +1073,16 @@ The I<--clearmodifiers> flag can currently clear the following:
 
 =back
 
-=head1 AFTERMODIFIERS
+=head1 AFTERKEYS
 
-Any command taking the I<--aftermodifiers> flag will wait until any currently
-pressed modifier keys have been released before performing the action. It solves a
-similar problem to I<--clearmodifiers>, but does not attempt to restore the
-modifier state afterward.
+Any command taking the I<--afterkeys> flag will wait until any currently
+pressed keys have been released before performing the action, to avoid the
+end of a user's keyboard shortcut interfering with the beginning of xdotool's
+actions.
 
-I<--aftermodifiers> only waits for modifier keys, not mouse buttons or caps lock.
-If you use both I<--aftermodifiers> and I<--clearmodifiers>, the mouse buttons
-and caps lock state will still be cleared as described above.
+I<--afterkeys> only waits for key presses, not mouse buttons or caps lock state.
+If you use both I<--afterkeys> and I<--clearmodifiers>, I<--afterkeys> happens
+first, then the mouse buttons and caps lock state will be cleared as described above.
 
 =head1 SENDEVENT NOTES
 
