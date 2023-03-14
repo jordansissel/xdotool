@@ -7,7 +7,7 @@
  */
 
 #ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE 600
 #endif /* _XOPEN_SOURCE */
 
 #include <sys/select.h>
@@ -1005,10 +1005,10 @@ int xdo_enter_text_window(const xdo_t *xdo, Window window, const char *string, u
       //printf("sym: %s\n", XKeysymToString(key.symbol));
     }
 
-    //printf(stderr,
-            //"Key '%c' maps to code %d / sym %lu in group %d / mods %d (%s)\n",
-            //key.key, key.code, key.symbol, key.group, key.modmask,
-            //(key.needs_binding == 1) ? "needs binding" : "ok");
+    _xdo_debug(xdo,
+            "Key '%c' maps to code %d / sym %lu [%s] in group %d / mods %d (%s)\n",
+            key.key, key.code, key.symbol, XKeysymToString(key.symbol), key.group, key.modmask,
+            (key.needs_binding == 1) ? "needs binding" : "ok");
 
     //_xdo_send_key(xdo, window, keycode, modstate, True, delay);
     //_xdo_send_key(xdo, window, keycode, modstate, False, delay);
@@ -1324,6 +1324,13 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
   KeySym *keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low,
                                         xdo->keycode_high - xdo->keycode_low + 1,
                                         &xdo->keysyms_per_keycode);
+  for (int i = xdo->keycode_low; i <= xdo->keycode_high; i++) {
+    for (int g = 0; g < xdo->keysyms_per_keycode; g++) {
+      if (keysyms[(i - xdo->keycode_low) * xdo->keysyms_per_keycode + g] == XK_minus) {
+        printf("XGetKeyboardMapping says XK_minus is code %d entry %d\n", i, g);
+      }
+    }
+  }
   XFree(keysyms);
 
   /* Add 2 to the size because the range [low, high] is inclusive */
@@ -1355,6 +1362,10 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
         xdo->charcodes[idx].group = group;
         xdo->charcodes[idx].modmask = modmask | _xdo_query_keycode_to_modifier(modmap, keycode);
         xdo->charcodes[idx].symbol = keysym;
+
+        if (keysym == XK_minus || keysym == XK_bracketleft) {
+          printf("Found %s char:%lc, code:%d, group %d, modmask %d\n", XKeysymToString(keysym), xdo->charcodes[idx].key, keycode, group, xdo->charcodes[idx].modmask);
+        }
 
         idx++;
       }
