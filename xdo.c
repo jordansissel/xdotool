@@ -786,6 +786,13 @@ int xdo_raise_window(const xdo_t *xdo, Window wid) {
   return _is_success("XRaiseWindow", ret == 0, xdo);
 }
 
+int xdo_lower_window(const xdo_t *xdo, Window wid) {
+  int ret = 0;
+  ret = XLowerWindow(xdo->xdpy, wid);
+  XFlush(xdo->xdpy);
+  return _is_success("XLowerWindow", ret == 0, xdo);
+}
+
 int xdo_move_mouse(const xdo_t *xdo, int x, int y, int screen)  {
   int ret = 0;
 
