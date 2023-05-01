@@ -1,4 +1,5 @@
 *.o
+*.dylib
 *.so*
 *.1
 libxdo.pc
