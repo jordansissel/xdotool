@@ -5,3 +5,7 @@ libxdo.pc
 xdotool
 deb-build
 *.deb
+# for CYGWIN
+xdotool\.exe
+*\.a
+*\.a\.[0-9]
