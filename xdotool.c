@@ -241,6 +241,7 @@ struct dispatch {
   { "windowminimize", cmd_windowminimize, },
   { "windowmove", cmd_windowmove, },
   { "windowraise", cmd_windowraise, },
+  { "windowlower", cmd_windowlower, },
   { "windowreparent", cmd_windowreparent, },
   { "windowsize", cmd_windowsize, },
   { "windowstate", cmd_windowstate, },
