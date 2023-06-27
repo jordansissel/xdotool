@@ -51,9 +51,7 @@ int cmd_windowstate(context_t *context) {
                   "--toggle property - toggle a property\n"
                   "property can be one of \n"
                   "MODAL, STICKY, MAXIMIZED_VERT, MAXIMIZED_HORZ, SHADED, SKIP_TASKBAR, \n"
-                  "SKIP_PAGER, HIDDEN, FULLSCREEN, ABOVE, BELOW, DEMANDS_ATTENTION";
-  static int *errno_ptr;
-  errno_ptr = &errno;
+                  "SKIP_PAGER, HIDDEN, FULLSCREEN, ABOVE, BELOW, DEMANDS_ATTENTION\n";
   while ((c = getopt_long_only(context->argc, context->argv, "+ha:r:t:",
                                longopts, &option_index)) != -1) {
     switch (c) {
@@ -81,7 +79,8 @@ int cmd_windowstate(context_t *context) {
 
   consume_args(context, optind);
 
-  if (action == -1 || arg_property == NULL) {
+  if (action == (unsigned long)-1 || arg_property == NULL) {
+    fprintf(stderr, usage, cmd);
     return 1;
   }
 

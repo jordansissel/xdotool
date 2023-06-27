@@ -7,9 +7,7 @@ int cmd_windowunmap(context_t *context) {
   int opsync;
 
   int c;
-  typedef enum {
-    opt_unused, opt_help, opt_sync, opt_verbose
-  } optlist_t;
+  enum { opt_unused, opt_help, opt_sync, opt_verbose };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { "sync", no_argument, NULL, opt_sync },

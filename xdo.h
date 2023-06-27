@@ -14,6 +14,10 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @mainpage
  *
@@ -159,6 +163,11 @@ typedef struct xdo {
  */
 #define SEARCH_DESKTOP (1UL << 7)
 
+/**
+ * Search only window role.
+ * @see xdo_search
+ */
+#define SEARCH_ROLE (1UL << 8)
 
 /**
  * The window search query structure.
@@ -170,6 +179,7 @@ typedef struct xdo_search {
   const char *winclass;     /** pattern to test against a window class */
   const char *winclassname; /** pattern to test against a window class */
   const char *winname;      /** pattern to test against a window name */
+  const char *winrole;      /** pattern to test against a window role */
   int pid;            /** window pid (From window atom _NET_WM_PID) */
   long max_depth;     /** depth of search. 1 means only toplevel windows */
   int only_visible;   /** boolean; set true to search only visible windows */
@@ -286,7 +296,7 @@ int xdo_get_mouse_location(const xdo_t *xdo, int *x, int *y, int *screen_num);
 /**
  * Get the window the mouse is currently over
  *
- * @param window_ret Winter pointer where the window will be stored.
+ * @param window_ret Window pointer where the window will be stored.
  */
 int xdo_get_window_at_mouse(const xdo_t *xdo, Window *window_ret);
 
@@ -525,6 +535,14 @@ int xdo_focus_window(const xdo_t *xdo, Window wid);
 int xdo_raise_window(const xdo_t *xdo, Window wid);
 
 /**
+ * Lower a window to the bottom of the window stack. This is also sometimes
+ * termed as sending the window backward.
+ *
+ * @param wid The window to lower.
+ */
+int xdo_lower_window(const xdo_t *xdo, Window wid);
+
+/**
  * Get the window currently having focus.
  *
  * @param window_ret Pointer to a window where the currently-focused window
@@ -607,6 +625,13 @@ int xdo_minimize_window(const xdo_t *xdo, Window wid);
 #define _NET_WM_STATE_REMOVE        0    /* remove/unset property */
 #define _NET_WM_STATE_ADD           1    /* add/set property */
 #define _NET_WM_STATE_TOGGLE        2    /* toggle property  */
+
+/**
+ * Get window classname
+ * @param window the window
+ * @param class_ret Pointer to the window classname WM_CLASS
+ */
+int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **class_ret);
 
 /**
  * Change window state
@@ -836,6 +861,12 @@ int xdo_kill_window(const xdo_t *xdo, Window window);
 int xdo_close_window(const xdo_t *xdo, Window window);
 
 /**
+ * Request that a window close, gracefully.
+ *
+ */
+int xdo_quit_window(const xdo_t *xdo, Window window);
+
+/**
  * Find a client window that is a parent of the window given
  */
 #define XDO_FIND_PARENTS (0)
@@ -855,7 +886,10 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
 /**
  * Get a window's name, if any.
  *
- * TODO(sissel): Document
+ * @param window window to get the name of.
+ * @param name_ret character pointer pointer where the address of the window name will be stored.
+ * @param name_len_ret integer pointer where the length of the window name will be stored.
+ * @param name_type integer pointer where the type (atom) of the window name will be stored.
  */
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
                         unsigned char **name_ret, int *name_len_ret,
@@ -900,4 +934,11 @@ int xdo_has_feature(xdo_t *xdo, int feature);
  */
 int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
                                 unsigned int *height, int screen);
+
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* ifndef _XDO_H_ */
+

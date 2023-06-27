@@ -1,6 +1,10 @@
 #ifndef _XDOTOOL_H_
 #define _XDOTOOL_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* TODO(sissel): use proper printf format depending on the storage
  * size of Window (could be 4 or 8 bytes depending on platform */
 #define window_print(window) (printf("%ld\n", window))
@@ -49,6 +53,7 @@ int cmd_getactivewindow(context_t *context);
 int cmd_getmouselocation(context_t *context);
 int cmd_getwindowfocus(context_t *context);
 int cmd_getwindowname(context_t *context);
+int cmd_getwindowclassname(context_t *context);
 int cmd_getwindowpid(context_t *context);
 int cmd_getwindowgeometry(context_t *context);
 int cmd_help(context_t *context);
@@ -66,10 +71,12 @@ int cmd_windowactivate(context_t *context);
 int cmd_windowfocus(context_t *context);
 int cmd_windowkill(context_t *context);
 int cmd_windowclose(context_t *context);
+int cmd_windowquit(context_t *context);
 int cmd_windowmap(context_t *context);
 int cmd_windowminimize(context_t *context);
 int cmd_windowmove(context_t *context);
 int cmd_windowraise(context_t *context);
+int cmd_windowlower(context_t *context);
 int cmd_windowreparent(context_t *context);
 int cmd_windowsize(context_t *context);
 int cmd_windowstate(context_t *context);
@@ -84,5 +91,9 @@ int cmd_get_desktop_for_window(context_t *context);
 int cmd_set_desktop_viewport(context_t *context);
 int cmd_get_desktop_viewport(context_t *context);
 int cmd_get_display_geometry(context_t *context);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _XDOTOOL_H_ */

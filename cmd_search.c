@@ -16,10 +16,11 @@ int cmd_search(context_t *context) {
   char out_prefix[17] = {'\0'};
   int search_class = 0;
   int search_classname = 0;
-  typedef enum {
+  int search_role = 0;
+  enum {
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_shell, opt_prefix, opt_class, opt_maxdepth,
     opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname, opt_desktop,
-    opt_limit, opt_sync, opt_syncsleep
+    opt_limit, opt_sync, opt_role, opt_syncsleep
   } optlist_t;
   struct option longopts[] = {
     { "all", no_argument, NULL, opt_all },
@@ -38,6 +39,7 @@ int cmd_search(context_t *context) {
     { "desktop", required_argument, NULL, opt_desktop },
     { "limit", required_argument, NULL, opt_limit },
     { "sync", no_argument, NULL, opt_sync },
+    { "role", no_argument, NULL, opt_role },
     { "syncsleep", required_argument, NULL, opt_syncsleep },
     { 0, 0, 0, 0 },
   };
@@ -46,6 +48,7 @@ int cmd_search(context_t *context) {
       "[options] regexp_pattern\n"
       "--class         check regexp_pattern against the window class\n"
       "--classname     check regexp_pattern against the window classname\n"
+      "--role          check regexp_pattern against the window role\n"
       "--maxdepth N    set search depth to N. Default is infinite.\n"
       "                -1 also means infinite.\n"
       "--onlyvisible   matches only windows currently visible\n"
@@ -64,8 +67,8 @@ int cmd_search(context_t *context) {
       "--syncsleep     Delay between searches with --sync. Default is 500ms.\n"
       "-h, --help      show this help output\n"
       "\n"
-      "If none of --name, --classname, or --class are specified, the \n"
-      "defaults are: --name --classname --class\n";
+      "If none of --name, --classname, --class, or --role are specified, the \n"
+      "defaults are: --name --classname --class --role\n";
 
   memset(&search, 0, sizeof(xdo_search_t));
   search.max_depth = -1;
@@ -110,6 +113,9 @@ int cmd_search(context_t *context) {
         break;
       case opt_classname:
         search_classname = True;
+        break;
+      case opt_role:
+        search_role = True;
         break;
       case opt_title:
         fprintf(stderr, "This flag is deprecated. Assuming you mean --name (the"
@@ -159,12 +165,16 @@ int cmd_search(context_t *context) {
   }
 
   if (context->argc > 0) {
-    if (!search_title && !search_name && !search_class && !search_classname) {
-      fprintf(stderr, "Defaulting to search window name, class, and classname\n");
-      search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME);
+    if (!search_title && !search_name && !search_class && !search_classname
+        && !search_role) {
+      fprintf(stderr,
+        "Defaulting to search window name, class, classname, and role\n");
+      search.searchmask |= (SEARCH_NAME | SEARCH_CLASS | SEARCH_CLASSNAME
+        | SEARCH_ROLE);
       search_name = 1;
       search_class = 1;
       search_classname = 1;
+      search_role = 1;
     }
 
     if (search_title) {
@@ -183,13 +193,15 @@ int cmd_search(context_t *context) {
       search.searchmask |= SEARCH_CLASSNAME;
       search.winclassname = context->argv[0];
     }
+    if (search_role) {
+      search.searchmask |= SEARCH_ROLE;
+      search.winrole = context->argv[0];
+    }
     consume_args(context, 1);
   }
 
   do {
-    if (list != NULL) {
-      free(list);
-    }
+    free(list);
 
     xdo_search_windows(context->xdo, &search, &list, &nwindows);
 
@@ -210,9 +222,7 @@ int cmd_search(context_t *context) {
   } while (op_sync && nwindows == 0);
 
   /* Free old list as it's malloc'd by xdo_search_windows */
-  if (context->windows != NULL) {
-    free(context->windows);
-  }
+  free(context->windows);
   context->windows = list;
   context->nwindows = nwindows;
 

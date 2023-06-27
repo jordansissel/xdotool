@@ -6,9 +6,7 @@ int cmd_windowreparent(context_t *context) {
   const char *window_arg = "%1";
 
   int c;
-  typedef enum {
-    opt_unused, opt_help
-  } optlist_t;
+  enum { opt_unused, opt_help };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { 0, 0, 0, 0 },

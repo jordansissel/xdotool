@@ -181,3 +181,7 @@ module XdoTestHelper
         "Mouse Y position expected to be near #{y}, is #{my} (+- #{tolerance} pixels)")
   end # def assert_mouse_position
 end # module XdoTestHelper
+
+def assert_not_equal vala, valb, message
+  assert vala != valb, message
+end

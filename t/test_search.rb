@@ -153,3 +153,26 @@ class XdotoolSearchTests < MiniTest::Test
     end # ["name" ... ].each 
   end # def test_search_can_find_all_windows
 end # XdotoolSearchTests
+
+class XdotoolRaceSearchTests < MiniTest::Test
+  include XdoTestHelper
+
+  def setup
+    setup_vars
+    setup_ensure_x_is_healthy
+    setup_launch_xterm
+    setup_launch("sh", "-c", "for i in $(seq 100); do xterm -e sleep 0.1 & true; done")
+  end # def setup
+
+  def test_search_title
+    (1 .. 100).each do
+      status, lines = xdotool "search --name #{@title}"
+      assert_equal(0, status, "Exit status should have been 0")
+      assert_equal(1, lines.size,
+                   "Expect only one match to our search (only one window " \
+                   "running that should match)")
+      assert_equal(@wid, lines[0].to_i,
+                   "Expected the correct windowid when searching for its pid")
+    end
+  end
+end # XdotoolRaceSearchTests

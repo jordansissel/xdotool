@@ -6,9 +6,7 @@ int cmd_windowfocus(context_t *context) {
   int opsync = 0;
 
   int c;
-  typedef enum {
-    opt_unused, opt_help, opt_sync
-  } optlist_t;
+  enum { opt_unused, opt_help, opt_sync };
   static struct option longopts[] = {
     { "help", no_argument, NULL, opt_help },
     { "sync", no_argument, NULL, opt_sync },

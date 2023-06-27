@@ -16,6 +16,8 @@ static const char *symbol_map[] = {
   "meta", "Meta_L",
   "super", "Super_L",
   "shift", "Shift_L",
+  "enter", "Return",
+  "return", "Return",
   NULL, NULL,
 };
 

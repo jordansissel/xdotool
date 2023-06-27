@@ -7,7 +7,7 @@
  */
 
 #ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE 600
 #endif /* _XOPEN_SOURCE */
 
 #include <sys/select.h>
@@ -28,6 +28,7 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/Xinerama.h>
+#include <X11/extensions/XInput2.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
 
@@ -69,6 +70,7 @@ static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_
 static int _is_success(const char *funcname, int code, const xdo_t *xdo);
 static void _xdo_debug(const xdo_t *xdo, const char *format, ...);
 static void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...);
+static int appears_to_be_wayland(Display *xdpy);
 
 /* context-free functions */
 static wchar_t _keysym_to_char(KeySym keysym);
@@ -83,14 +85,23 @@ static Atom atom_UTF8_STRING = -1;
 xdo_t* xdo_new(const char *display_name) {
   Display *xdpy;
 
-  if ((xdpy = XOpenDisplay(display_name)) == NULL) {
-    /* Can't use _xdo_eprintf yet ... */
-    fprintf(stderr, "Error: Can't open display: %s\n", display_name);
+  if (display_name == NULL) {
+    display_name = XDisplayName(display_name);
+  }
+
+#define DISPLAY_HINT "Is there an Xorg or other X server running? You can try setting 'export DISPLAY=:0' and trying again."
+  if (display_name == NULL) {
+    fprintf(stderr, "Error: No DISPLAY environment variable is set. " DISPLAY_HINT "\n");
     return NULL;
   }
 
-  if (display_name == NULL) {
-    display_name = getenv("DISPLAY");
+  if (*display_name == '\0') {
+    fprintf(stderr, "Error: DISPLAY environment variable is empty. " DISPLAY_HINT "\n");
+    return NULL;
+  }
+
+  if ((xdpy = XOpenDisplay(display_name)) == NULL) {
+    return NULL;
   }
 
   return xdo_new_with_opened_display(xdpy, display_name, 1);
@@ -105,6 +116,16 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
     fprintf(stderr, "xdo_new: xdisplay I was given is a null pointer\n");
     return NULL;
   }
+
+  // This library and xdotool do not work correctly on Wayland/XWayland.
+  // Try to detect XWayland and warn the user about problems.
+  // TODO(sissel): This was disabled due to issue #346
+  //  -- xdotool works on XWayland for some operations, so it isn't helpful to refuse all usage on XWayland.
+  //if (appears_to_be_wayland(xdpy)) {
+    //fprintf(stderr, "The X server at %s appears to be XWayland. Unfortunately, XWayland does not correctly support the features used by libxdo and xdotool.\n", display);
+    //return NULL;
+  //}
+
 
   /* XXX: Check for NULL here */
   xdo = malloc(sizeof(xdo_t));
@@ -139,10 +160,8 @@ void xdo_free(xdo_t *xdo) {
   if (xdo == NULL)
     return;
 
-  if (xdo->display_name)
-    free(xdo->display_name);
-  if (xdo->charcodes)
-    free(xdo->charcodes);
+  free(xdo->display_name);
+  free(xdo->charcodes);
   if (xdo->xdpy && xdo->close_display_when_freed)
     XCloseDisplay(xdo->xdpy);
 
@@ -212,7 +231,7 @@ int xdo_get_window_location(const xdo_t *xdo, Window wid,
       y = attr.y;
     } else {
       XTranslateCoordinates(xdo->xdpy, wid, attr.root,
-                            attr.x, attr.y, &x, &y, &unused_child);
+                            0, 0, &x, &y, &unused_child);
     }
 
     if (x_ret != NULL) {
@@ -370,7 +389,7 @@ int xdo_set_window_property(const xdo_t *xdo, Window wid, const char *property, 
   
   char netwm_property[256] = "_NET_";
   int ret = 0;
-  strncat(netwm_property, property, strlen(property));
+  strcat(netwm_property, property);
 
   // Change the property
   ret = XChangeProperty(xdo->xdpy, wid, 
@@ -767,6 +786,13 @@ int xdo_raise_window(const xdo_t *xdo, Window wid) {
   return _is_success("XRaiseWindow", ret == 0, xdo);
 }
 
+int xdo_lower_window(const xdo_t *xdo, Window wid) {
+  int ret = 0;
+  ret = XLowerWindow(xdo->xdpy, wid);
+  XFlush(xdo->xdpy);
+  return _is_success("XLowerWindow", ret == 0, xdo);
+}
+
 int xdo_move_mouse(const xdo_t *xdo, int x, int y, int screen)  {
   int ret = 0;
 
@@ -977,7 +1003,7 @@ int xdo_enter_text_window(const xdo_t *xdo, Window window, const char *string, u
     }
     _xdo_charcodemap_from_char(xdo, &key);
     if (key.code == 0 && key.symbol == NoSymbol) {
-      fprintf(stderr, "I don't what key produces '%lc', skipping.\n",
+      fprintf(stderr, "I don't know which key produces '%lc', skipping.\n",
               key.key);
       continue;
     } else {
@@ -1017,9 +1043,7 @@ int _xdo_send_keysequence_window_do(const xdo_t *xdo, Window window, const char 
   }
 
   ret = xdo_send_keysequence_window_list_do(xdo, window, keys, nkeys, pressed, modifier, delay);
-  if (keys != NULL) {
-    free(keys);
-  }
+  free(keys);
 
   return ret;
 }
@@ -1260,6 +1284,14 @@ static KeySym _xdo_keysym_from_char(const xdo_t *xdo, wchar_t key) {
 static void _xdo_charcodemap_from_char(const xdo_t *xdo, charcodemap_t *key) {
   KeySym keysym = _xdo_keysym_from_char(xdo, key->key);
   _xdo_charcodemap_from_keysym(xdo, key, keysym);
+
+  /* If the character is an uppercase character within the Basic Latin or Latin-1 code block,
+   * then sending the capital character keycode will not work.
+   * We have to also send the shift modifier.
+   * There are only three ranges of capital letters to worry about */
+  if ((key->key >= 0x41 && key->key <= 0x5A) || (key->key >= 0xC0 && key->key <= 0xD6) || (key->key >= 0xD8 && key->key <= 0xDE)) {
+    key->modmask = ShiftMask;
+  }
 }
 
 static void _xdo_charcodemap_from_keysym(const xdo_t *xdo, charcodemap_t *key, KeySym keysym) {
@@ -1336,7 +1368,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
     }
   }
   xdo->charcodes_len = idx;
-  XkbFreeClientMap(desc, 0, 1);
+  XkbFreeKeyboard(desc, 0, 1);
   XFreeModifiermap(modmap);
 }
 
@@ -1491,8 +1523,10 @@ int _xdo_ewmh_is_supported(const xdo_t *xdo, const char *feature) {
 
   results = (Atom *) xdo_get_window_property_by_atom(xdo, root, request, &nitems, &type, &size);
   for (i = 0L; i < nitems; i++) {
-    if (results[i] == feature_atom)
+    if (results[i] == feature_atom) {
+      free(results);
       return True;
+    }
   }
   free(results);
 
@@ -1790,18 +1824,21 @@ int xdo_get_desktop_viewport(const xdo_t *xdo, int *x_ret, int *y_ret) {
             "Got unexpected type returned from _NET_DESKTOP_VIEWPORT."
             " Expected CARDINAL, got %s\n",
             XGetAtomName(xdo->xdpy, type));
+    free(data);
     return XDO_ERROR;
   }
 
   if (nitems != 2) {
     fprintf(stderr, "Expected 2 items for _NET_DESKTOP_VIEWPORT, got %ld\n",
             nitems);
+    free(data);
     return XDO_ERROR;
   }
 
   int *viewport_data = (int *)data;
   *x_ret = viewport_data[0];
   *y_ret = viewport_data[1];
+  free(data);
 
   return XDO_SUCCESS;
 }
@@ -1841,6 +1878,29 @@ int xdo_close_window(const xdo_t *xdo, Window window) {
   return _is_success("XDestroyWindow", ret == 0, xdo);
 }
 
+int xdo_quit_window(const xdo_t *xdo, Window window) {
+  XEvent xev;
+  int ret;
+  Window root = RootWindow(xdo->xdpy, 0);
+
+  memset(&xev, 0, sizeof(xev));
+  xev.type = ClientMessage;
+  xev.xclient.serial = 0;
+  xev.xclient.send_event = True;
+  xev.xclient.display = xdo->xdpy;
+  xev.xclient.window = window;
+  xev.xclient.message_type = XInternAtom(xdo->xdpy, "_NET_CLOSE_WINDOW", False);
+  xev.xclient.format = 32;
+
+  ret = XSendEvent(xdo->xdpy, root, False,
+                   SubstructureNotifyMask | SubstructureRedirectMask,
+                   &xev);
+
+  /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
+   * Manpage says it will only generate BadWindow or BadValue errors */
+  return _is_success("XSendEvent[_NET_CLOSE_WINDOW]", ret == 0, xdo);
+}
+
 int xdo_get_window_name(const xdo_t *xdo, Window window, 
                         unsigned char **name_ret, int *name_len_ret,
                         int *name_type) {
@@ -1877,6 +1937,19 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
   *name_type = type;
 
   return 0;
+}
+
+int xdo_get_window_classname(const xdo_t *xdo, Window window, unsigned char **class_ret) {
+  XClassHint classhint;
+  Status ret = XGetClassHint(xdo->xdpy, window, &classhint);
+
+  if (ret) {
+    XFree(classhint.res_name);
+    *class_ret = (unsigned char*) classhint.res_class;
+  } else {
+    *class_ret = NULL;
+  }
+  return _is_success("XGetClassHint[WM_CLASS]", ret == 0, xdo);
 }
 
 int xdo_window_state(xdo_t *xdo, Window window, unsigned long action, const char *property) {
@@ -1921,6 +1994,7 @@ void _xdo_debug(const xdo_t *xdo, const char *format, ...) {
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
   }
+  va_end(args);
 } /* _xdo_debug */
 
 /* Used for printing things conditionally based on xdo->quiet */
@@ -1934,6 +2008,7 @@ void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...) {
 
   vfprintf(stderr, format, args);
   fprintf(stderr, "\n");
+  va_end(args);
 } /* _xdo_eprintf */
 
 void xdo_enable_feature(xdo_t *xdo, int feature) {
@@ -1972,4 +2047,25 @@ int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
     Window root = RootWindow(xdo->xdpy, screen);
     return xdo_get_window_size(xdo, root, width, height);
   }
+}
+
+static int appears_to_be_wayland(Display *xdpy) {
+  // XWayland leaks its presence in two extensions (at time of writing, August 2021)
+  // First: the name of input devices "xwayland-pointer"
+  // Second: in the Vendor string of XFree86-VidModeExtension
+
+  int count;
+  XDeviceInfo *devices = XListInputDevices(xdpy, &count);
+  for (int i = 0; i < count; i++) {
+    // fprintf(stderr, "Device %d: %s\n", i, devices[i].name);
+    // If the input device name starts with "xwayland-", 
+    // there's a good chance we're running on XWayland.
+    if (strstr(devices[i].name, "xwayland-") == devices[i].name) {
+      XFreeDeviceList(devices);
+      return 1; // Running on wayland
+    }
+  }
+  XFreeDeviceList(devices);
+
+  return 0;
 }

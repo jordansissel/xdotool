@@ -1,5 +1,12 @@
 *.o
+*.dylib
 *.so*
 *.1
-xdo_version.h
+libxdo.pc
 xdotool
+deb-build
+*.deb
+# for CYGWIN
+xdotool\.exe
+*\.a
+*\.a\.[0-9]

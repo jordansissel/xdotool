@@ -11,6 +11,13 @@ libsuffix() {
         echo "$1.dylib"
       fi
       ;;
+    CYGWIN_NT*)
+      if [ -z "$1" ] ; then
+        echo "a"
+      else
+        echo a.$1
+      fi
+      ;;
     *)
       if [ -z "$1" ] ; then
         echo "so"
@@ -39,6 +46,7 @@ libnameflag() {
 
 extralibs() {
   case $uname in
+    CYGWIN_NT*) echo "-lrt -lxkbcommon -lXtst -lXinerama" ; ;;
     Linux|GNU/kFreeBSD|GNU) echo "-lrt" ;;
   esac
 }

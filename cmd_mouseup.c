@@ -72,9 +72,7 @@ int cmd_mouseup(context_t *context) {
     }
   }); /* window_each(...) */
 
-  if (window_arg != NULL) {
-    free(window_arg);
-  }
+  free(window_arg);
   consume_args(context, 1);
   return ret;
 }

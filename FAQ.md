@@ -9,7 +9,7 @@ This will show the window ID in hexadecimal of
 a window with title `My dialog title`:
 
 ```
-wmctrl -l | egrep "My dialog title" | cut -f 1 -d ' '
+wmctrl -l | grep "My dialog title" | cut -f 1 -d ' '
 ```
 
 I got the value of `0x02800003` displayed on my screen, 
@@ -18,7 +18,7 @@ but you will probably have a different value.
 Feeding that hexadecimal value to `xdotool` does activate the window:
 
 ```
-xdotool windowactivate $(wmctrl -l | egrep "My dialog title" | cut -f 1 -d ' ')
+xdotool windowactivate $(wmctrl -l | grep "My dialog title" | cut -f 1 -d ' ')
 ```
 
 ## How to let `xdotool` work with Qt applications?
@@ -31,7 +31,7 @@ If something is wrong, a workaround is to use `wmctrl`
 to obtain the window ID:
 
 ```
-xdotool windowactivate $(wmctrl -l | egrep "My dialog title" | cut -f 1 -d ' ')
+xdotool windowactivate $(wmctrl -l | grep "My dialog title" | cut -f 1 -d ' ')
 ```
 
 Replace 'My dialog title' for the window name you are looking for.
