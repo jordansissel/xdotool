@@ -690,6 +690,9 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
   request = XInternAtom(xdo->xdpy, "_NET_WM_DESKTOP", False);
 
   data = xdo_get_window_property_by_atom(xdo, wid, request, &nitems, &type, &size);
+  if (data == NULL) {
+    return XDO_ERROR;
+  }
 
   if (nitems > 0) {
     *desktop = *((long*)data);
