@@ -12,7 +12,7 @@ xdotool search --classname "$classname" \
   set_window --overrideredirect 0 windowunmap windowmap
 
 # Select a window and tag it with a special classname
-echo "Click on any window to have it slide in when you move the mouse to the $positoin"
+echo "Click on any window to have it slide in when you move the mouse to the $position"
 xdotool selectwindow set_window --classname "$classname"
 echo "Window selected. Now move the mouse to the $position part of the screen to activate it."
 
