@@ -32,6 +32,21 @@
 static int script_main(int argc, char **argv);
 static int args_main(int argc, char **argv);
 
+int is_numeric(const char *s) {
+  if (!s)  return 0; // null pointer
+  if (!*s) return 0; // empty string
+  if (*s == '-') { // "-N..."
+    s++;
+    if (!*s)          return 0; // "-"
+    if (!isdigit(*s)) return 0; // "-X"
+    s++;
+  }
+  while (*s) { // "...N..."
+    if (!isdigit(*s++)) return 0;
+  }
+  return 1; // OK
+}
+
 void consume_args(context_t *context, int argc) {
   if (argc > context->argc) {
     fprintf(stderr,

@@ -24,6 +24,8 @@ extern "C" {
   "This command consumes all arguments after it, so you cannot chain\n" \
   " additional commands after it.\n"
 
+extern int is_numeric(const char *s);
+
 extern void consume_args(context_t *context, int argc);
 extern void window_list(context_t *context, const char *window_arg,
                         Window **windowlist_ret, int *nwindows_ret,
