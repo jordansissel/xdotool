@@ -26,7 +26,7 @@ int cmd_click(context_t *context) {
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
-            "Usage: %s [options] <button>\n"
+            "Usage: %s [options] <button> [<x> <y>]\n"
             "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
             "--window WINDOW        - specify a window to send click to\n"
             "--repeat REPEATS       - number of times to click. Default is 1\n"
@@ -34,8 +34,10 @@ int cmd_click(context_t *context) {
             "    This has no effect if you do not use --repeat.\n"
             "    Default is 100ms\n"
             "\n"
-            "Button is a button number. Generally, left = 1, middle = 2, \n"
-            "right = 3, wheel up = 4, wheel down = 5\n";
+            "Button is a button number. Generally, left = 1, middle = 2,\n"
+            "right = 3, wheel up = 4, wheel down = 5\n"
+            "With x and y specified the event is dispatched in given position\n"
+            "(relative to WINDOW if specified) without moving the mouse pointer.\n";
   int option_index;
 
   while ((c = getopt_long_only(context->argc, context->argv, "+cw:h",
@@ -84,6 +86,16 @@ int cmd_click(context_t *context) {
   }
 
   button = atoi(context->argv[0]);
+  consume_args(context, 1);
+
+  int x = COORDINATE_NONE;
+  int y = COORDINATE_NONE;
+  if (context->argc >= 2) {
+    if (is_numeric(context->argv[0]) && is_numeric(context->argv[1]))
+    x = atoi(context->argv[0]);
+    y = atoi(context->argv[1]);
+    consume_args(context, 2);
+  }
 
   window_each(context, window_arg, {
     if (clear_modifiers) {
@@ -91,7 +103,7 @@ int cmd_click(context_t *context) {
       xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);
     }
 
-    ret = xdo_click_window_multiple(context->xdo, window, button, repeat, delay);
+    ret = xdo_click_window_multiple(context->xdo, window, button, x, y, repeat, delay);
     if (ret != XDO_SUCCESS) {
       fprintf(stderr, "xdo_click_window failed on window %ld\n", window);
       return ret;
@@ -103,6 +115,6 @@ int cmd_click(context_t *context) {
     }
   }); /* window_each(...) */
 
-  consume_args(context, 1);
+  free(window_arg);
   return ret;
 }

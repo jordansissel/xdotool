@@ -264,6 +264,8 @@ int xdo_move_mouse_relative_to_window(const xdo_t *xdo, Window window, int x, in
  */
 int xdo_move_mouse_relative(const xdo_t *xdo, int x, int y);
 
+#define COORDINATE_NONE -32768
+
 /**
  * Send a mouse press (aka mouse down) for a given button at the current mouse
  * location.
@@ -271,8 +273,10 @@ int xdo_move_mouse_relative(const xdo_t *xdo, int x, int y);
  * @param window The window you want to send the event to or CURRENTWINDOW
  * @param button The mouse button. Generally, 1 is left, 2 is middle, 3 is
  *    right, 4 is wheel up, 5 is wheel down.
+ * @param x the target X coordinate withing the window in pixels.
+ * @param y the target X coordinate withing the window in pixels.
  */
-int xdo_mouse_down(const xdo_t *xdo, Window window, int button);
+int xdo_mouse_down(const xdo_t *xdo, Window window, int button, int x, int y);
 
 /**
  * Send a mouse release (aka mouse up) for a given button at the current mouse
@@ -281,8 +285,10 @@ int xdo_mouse_down(const xdo_t *xdo, Window window, int button);
  * @param window The window you want to send the event to or CURRENTWINDOW
  * @param button The mouse button. Generally, 1 is left, 2 is middle, 3 is
  *    right, 4 is wheel up, 5 is wheel down.
+ * @param x the target X coordinate withing the window in pixels.
+ * @param y the target X coordinate withing the window in pixels.
  */
-int xdo_mouse_up(const xdo_t *xdo, Window window, int button);
+int xdo_mouse_up(const xdo_t *xdo, Window window, int button, int x, int y);
 
 /**
  * Get the current mouse location (coordinates and screen number).
@@ -340,7 +346,7 @@ int xdo_wait_for_mouse_move_to(const xdo_t *xdo, int dest_x, int dest_y);
  * @param button The mouse button. Generally, 1 is left, 2 is middle, 3 is
  *    right, 4 is wheel up, 5 is wheel down.
  */
-int xdo_click_window(const xdo_t *xdo, Window window, int button);
+int xdo_click_window(const xdo_t *xdo, Window window, int button, int x, int y);
 
 /**
  * Send a one or more clicks for a specific mouse button at the current mouse
@@ -350,7 +356,7 @@ int xdo_click_window(const xdo_t *xdo, Window window, int button);
  * @param button The mouse button. Generally, 1 is left, 2 is middle, 3 is
  *    right, 4 is wheel up, 5 is wheel down.
  */
-int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button,
+int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button, int x, int y,
                        int repeat, useconds_t delay);
 
 /**
@@ -935,6 +941,24 @@ int xdo_has_feature(xdo_t *xdo, int feature);
 int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
                                 unsigned int *height, int screen);
 
+int xdo_sent_enter_event(const xdo_t *xdo, Window window);
+
+int xdo_sent_motion_event(const xdo_t *xdo, Window window, int x, int y);
+
+int xdo_get_screen_number_of_window(const xdo_t *xdo, Window window);
+
+void xdo_translate_coordinates(const xdo_t *xdo,
+                               Window src_w, Window dest_w,
+                               int src_x, int src_y,
+                               int *dest_x_ret, int *dest_y_ret);
+
+void xdo_translate_coordinates_to_window(const xdo_t *xdo, Window dest_w,
+                                         int src_x, int src_y,
+                                         int *dest_x_ret, int *dest_y_ret);
+
+void xdo_translate_coordinates_to_root(const xdo_t *xdo, Window src_w,
+                                       int src_x, int src_y,
+                                       int *dest_x_ret, int *dest_y_ret);
 
 #ifdef __cplusplus
 } /* extern "C" */

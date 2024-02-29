@@ -18,9 +18,12 @@ int cmd_mousedown(context_t *context) {
     { 0, 0, 0, 0 },
   };
   static const char *usage =
-            "Usage: %s [--clearmodifiers] [--window WINDOW] <button>\n"
+            "Usage: %s [--clearmodifiers] [--window WINDOW] <button> [<x> <y>]\n"
             "--window <windowid>    - specify a window to send keys to\n"
-            "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n";
+            "--clearmodifiers       - reset active modifiers (alt, etc) while typing\n"
+            "\n"
+            "With x and y specified the event is dispatched in given position\n"
+            "(relative to WINDOW if specified) without moving the mouse pointer.\n";
   int option_index;
 
   while ((c = getopt_long_only(context->argc, context->argv, "+chw:",
@@ -52,6 +55,16 @@ int cmd_mousedown(context_t *context) {
   }
 
   button = atoi(context->argv[0]);
+  consume_args(context, 1);
+
+  int x = COORDINATE_NONE;
+  int y = COORDINATE_NONE;
+  if (context->argc >= 2) {
+    if (is_numeric(context->argv[0]) && is_numeric(context->argv[1]))
+    x = atoi(context->argv[0]);
+    y = atoi(context->argv[1]);
+    consume_args(context, 2);
+  }
 
   window_each(context, window_arg, {
     if (clear_modifiers) {
@@ -59,7 +72,7 @@ int cmd_mousedown(context_t *context) {
       xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);
     }
 
-    ret = xdo_mouse_down(context->xdo, window, button);
+    ret = xdo_mouse_down(context->xdo, window, button, x, y);
 
     if (clear_modifiers) {
       xdo_set_active_modifiers(context->xdo, window, active_mods, active_mods_n);
@@ -72,8 +85,6 @@ int cmd_mousedown(context_t *context) {
     }
   }); /* window_each(...) */
 
-  consume_args(context, 1);
   free(window_arg);
-
   return ret;
 }
