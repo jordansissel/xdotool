@@ -66,7 +66,7 @@ xdotool search --onlyvisible --classname "gnome-terminal" windowsize %@ 500
 
 ## Wayland
 
-Wayland is a very different graphics system than X11 (which you might know as Xorg or X). Wayland has some X11 compatibility, but for the purposes of xdotool, many things do not work correctly. Typing, window searching, and many other functions of xdotool do not work, and it is unclear if they could ever work.
+Wayland is a very different graphics system than X11 (which you might know as Xorg or X). Wayland has some X11 compatibility, but for the purposes of xdotool, many things do not work correctly. Typing, window searching, and many other functions of xdotool do not work, and it is unclear if they could ever work. That does not mean these functions can't be achieved with Wayland, it just means that you usually need to go through a Wayland compositor.
 
 Some other tools that might help you if you use Wayland are:
 
