@@ -287,8 +287,12 @@ int xdo_translate_window_with_sizehint(const xdo_t *xdo, Window window,
     height *= hints.height_inc;
   } else {
     fprintf(stderr, "No size hints found for window %ld\n", window);
-    *width_ret = width;
-    *height_ret = width;
+    if (width_ret != NULL) {
+      *width_ret = width;
+    }
+    if (height_ret != NULL) {
+      *height_ret = width;
+    }
   }
 
   if (supplied_return & PBaseSize) {
