@@ -46,7 +46,7 @@
  */
 #define MAX_TRIES 500
 
-static int _xdo_xtest_keyboard_id(xdo_t *xdo);
+static int _xdo_xtest_keyboard_id(const xdo_t *xdo);
 
 static void _xdo_populate_charcode_map(xdo_t *xdo);
 static int _xdo_has_xtest(const xdo_t *xdo);
@@ -153,6 +153,8 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
                 " info.", xdo->display_name);
     xdo_disable_feature(xdo, XDO_FEATURE_XTEST);
   }
+
+  xdo->id_xtest_keyboard = _xdo_xtest_keyboard_id(xdo);
 
   _xdo_populate_charcode_map(xdo);
   return xdo;
@@ -1097,7 +1099,16 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
     if (keys[i].needs_binding == 1) {
       KeySym keysym_list[] = { keys[i].symbol };
       _xdo_debug(xdo, "Mapping sym %lu to %d", keys[i].symbol, scratch_keycode);
-      XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
+
+      XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllMapComponentsMask, xdo->id_xtest_keyboard);
+
+      XkbChangesPtr changes = calloc( 1, sizeof(XkbChangesRec));
+
+      XkbUpdateMapFromCore(desc, scratch_keycode, 1, 1, keysym_list, changes);
+
+      XkbChangeMap(xdo->xdpy, desc, &changes->map);
+      free(changes);
+
       XSync(xdo->xdpy, False);
       /* override the code in our current key to use the scratch_keycode */
       keys[i].code = scratch_keycode;
@@ -1124,10 +1135,15 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
 
 
   if (keymapchanged) {
-    KeySym keysym_list[] = { 0 };
+    KeySym keysym_list[] = { NoSymbol };
     _xdo_debug(xdo, "Reverting scratch keycode (sym %lu to %d)",
               keys[i].symbol, scratch_keycode);
-    XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
+
+    XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllMapComponentsMask, xdo->id_xtest_keyboard);
+    XkbChangesPtr changes = calloc( 1, sizeof(XkbChangesRec));
+    XkbUpdateMapFromCore(desc, scratch_keycode, 1, 1, keysym_list, changes);
+    XkbChangeMap(xdo->xdpy, desc, &changes->map);
+    free(changes);
   }
 
   /* Necessary? */
@@ -1325,7 +1341,7 @@ static int _xdo_has_xtest(const xdo_t *xdo) {
   return (XTestQueryExtension(xdo->xdpy, &dummy, &dummy, &dummy, &dummy) == True);
 }
 
-static int _xdo_xtest_keyboard_id(xdo_t *xdo) {
+static int _xdo_xtest_keyboard_id(const xdo_t *xdo) {
   int id = XkbUseCoreKbd;
 
   int num_devices;
@@ -1364,7 +1380,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
                      * xdo->keysyms_per_keycode;
 
   xdo->charcodes = calloc(keycodes_length, sizeof(charcodemap_t));
-  XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllClientInfoMask, _xdo_xtest_keyboard_id(xdo));
+  XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllClientInfoMask, xdo->id_xtest_keyboard);
 
   for (keycode = xdo->keycode_low; keycode <= xdo->keycode_high; keycode++) {
     groups = XkbKeyNumGroups(desc, keycode);
@@ -1588,15 +1604,14 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
   if (use_xtest) {
     //printf("XTEST: Sending key %d %s\n", key->code, is_press ? "down" : "up");
     XkbStateRec state;
-    int id = _xdo_xtest_keyboard_id(xdo);
-    XkbGetState(xdo->xdpy, id, &state);
+    XkbGetState(xdo->xdpy, xdo->id_xtest_keyboard, &state);
     int current_group = state.group;
-    XkbLockGroup(xdo->xdpy, id, key->group);
+    XkbLockGroup(xdo->xdpy, xdo->id_xtest_keyboard, key->group);
     if (mask)
       _xdo_send_modifier(xdo, mask, is_press);
     //printf("XTEST: Sending key %d %s %x %d\n", key->code, is_press ? "down" : "up", key->modmask, key->group);
     XTestFakeKeyEvent(xdo->xdpy, key->code, is_press, CurrentTime);
-    XkbLockGroup(xdo->xdpy, id, current_group);
+    XkbLockGroup(xdo->xdpy, xdo->id_xtest_keyboard, current_group);
     XSync(xdo->xdpy, False);
   } else {
     /* Since key events have 'state' (shift, etc) in the event, we don't

@@ -110,6 +110,9 @@ typedef struct xdo {
   /** Feature flags, such as XDO_FEATURE_XTEST, etc... */
   int features_mask;
 
+  /** Id of the xtest keyboard **/
+  int id_xtest_keyboard;
+
 } xdo_t;
 
 
