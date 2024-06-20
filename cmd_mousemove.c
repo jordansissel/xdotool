@@ -218,8 +218,15 @@ static int _mousemove(context_t *context, struct mousemove *mousemove) {
     fprintf(stderr, "xdo_move_mouse reported an error\n");
   } else {
     if (mousemove->opsync) {
-      /* Wait until the mouse moves away from its current position */
-      xdo_wait_for_mouse_move_from(context->xdo, mx, my);
+      if (mx == x && my == y && mscreen == screen) {
+        /* Requested location is the same as the original mouse location, 
+         * so there's nothing to wait for */
+
+        // Blank, do nothing.
+      }  else {
+        /* Wait until the mouse moves away from its current position */
+        xdo_wait_for_mouse_move_from(context->xdo, mx, my);
+      }
     }
   }
 
