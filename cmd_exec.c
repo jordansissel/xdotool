@@ -80,8 +80,12 @@ int cmd_exec(context_t *context) {
     return EXIT_FAILURE;
   }
 
-  command = calloc(context->argc + 1, sizeof(char *));
+  size_t command_len = context->argc + 1;
+  command = calloc(command_len, sizeof(char *));
+  size_t pos = 0;
 
+  // Build the command-line argument list
+  // And also check if we need to use the window stack (%1, %@, etc)
   for (i=0; i < context->argc; i++) {
     if (arity > 0 && i == arity) {
       break;
@@ -93,12 +97,35 @@ int cmd_exec(context_t *context) {
       break;
     }
 
-    command[i] = strdup(context->argv[i]);
+    // Grow command array if needed
+    if (pos == command_len-1) {
+      command_len += 1;
+      command = realloc(command, command_len * sizeof(char *));
+    }
+
+    // Processes the argument. If it's a window list entry like %1 or %@,
+    // replace it with the window id(s). Otherwise, append it to the command array.
+    if (context->argv[i][0] == '%') {
+      window_each(context, context->argv[i], {
+        // Grow command array if needed
+        if (pos == command_len-1) {
+          command_len += 1;
+          command = realloc(command, command_len * sizeof(char *));
+        }
+
+        // XXX: Check for asprintf() error
+        asprintf(&command[pos], "%ld", window);
+        pos++;
+      });
+    } else {
+      command[pos] = strdup(context->argv[i]);
+      pos++;
+    }
     command_count = i + 1; /* i starts at 0 */
     xdotool_debug(context, "Exec arg[%d]: %s", i, command[i]);
   }
-  command[i] = NULL;
-  
+  command[pos] = NULL;
+
   pid_t child;
   child = fork();
   if (child == 0) { /* child */
@@ -118,7 +145,7 @@ int cmd_exec(context_t *context) {
   consume_args(context, command_count);
   free(terminator);
 
-  for (i=0; i < command_count; i++) {
+  for (i=0; i < command_len; i++) {
     free(command[i]);
   }
   free(command);
