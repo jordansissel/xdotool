@@ -110,6 +110,12 @@ typedef struct xdo {
   /** Feature flags, such as XDO_FEATURE_XTEST, etc... */
   int features_mask;
 
+  /** Id of the xtest keyboard **/
+  int id_xtest_keyboard;
+
+  /** ID of the device from which the charcode map was extracted **/
+  int current_map_id;
+
 } xdo_t;
 
 

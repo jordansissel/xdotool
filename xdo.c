@@ -46,7 +46,9 @@
  */
 #define MAX_TRIES 500
 
-static void _xdo_populate_charcode_map(xdo_t *xdo);
+static int _xdo_xtest_keyboard_id(const xdo_t *xdo);
+
+static void _xdo_populate_charcode_map(xdo_t *xdo, int device_id);
 static int _xdo_has_xtest(const xdo_t *xdo);
 
 static KeySym _xdo_keysym_from_char(const xdo_t *xdo, wchar_t key);
@@ -60,6 +62,7 @@ static int _xdo_send_keysequence_window_do(const xdo_t *xdo, Window window, cons
                                int pressed, int *modifier, useconds_t delay);
 static int _xdo_ewmh_is_supported(const xdo_t *xdo, const char *feature);
 static void _xdo_init_xkeyevent(const xdo_t *xdo, XKeyEvent *xk);
+static int _xdo_use_xtest(const xdo_t *xdo, Window window);
 static void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
                           int modstate, int is_press, useconds_t delay);
 static void _xdo_send_modifier(const xdo_t *xdo, int modmask, int is_press);
@@ -152,7 +155,10 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
     xdo_disable_feature(xdo, XDO_FEATURE_XTEST);
   }
 
-  _xdo_populate_charcode_map(xdo);
+  xdo->id_xtest_keyboard = _xdo_xtest_keyboard_id(xdo);
+
+  _xdo_populate_charcode_map(xdo, XkbUseCoreKbd);
+
   return xdo;
 }
 
@@ -991,6 +997,11 @@ int xdo_enter_text_window(const xdo_t *xdo, Window window, const char *string, u
    * divide by two. */
   delay /= 2;
 
+  int device_id = _xdo_use_xtest(xdo, window) ? xdo->id_xtest_keyboard : XkbUseCoreKbd;
+  if (device_id == xdo->id_xtest_keyboard && xdo->current_map_id == XkbUseCoreKbd ) {
+    _xdo_populate_charcode_map(xdo, device_id);
+  }
+
   /* XXX: Add error handling */
   //int nkeys = strlen(string);
   //charcodemap_t *keys = calloc(nkeys, sizeof(charcodemap_t));
@@ -1040,6 +1051,11 @@ int _xdo_send_keysequence_window_do(const xdo_t *xdo, Window window, const char 
   charcodemap_t *keys = NULL;
   int nkeys = 0;
 
+  int device_id = _xdo_use_xtest(xdo, window) ? xdo->id_xtest_keyboard : XkbUseCoreKbd;
+  if (device_id == xdo->id_xtest_keyboard && xdo->current_map_id == XkbUseCoreKbd ) {
+    _xdo_populate_charcode_map(xdo, device_id);
+  }
+
   if (_xdo_send_keysequence_window_to_keycode_list(xdo, keyseq, &keys, &nkeys) == False) {
     fprintf(stderr, "Failure converting key sequence '%s' to keycodes\n", keyseq);
     return 1;
@@ -1056,6 +1072,8 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
   int i = 0;
   int modstate = 0;
   int keymapchanged = 0;
+
+  int device_id = _xdo_use_xtest(xdo, window) ? xdo->id_xtest_keyboard : XkbUseCoreKbd;
 
   /* Find an unused keycode in case we need to bind unmapped keysyms */
   KeySym *keysyms = NULL;
@@ -1093,10 +1111,23 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
 
   for (i = 0; i < nkeys; i++) {
     if (keys[i].needs_binding == 1) {
-      KeySym keysym_list[] = { keys[i].symbol };
-      _xdo_debug(xdo, "Mapping sym %lu to %d", keys[i].symbol, scratch_keycode);
-      XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
       XSync(xdo->xdpy, False);
+
+      KeySym keysym_list[] = { keys[i].symbol };
+      _xdo_debug(xdo, "Mapping sym %lu to %d on device %d", keys[i].symbol, scratch_keycode, device_id);
+
+      XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllMapComponentsMask, device_id);
+
+      XkbChangesPtr changes = calloc( 1, sizeof(XkbChangesRec));
+
+      XkbUpdateMapFromCore(desc, scratch_keycode, 1, 1, keysym_list, changes);
+
+      XkbChangeMap(xdo->xdpy, desc, &changes->map);
+      free(changes);
+
+      usleep(5000); // Without the sleep, some keys got lost.
+      XSync(xdo->xdpy, False);
+
       /* override the code in our current key to use the scratch_keycode */
       keys[i].code = scratch_keycode;
       keymapchanged = 1;
@@ -1110,6 +1141,7 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
       /* If we needed to make a new keymapping for this keystroke, we
        * should sync with the server now, after the keypress, so that
        * the next mapping or removal doesn't conflict. */
+      usleep(5000); // Without the sleep, some keys got lost.
       XSync(xdo->xdpy, False);
     }
 
@@ -1122,10 +1154,17 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
 
 
   if (keymapchanged) {
-    KeySym keysym_list[] = { 0 };
+    XSync(xdo->xdpy, False);
+
+    KeySym keysym_list[] = { NoSymbol };
     _xdo_debug(xdo, "Reverting scratch keycode (sym %lu to %d)",
               keys[i].symbol, scratch_keycode);
-    XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
+
+    XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllMapComponentsMask, device_id);
+    XkbChangesPtr changes = calloc( 1, sizeof(XkbChangesRec));
+    XkbUpdateMapFromCore(desc, scratch_keycode, 1, 1, keysym_list, changes);
+    XkbChangeMap(xdo->xdpy, desc, &changes->map);
+    free(changes);
   }
 
   /* Necessary? */
@@ -1323,8 +1362,30 @@ static int _xdo_has_xtest(const xdo_t *xdo) {
   return (XTestQueryExtension(xdo->xdpy, &dummy, &dummy, &dummy, &dummy) == True);
 }
 
-static void _xdo_populate_charcode_map(xdo_t *xdo) {
+static int _xdo_xtest_keyboard_id(const xdo_t *xdo) {
+  int id = XkbUseCoreKbd;
+
+  int num_devices;
+  XDeviceInfo * xdi = XListInputDevices( xdo->xdpy, &num_devices);
+
+  for (int i = 0; i < num_devices; i++) {
+    if (strcmp(xdi[i].name, "Virtual core XTEST keyboard") == 0) {
+      id = xdi[i].id;
+      break;
+    }
+  }
+
+  XFreeDeviceList( xdi );
+
+  return id;
+}
+
+
+
+static void _xdo_populate_charcode_map(xdo_t *xdo, int device_id) {
   /* assert xdo->display is valid */
+  xdo->current_map_id = device_id;
+
   int keycodes_length = 0;
   int idx = 0;
   int keycode, group, groups, level, modmask, num_map;
@@ -1341,15 +1402,17 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
   keycodes_length = ((xdo->keycode_high - xdo->keycode_low) + 1)
                      * xdo->keysyms_per_keycode;
 
+  free(xdo->charcodes);
   xdo->charcodes = calloc(keycodes_length, sizeof(charcodemap_t));
-  XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllClientInfoMask, XkbUseCoreKbd);
+  XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllClientInfoMask, device_id);
 
   for (keycode = xdo->keycode_low; keycode <= xdo->keycode_high; keycode++) {
     groups = XkbKeyNumGroups(desc, keycode);
     for (group = 0; group < groups; group++) {
       XkbKeyTypePtr key_type = XkbKeyKeyType(desc, keycode, group);
       for (level = 0; level < key_type->num_levels; level++) {
-        KeySym keysym = XkbKeycodeToKeysym(xdo->xdpy, keycode, group, level);
+        KeySym keysym = XkbKeySymEntry(desc, keycode, level, group);
+
         modmask = 0;
 
         for (num_map = 0; num_map < key_type->map_count; num_map++) {
@@ -1546,33 +1609,38 @@ void _xdo_init_xkeyevent(const xdo_t *xdo, XKeyEvent *xk) {
   xk->x = xk->y = xk->x_root = xk->y_root = 1;
 }
 
+int _xdo_use_xtest(const xdo_t *xdo, Window window) {
+  if (window == CURRENTWINDOW) {
+    return 1;
+  } else {
+    Window focuswin = 0;
+    xdo_get_focused_window(xdo, &focuswin);
+    if (focuswin == window) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
                           int modstate, int is_press, useconds_t delay) {
   /* Properly ensure the modstate is set by finding a key
    * that activates each bit in the modifier state */
   int mask = modstate | key->modmask;
-  int use_xtest = 0;
+  int use_xtest = _xdo_use_xtest(xdo, window);
 
-  if (window == CURRENTWINDOW) {
-    use_xtest = 1;
-  } else {
-    Window focuswin = 0;
-    xdo_get_focused_window(xdo, &focuswin);
-    if (focuswin == window) {
-      use_xtest = 1;
-    }
-  }
+
   if (use_xtest) {
     //printf("XTEST: Sending key %d %s\n", key->code, is_press ? "down" : "up");
     XkbStateRec state;
-    XkbGetState(xdo->xdpy, XkbUseCoreKbd, &state);
+    XkbGetState(xdo->xdpy, xdo->id_xtest_keyboard, &state);
     int current_group = state.group;
-    XkbLockGroup(xdo->xdpy, XkbUseCoreKbd, key->group);
+    XkbLockGroup(xdo->xdpy, xdo->id_xtest_keyboard, key->group);
     if (mask)
       _xdo_send_modifier(xdo, mask, is_press);
     //printf("XTEST: Sending key %d %s %x %d\n", key->code, is_press ? "down" : "up", key->modmask, key->group);
     XTestFakeKeyEvent(xdo->xdpy, key->code, is_press, CurrentTime);
-    XkbLockGroup(xdo->xdpy, XkbUseCoreKbd, current_group);
+    XkbLockGroup(xdo->xdpy, xdo->id_xtest_keyboard, current_group);
     XSync(xdo->xdpy, False);
   } else {
     /* Since key events have 'state' (shift, etc) in the event, we don't
