@@ -113,6 +113,9 @@ typedef struct xdo {
   /** Id of the xtest keyboard **/
   int id_xtest_keyboard;
 
+  /** ID of the device from which the charcode map was extracted **/
+  int current_map_id;
+
 } xdo_t;
 
 
