@@ -804,8 +804,12 @@ int xdo_move_mouse(const xdo_t *xdo, int x, int y, int screen)  {
    * seem to recommend XWarpPointer instead, ie;
    * https://bugzilla.redhat.com/show_bug.cgi?id=518803
    */
-  Window screen_root = RootWindow(xdo->xdpy, screen);
-  ret = XWarpPointer(xdo->xdpy, None, screen_root, 0, 0, 0, 0, x, y);
+  if (screen > 0) {
+    Window screen_root = RootWindow(xdo->xdpy, screen);
+    ret = XWarpPointer(xdo->xdpy, None, screen_root, 0, 0, 0, 0, x, y);
+  } else {
+    ret = XTestFakeMotionEvent(xdo->xdpy, 0, x, y, CurrentTime);
+  }
   XFlush(xdo->xdpy);
   return _is_success("XWarpPointer", ret == 0, xdo);
 }
