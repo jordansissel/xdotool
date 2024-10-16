@@ -145,8 +145,8 @@ int cmd_exec(context_t *context) {
   consume_args(context, command_count);
   free(terminator);
 
-  for (i=0; i < command_len; i++) {
-    free(command[i]);
+  for (size_t j=0; j < command_len; j++) {
+    free(command[j]);
   }
   free(command);
   return ret;
