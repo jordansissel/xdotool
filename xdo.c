@@ -28,7 +28,6 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/Xinerama.h>
-#include <X11/extensions/XInput2.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
 
@@ -70,7 +69,6 @@ static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_
 static int _is_success(const char *funcname, int code, const xdo_t *xdo);
 static void _xdo_debug(const xdo_t *xdo, const char *format, ...);
 static void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...);
-static int appears_to_be_wayland(Display *xdpy);
 
 /* context-free functions */
 static wchar_t _keysym_to_char(KeySym keysym);
@@ -116,16 +114,6 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
     fprintf(stderr, "xdo_new: xdisplay I was given is a null pointer\n");
     return NULL;
   }
-
-  // This library and xdotool do not work correctly on Wayland/XWayland.
-  // Try to detect XWayland and warn the user about problems.
-  // TODO(sissel): This was disabled due to issue #346
-  //  -- xdotool works on XWayland for some operations, so it isn't helpful to refuse all usage on XWayland.
-  //if (appears_to_be_wayland(xdpy)) {
-    //fprintf(stderr, "The X server at %s appears to be XWayland. Unfortunately, XWayland does not correctly support the features used by libxdo and xdotool.\n", display);
-    //return NULL;
-  //}
-
 
   /* XXX: Check for NULL here */
   xdo = malloc(sizeof(xdo_t));
@@ -2034,25 +2022,4 @@ int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
     Window root = RootWindow(xdo->xdpy, screen);
     return xdo_get_window_size(xdo, root, width, height);
   }
-}
-
-static int appears_to_be_wayland(Display *xdpy) {
-  // XWayland leaks its presence in two extensions (at time of writing, August 2021)
-  // First: the name of input devices "xwayland-pointer"
-  // Second: in the Vendor string of XFree86-VidModeExtension
-
-  int count;
-  XDeviceInfo *devices = XListInputDevices(xdpy, &count);
-  for (int i = 0; i < count; i++) {
-    // fprintf(stderr, "Device %d: %s\n", i, devices[i].name);
-    // If the input device name starts with "xwayland-", 
-    // there's a good chance we're running on XWayland.
-    if (strstr(devices[i].name, "xwayland-") == devices[i].name) {
-      XFreeDeviceList(devices);
-      return 1; // Running on wayland
-    }
-  }
-  XFreeDeviceList(devices);
-
-  return 0;
 }
