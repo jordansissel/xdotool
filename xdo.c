@@ -1978,6 +1978,7 @@ void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...) {
 
   va_start(args, format);
   if (xdo->quiet == True && hushable) {
+    va_end(args);
     return;
   }
 
