@@ -65,7 +65,7 @@ static void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
 static void _xdo_send_modifier(const xdo_t *xdo, int modmask, int is_press);
 
 static int _xdo_query_keycode_to_modifier(XModifierKeymap *modmap, KeyCode keycode);
-static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press);
+static int _xdo_mousebutton(const xdo_t* xdo, Window window, int button, int is_press, int x, int y);
 
 static int _is_success(const char *funcname, int code, const xdo_t *xdo);
 static void _xdo_debug(const xdo_t *xdo, const char *format, ...);
@@ -832,7 +832,7 @@ int xdo_move_mouse_relative(const xdo_t *xdo, int x, int y)  {
   return _is_success("XTestFakeRelativeMotionEvent", ret == 0, xdo);
 }
 
-int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) {
+int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press, int x, int y) {
   int ret = 0;
 
   if (window == CURRENTWINDOW) {
@@ -861,6 +861,14 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     xbpe.time = CurrentTime;
     xbpe.type = (is_press ? ButtonPress : ButtonRelease);
 
+    /* Use given position within the window */
+    if (x != COORDINATE_NONE && y != COORDINATE_NONE) {
+      xbpe.x = x;
+      xbpe.y = y;
+      XTranslateCoordinates(xdo->xdpy, xbpe.window, xbpe.root,
+                            xbpe.x, xbpe.y, &xbpe.x_root, &xbpe.y_root, &xbpe.subwindow);
+    }
+
     /* Get the coordinates of the cursor relative to xbpe.window and also find what
      * subwindow it might be on */
     XTranslateCoordinates(xdo->xdpy, xbpe.root, xbpe.window, 
@@ -885,12 +893,12 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
   }
 }
 
-int xdo_mouse_up(const xdo_t *xdo, Window window, int button) {
-  return _xdo_mousebutton(xdo, window, button, False);
+int xdo_mouse_up(const xdo_t *xdo, Window window, int button, int x, int y) {
+  return _xdo_mousebutton(xdo, window, button, False, x, y);
 }
 
-int xdo_mouse_down(const xdo_t *xdo, Window window, int button) {
-  return _xdo_mousebutton(xdo, window, button, True);
+int xdo_mouse_down(const xdo_t *xdo, Window window, int button, int x, int y) {
+  return _xdo_mousebutton(xdo, window, button, True, x, y);
 }
 
 int xdo_get_mouse_location(const xdo_t *xdo, int *x_ret, int *y_ret,
@@ -957,23 +965,27 @@ int xdo_get_mouse_location2(const xdo_t *xdo, int *x_ret, int *y_ret,
   return _is_success("XQueryPointer", ret == False, xdo);
 }
 
-int xdo_click_window(const xdo_t *xdo, Window window, int button) {
+int xdo_click_window(const xdo_t *xdo, Window window, int button, int x, int y) {
   int ret = 0;
-  ret = xdo_mouse_down(xdo, window, button);
+  ret = xdo_mouse_down(xdo, window, button, x, y);
   if (ret != XDO_SUCCESS) {
     fprintf(stderr, "xdo_mouse_down failed, aborting click.\n");
     return ret;
   }
   usleep(DEFAULT_DELAY);
-  ret = xdo_mouse_up(xdo, window, button);
+  ret = xdo_mouse_up(xdo, window, button, x, y);
   return ret;
 }
 
-int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button,
+int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button, int x, int y,
                        int repeat, useconds_t delay) {
   int ret = 0;
   while (repeat > 0) {
-    ret = xdo_click_window(xdo, window, button);
+    if (x != COORDINATE_NONE && y != COORDINATE_NONE) {
+      xdo_sent_enter_event(xdo, window);
+      xdo_sent_motion_event(xdo, window, x, y);
+    }
+    ret = xdo_click_window(xdo, window, button, x, y);
     if (ret != XDO_SUCCESS) {
       fprintf(stderr, "click failed with %d repeats remaining\n", repeat);
       return ret;
@@ -1689,15 +1701,15 @@ int xdo_clear_active_modifiers(const xdo_t *xdo, Window window, charcodemap_t *a
                           active_mods_n, False, NULL, DEFAULT_DELAY);
 
   if (input_state & Button1MotionMask)
-    ret = xdo_mouse_up(xdo, window, 1);
+    ret = xdo_mouse_up(xdo, window, 1, COORDINATE_NONE, COORDINATE_NONE);
   if (!ret && input_state & Button2MotionMask)
-    ret = xdo_mouse_up(xdo, window, 2);
+    ret = xdo_mouse_up(xdo, window, 2, COORDINATE_NONE, COORDINATE_NONE);
   if (!ret && input_state & Button3MotionMask)
-    ret = xdo_mouse_up(xdo, window, 3);
+    ret = xdo_mouse_up(xdo, window, 3, COORDINATE_NONE, COORDINATE_NONE);
   if (!ret && input_state & Button4MotionMask)
-    ret = xdo_mouse_up(xdo, window, 4);
+    ret = xdo_mouse_up(xdo, window, 4, COORDINATE_NONE, COORDINATE_NONE);
   if (!ret && input_state & Button5MotionMask)
-    ret = xdo_mouse_up(xdo, window, 5);
+    ret = xdo_mouse_up(xdo, window, 5, COORDINATE_NONE, COORDINATE_NONE);
   if (!ret && input_state & LockMask) {
     /* explicitly use down+up here since xdo_send_keysequence_window alone will track the modifiers
      * incurred by a key (like shift, or caps) and send them on the 'up' sequence.
@@ -1716,15 +1728,15 @@ int xdo_set_active_modifiers(const xdo_t *xdo, Window window, charcodemap_t *act
   xdo_send_keysequence_window_list_do(xdo, window, active_mods,
                           active_mods_n, True, NULL, DEFAULT_DELAY);
   if (input_state & Button1MotionMask)
-    ret = xdo_mouse_down(xdo, window, 1);
+    ret = xdo_mouse_down(xdo, window, 1, COORDINATE_NONE, COORDINATE_NONE);
   if (!ret && input_state & Button2MotionMask)
-    ret = xdo_mouse_down(xdo, window, 2);
+    ret = xdo_mouse_down(xdo, window, 2, COORDINATE_NONE, COORDINATE_NONE);
   if (!ret && input_state & Button3MotionMask)
-    ret = xdo_mouse_down(xdo, window, 3);
+    ret = xdo_mouse_down(xdo, window, 3, COORDINATE_NONE, COORDINATE_NONE);
   if (!ret && input_state & Button4MotionMask)
-    ret = xdo_mouse_down(xdo, window, 4);
+    ret = xdo_mouse_down(xdo, window, 4, COORDINATE_NONE, COORDINATE_NONE);
   if (!ret && input_state & Button5MotionMask)
-    ret = xdo_mouse_down(xdo, window, 5);
+    ret = xdo_mouse_down(xdo, window, 5, COORDINATE_NONE, COORDINATE_NONE);
   if (!ret && input_state & LockMask) {
     /* explicitly use down+up here since xdo_send_keysequence_window alone will track the modifiers
      * incurred by a key (like shift, or caps) and send them on the 'up' sequence.
@@ -1963,10 +1975,7 @@ int xdo_minimize_window(const xdo_t *xdo, Window window) {
   int ret;
   int screen;
 
-  /* Get screen number */
-  XWindowAttributes attr;
-  XGetWindowAttributes(xdo->xdpy, window, &attr);
-  screen = XScreenNumberOfScreen(attr.screen);
+  screen = xdo_get_screen_number_of_window(xdo, window);
 
   /* Minimize it */
   ret = XIconifyWindow(xdo->xdpy, window, screen);
@@ -2034,6 +2043,74 @@ int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
     Window root = RootWindow(xdo->xdpy, screen);
     return xdo_get_window_size(xdo, root, width, height);
   }
+}
+
+int xdo_sent_enter_event(const xdo_t *xdo, Window window) {
+  XEnterWindowEvent xev;
+  int screen_num = xdo_get_screen_number_of_window(xdo, window);
+
+  xev.type = EnterNotify;
+  xev.display = xdo->xdpy;
+  xev.window = window;
+  xev.root = RootWindow(xdo->xdpy, screen_num);
+  xev.subwindow = None;
+  xev.time = CurrentTime;
+  xev.state = 0;
+  xev.focus = False;
+  xev.same_screen = True;
+
+  return XSendEvent(xdo->xdpy, window, False, PointerMotionMask|ButtonMotionMask|MotionNotify, (XEvent *)&xev);
+}
+
+int xdo_sent_motion_event(const xdo_t *xdo, Window window, int x, int y) {
+  XMotionEvent xev;
+  int screen_num = xdo_get_screen_number_of_window(xdo, window);
+
+  xev.type = MotionNotify;
+  xev.display = xdo->xdpy;
+  xev.window = window;
+  xev.root = RootWindow(xdo->xdpy, screen_num);
+  xev.subwindow = None;
+  xev.time = CurrentTime;
+  xev.x = x;
+  xev.y = y;
+  xev.state = 0;
+  xev.is_hint = NotifyNormal;
+  xev.same_screen = True;
+
+  return XSendEvent(xdo->xdpy, window, False, PointerMotionMask|ButtonMotionMask|MotionNotify, (XEvent *)&xev);
+}
+
+int xdo_get_screen_number_of_window(const xdo_t *xdo, Window window) {
+  XWindowAttributes attr;
+  XGetWindowAttributes(xdo->xdpy, window, &attr);
+  return XScreenNumberOfScreen(attr.screen);
+}
+
+void xdo_translate_coordinates(const xdo_t *xdo,
+                               Window src_w, Window dest_w,
+                               int src_x, int src_y,
+                               int *dest_x_ret, int *dest_y_ret) {
+  Window unused_child;
+  XTranslateCoordinates(xdo->xdpy, src_w, dest_w, src_x, src_y, dest_x_ret, dest_y_ret, &unused_child);
+}
+
+void xdo_translate_coordinates_to_window(const xdo_t *xdo, Window dest_w,
+                                         int src_x, int src_y,
+                                         int *dest_x_ret, int *dest_y_ret) {
+  Window unused_child;
+  int screen_num = xdo_get_screen_number_of_window(xdo, dest_w);
+  Window root = RootWindow(xdo->xdpy, screen_num);
+  XTranslateCoordinates(xdo->xdpy, root, dest_w, src_x, src_y, dest_x_ret, dest_y_ret, &unused_child);
+}
+
+void xdo_translate_coordinates_to_root(const xdo_t *xdo, Window src_w,
+                                       int src_x, int src_y,
+                                       int *dest_x_ret, int *dest_y_ret) {
+  Window unused_child;
+  int screen_num = xdo_get_screen_number_of_window(xdo, src_w);
+  Window root = RootWindow(xdo->xdpy, screen_num);
+  XTranslateCoordinates(xdo->xdpy, src_w, root, src_x, src_y, dest_x_ret, dest_y_ret, &unused_child);
 }
 
 static int appears_to_be_wayland(Display *xdpy) {
