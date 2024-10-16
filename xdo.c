@@ -985,17 +985,10 @@ int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button,
 
 /* XXX: Return proper code if errors found */
 int xdo_enter_text_window(const xdo_t *xdo, Window window, const char *string, useconds_t delay) {
+  /* Keep the original delay for key up events, but use 50000 microseconds (50ms) for key down */
+  useconds_t down_delay = 50000; 
 
-  /* Since we're doing down/up, the delay should be based on the number
-   * of keys pressed (including shift). Since up/down is two calls,
-   * divide by two. */
-  delay /= 2;
-
-  /* XXX: Add error handling */
-  //int nkeys = strlen(string);
-  //charcodemap_t *keys = calloc(nkeys, sizeof(charcodemap_t));
   charcodemap_t key;
-  //int modifier = 0;
   setlocale(LC_CTYPE,"");
   mbstate_t ps = { 0 };
   ssize_t len;
@@ -1009,28 +1002,15 @@ int xdo_enter_text_window(const xdo_t *xdo, Window window, const char *string, u
       fprintf(stderr, "I don't know which key produces '%lc', skipping.\n",
               key.key);
       continue;
-    } else {
-      //printf("Found key for %c\n", key.key);
-      //printf("code: %d\n", key.code);
-      //printf("sym: %s\n", XKeysymToString(key.symbol));
     }
 
-    //printf(stderr,
-            //"Key '%c' maps to code %d / sym %lu in group %d / mods %d (%s)\n",
-            //key.key, key.code, key.symbol, key.group, key.modmask,
-            //(key.needs_binding == 1) ? "needs binding" : "ok");
-
-    //_xdo_send_key(xdo, window, keycode, modstate, True, delay);
-    //_xdo_send_key(xdo, window, keycode, modstate, False, delay);
-    xdo_send_keysequence_window_list_do(xdo, window, &key, 1, True, NULL, delay / 2);
+    /* Send the key press event with the fixed 50ms delay */
+    xdo_send_keysequence_window_list_do(xdo, window, &key, 1, True, NULL, down_delay);
     key.needs_binding = 0;
-    xdo_send_keysequence_window_list_do(xdo, window, &key, 1, False, NULL, delay / 2);
+    /* Send the key release event with the user-specified delay */
+    xdo_send_keysequence_window_list_do(xdo, window, &key, 1, False, NULL, delay);
+  }
 
-    /* XXX: Flush here or at the end? or never? */
-    //XFlush(xdo->xdpy);
-  } /* walk string generating a keysequence */
-
-  //free(keys);
   return XDO_SUCCESS;
 }
 
