@@ -913,9 +913,7 @@ default. See L<WINDOW STACK> and L<COMMAND CHAINING> for more details.
 
 =item B<get_desktop_for_window> I<[window]>
 
-Output the desktop currently containing the given window. Move a window to a
-different desktop. If no window is given, %1 is the default. See L<WINDOW
-STACK> and L<COMMAND CHAINING> for more details.
+Output the desktop currently containing the given window.
 
 =back
 
