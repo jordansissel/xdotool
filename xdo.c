@@ -1643,7 +1643,7 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
 
         if (*nkeys == keys_size) {
           keys_size *= 2;
-          *keys = realloc(keys, keys_size * sizeof(charcodemap_t));
+          *keys = realloc(*keys, keys_size * sizeof(charcodemap_t));
         }
       }
     }

@@ -35,7 +35,7 @@ int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
 
   unsigned int windowlist_size = 100;
   *nwindows_ret = 0;
-  *windowlist_ret = calloc(sizeof(Window), windowlist_size);
+  *windowlist_ret = calloc(windowlist_size, sizeof(Window));
 
   /* TODO(sissel): Support multiple screens */
   if (search->searchmask & SEARCH_SCREEN) {
