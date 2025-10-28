@@ -5,7 +5,7 @@
 require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolCommandWindowMapTests < MiniTest::Test
+class XdotoolCommandWindowMapTests < Minitest::Test
   include XdoTestHelper
 
   def test_succeeds_with_valid_window

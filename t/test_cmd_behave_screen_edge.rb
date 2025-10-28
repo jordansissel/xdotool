@@ -4,7 +4,7 @@
 require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolCommandBehaveScreenEdgeTests < MiniTest::Test
+class XdotoolCommandBehaveScreenEdgeTests < Minitest::Test
   include XdoTestHelper
 
   def test_expected_failures
