@@ -1308,7 +1308,6 @@ static int _xdo_has_xtest(const xdo_t *xdo) {
           if (idx == charcodes_size) { \
             xdo->charcodes = realloc(xdo->charcodes, (charcodes_size += 100) * sizeof(charcodemap_t)); \
           } \
-          _xdo_debug(xdo, "charcodemap[%ld] = keysym %s, keycode %d, group %d, mask %x", idx, XKeysymToString(keysym), keycode, group, mask); \
           xdo->charcodes[idx].key = _keysym_to_char(keysym); \
           xdo->charcodes[idx].code = keycode; \
           xdo->charcodes[idx].group = group; \
