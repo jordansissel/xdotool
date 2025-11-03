@@ -1409,7 +1409,6 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
            * Thus, if no active map entry is found, and the current shift
            * level is "one" (0), we must assume that the keycode alone will produce a keysym.
            */
-
           if (li != 0) {
             // No active modifier mappings and not level 1, therefore, no modifier combination will produce this shift level.
             // Thus, skip creating a charcodemap entry.
@@ -1425,9 +1424,6 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
               XGetAtomName(dpy, key_type->name), keycode);
           continue;
         }
-
-        //if (!map.active) {
-          //if (li != 0) {
 
         _xdo_debug(
           xdo,
@@ -1647,18 +1643,19 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
     }
   }
   if (use_xtest) {
-    //printf("XTEST: Sending key %d %s\n", key->code, is_press ? "down" : "up");
     XkbStateRec state;
     XkbGetState(xdo->xdpy, XkbUseCoreKbd, &state);
     int current_group = state.group;
     XkbLockGroup(xdo->xdpy, XkbUseCoreKbd, key->group);
     if (mask)
       _xdo_send_modifier(xdo, mask, is_press);
-    //printf("XTEST: Sending key %d %s %x %d\n", key->code, is_press ? "down" : "up", key->modmask, key->group);
+    _xdo_debug(xdo, "XTEST: %s key: keycode %d", is_press ? "Press" : "Release",
+               key->code);
     XTestFakeKeyEvent(xdo->xdpy, key->code, is_press, CurrentTime);
     XkbLockGroup(xdo->xdpy, XkbUseCoreKbd, current_group);
     XSync(xdo->xdpy, False);
   } else {
+    _xdo_debug(xdo, "XSendEvent: Sending key %s, keycode %d mask %s\n", is_press ? "down" : "up", key->code, modnames(key->modmask));
     /* Since key events have 'state' (shift, etc) in the event, we don't
      * need to worry about key press ordering. */
     XKeyEvent xk;
@@ -1686,6 +1683,12 @@ void _xdo_send_modifier(const xdo_t *xdo, int modmask, int is_press) {
       for (mod_key = 0; mod_key < modifiers->max_keypermod; mod_key++) {
         keycode = modifiers->modifiermap[mod_index * modifiers->max_keypermod + mod_key];
         if (keycode) {
+          _xdo_debug(
+            xdo,
+            "XTEST: %s modifier %s using keycode %d",
+            is_press ? "Press" : "Release",
+            modnames(modmask & (1 << mod_index)),
+            keycode);
           XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
           XSync(xdo->xdpy, False);
           break;
