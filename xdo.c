@@ -1317,25 +1317,6 @@ static int _xdo_has_xtest(const xdo_t *xdo) {
           idx++; 
 
 
-static int _xdo_charcodemap_cmp(const void *va, const void *vb) {
-  const charcodemap_t *a = va, *b = vb;
-
-  // Lower group first.
-  if (a->group != b->group) {
-    return a->group - b->group;
-  }
-
-  if (a->code != b->code) {
-    return a->code - b->code;
-  }
-
-  // Then by modmask, with modmask 0 being first.
-  // If we prefer modmask = 0 first, then things like Function keys (F1) where
-  // multiple modifier combinations produce the same keysym, but applications
-  // interpret F1 vs Shift+F1 diferently
-  return a->modmask - b->modmask;
-}
-
 static void _xdo_populate_charcode_map(xdo_t *xdo) {
   size_t idx = 0;
   XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllClientInfoMask, XkbUseCoreKbd);
@@ -1448,8 +1429,6 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
       }
     }
   }
-
-  qsort(xdo->charcodes, xdo->charcodes_len, sizeof(charcodemap_t), _xdo_charcodemap_cmp);
 
   XkbFreeKeyboard(desc, 0, True);
 }
