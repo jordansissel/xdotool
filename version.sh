@@ -5,7 +5,7 @@ if [ -r "VERSION" ] ; then
 fi
 
 if [ -z "$MAJOR" -o -z "$RELEASE" -o -z "$REVISION" ] ; then
-  MAJOR="3"
+  MAJOR="4"
   SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
   DATE_FMT="%Y%m%d"
   RELEASE="$(date -u -d "@$SOURCE_DATE_EPOCH" "+$DATE_FMT" 2>/dev/null || date -u -r "$SOURCE_DATE_EPOCH" "+$DATE_FMT" 2>/dev/null || date -u "+$DATE_FMT")"
