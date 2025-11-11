@@ -3,7 +3,7 @@
 require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolMouseMoveTests < MiniTest::Test
+class XdotoolMouseMoveTests < Minitest::Test
   include XdoTestHelper
 
   def test_mousemove_should_have_no_output

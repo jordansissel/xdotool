@@ -4,7 +4,7 @@
 require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolCommandKeyTests < MiniTest::Test
+class XdotoolCommandKeyTests < Minitest::Test
   include XdoTestHelper
 
   def test_flags

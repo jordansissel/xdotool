@@ -4,7 +4,7 @@
 require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolSearchTests < MiniTest::Test
+class XdotoolSearchTests < Minitest::Test
   include XdoTestHelper
 
   def test_search_pid
@@ -154,7 +154,7 @@ class XdotoolSearchTests < MiniTest::Test
   end # def test_search_can_find_all_windows
 end # XdotoolSearchTests
 
-class XdotoolRaceSearchTests < MiniTest::Test
+class XdotoolRaceSearchTests < Minitest::Test
   include XdoTestHelper
 
   def setup

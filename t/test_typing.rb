@@ -4,8 +4,9 @@
 require "minitest"
 require "tempfile"
 require "./xdo_test_helper"
+require "shellwords"
 
-class XdotoolTypingTests < MiniTest::Test
+class XdotoolTypingTests < Minitest::Test
   include XdoTestHelper
   SYMBOLS = "`12345678990-=~ !@\#$%^&*()_+[]\{}|;':\",./<>?"
   LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -28,9 +29,7 @@ class XdotoolTypingTests < MiniTest::Test
       if status == 0 and lines.first.to_i == @wid
         ready = true
       end
-      sleep 0.2
     end
-    #puts "Window #{@wid} has focus"
   end # def setup
 
   def readfile
@@ -46,9 +45,8 @@ class XdotoolTypingTests < MiniTest::Test
   def type(input)
     #status, lines = xdotool "type --window #{@wid} --clearmodifiers '#{input}'"
     #_xdotool "key ctrl+s ctrl+q"
-    input.gsub!(/'/, "\\'")
-    status, lines = xdotool "type --clearmodifiers '#{input}'"
-    xdotool "key ctrl+d ctrl+d"
+    status, lines = xdotool("type","--clearmodifiers", "--delay", "0", input)
+    xdotool "key --delay 0 ctrl+d ctrl+d"
     Process.wait(@launchpid) rescue nil
     return readfile
   end

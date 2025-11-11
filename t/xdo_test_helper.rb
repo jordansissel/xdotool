@@ -36,16 +36,15 @@ module XdoTestHelper
 
     healthy = false
     while !healthy
-      status, lines = runcmd("xwininfo -id #{@wid}")
+      status, lines = runcmd("xwininfo -id #{@wid} -size")
       healthy = (status == 0)
-      sleep 0.2
     end
   end # def setup_launch_xterm
   
   def setup_ensure_x_is_healthy
     healthy = false
     (1 .. 10).each do
-      system("xdpyinfo > /dev/null 2>&1")
+      system("xdpyinfo > /dev/null")
       healthy = ($?.exitstatus == 0)
       break if healthy
       puts "Waiting for xserver on #{ENV["DISPLAY"]} to be healthy"
@@ -61,7 +60,7 @@ module XdoTestHelper
   def teardown
     if @shellpid
       Process.kill("TERM", @shellpid) rescue nil
-      Process.wait(@shellpid) rescue nil
+      #Process.wait(@shellpid) rescue nil
     end
 
     if @windowpid
@@ -77,12 +76,12 @@ module XdoTestHelper
     end
   end # def teardown
 
-  def xdotool(args)
-    if $DEBUG
-      puts "Running: '#{@xdotool} #{args}'"
+  def xdotool(*args)
+    if args.length == 1
+      return runcmd(@xdotool, *Shellwords.split(args.first))
+    else
+      return runcmd(@xdotool, *args);
     end
-
-    return runcmd("#{@xdotool} #{args}")
   end # def xdotool
 
   def xdotool_ok(args)
@@ -97,8 +96,10 @@ module XdoTestHelper
     return [status, lines]
   end # def xdotool_fail
 
-  def runcmd(command)
-    io = IO.popen("#{command} #{$DEBUG ? "" : "2> /dev/null"}") #2> /dev/null")
+  def runcmd(*command)
+    command = Shellwords.split(command.first) if command.length == 1
+    puts "command> #{command.inspect}" if $DEBUG
+    io = IO.popen(command, :err => "/dev/null")
     output = io.readlines.collect { |i| i.chomp }
     io.close
     return [$?.exitstatus, output]

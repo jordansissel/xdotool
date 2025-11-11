@@ -4,7 +4,7 @@
 require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolCommandWindowMinimizeTests < MiniTest::Test
+class XdotoolCommandWindowMinimizeTests < Minitest::Test
   include XdoTestHelper
 
   def test_succeeds_with_valid_window
