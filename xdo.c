@@ -1359,6 +1359,52 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
           }
         };
 
+        KeySym keysym = XkbKeycodeToKeysym(dpy, keycode, group, map.level);
+
+        if (keysym == NoSymbol) {
+          // No keysym produced by the given (keycode, group, shift level)
+          _xdo_debug(
+              xdo, "[group %d, level %s[%d]] (KT: %s) keycode %d is not bound at this level",
+              group, XGetAtomName(dpy, key_type->level_names[li]),
+              li + 1 /* levels are named starting at 1 */,
+              XGetAtomName(dpy, key_type->name), keycode);
+          continue;
+        }
+
+        /* From:
+         * https://x.z-yx.cc/libX11/XKB/16-chapter-15-xkb-client-keyboard-mapping.html#The_Canonical_Key_Types
+         * > Any combination of modifiers not explicitly listed somewhere in
+         * > the map yields shift level one.
+         *
+         * Also: xkbcomp will delete all level 1 key map entries when compiling.
+         * Reference:
+         * https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/blob/d03a4ab1c0b24f6581411622ccf729ceb329aeb8/keytypes.c#L1247
+         *
+         * Thus, if no active map entry is found, and the current shift
+         * level is "one" (0), we must assume that the keycode alone will
+         * produce a keysym.
+         *
+         * Further, if no map entry with 'mask == 0' is found, it means that
+         * shift level one is produced when the keycode is used without any
+         * modifiers.
+         *
+         * As a shortcut, for shift level 1 (li == 0), check if the keycode
+         * produces this level's keysym without any modifiers. If so, then
+         * prefer it in the keymap.
+         */
+        if (li == 0) {
+          KeySym key_without_mask;
+          // Ask what keysym is produced by this keycode when mask == 0.
+          if (XkbTranslateKeyCode(desc, keycode, 0 /* modifier mask */, NULL, &key_without_mask) == True) {
+            // Safety check: does the keysym found above match the keysm produced by this shift level?
+            if (key_without_mask == keysym) {
+              // pretend we found the map entry in the XkbKTMap
+              map.level = li;
+              map.active = True;
+            }
+          }
+        }
+
         // Find out if there's any active modifier mappings for this keycode, group, and shift level.
         // We can stop looking after we find one.
         for (int mi = 0; mi < key_type->map_count && !map.active; mi++) {
@@ -1369,51 +1415,24 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
             if (map.mods.real_mods == 0 && map.mods.vmods == 0) {
               _xdo_debug(xdo, "Warning: found a mod entry with mods=0. This isn't expected?");
             }
+            keysym = XkbKeycodeToKeysym(dpy, keycode, group, map.level);
           }
         }
 
-
-        // If we get this far, and assuming the Xkb API is being used
-        // correctly, we can expect that for the given group,
-        // the keycode+shift level will produce a valid keysym.
-        KeySym keysym = XkbKeycodeToKeysym(dpy, keycode, group, map.level);
-
+        // If no active mapping is found, then no keysym is produced by this
+        // keycode+modifier at this shift level.
         if (!map.active) {
-          /* From:
-           * https://x.z-yx.cc/libX11/XKB/16-chapter-15-xkb-client-keyboard-mapping.html#The_Canonical_Key_Types
-           * > Any combination of modifiers not explicitly listed somewhere in
-           * > the map yields shift level one.
-           *
-           * Also: xkbcomp will delete all level 1 key map entries when compiling.
-           * Reference: https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/blob/d03a4ab1c0b24f6581411622ccf729ceb329aeb8/keytypes.c#L1247
-           *
-           * Thus, if no active map entry is found, and the current shift
-           * level is "one" (0), we must assume that the keycode alone will produce a keysym.
-           */
-          if (li != 0) {
-            // No active modifier mappings and not level 1, therefore, no modifier combination will produce this shift level.
-            // Thus, skip creating a charcodemap entry.
             continue;
-          }
-        }
-
-        if (keysym == NoSymbol) {
-          _xdo_debug(
-              xdo, "[group %d, level %s[%d]] (KT: %s) keycode %d is not bound at this level",
-              group, XGetAtomName(dpy, key_type->level_names[li]),
-              li + 1 /* levels are named starting at 1 */,
-              XGetAtomName(dpy, key_type->name), keycode);
-          continue;
         }
 
         _xdo_debug(
           xdo,
-          "[group %d, level %s[%d]] (KT: %s) Symbol(%s) = keycode %d with "
+          "[group %d, level %s[%d]] Symbol(%s) = keycode %d with "
           "mask:%s, "
           "real_mods:%x, vmods:%s%s",
           group, XGetAtomName(dpy, key_type->level_names[li]),
           li + 1 /* levels are named starting at 1 */,
-          XGetAtomName(dpy, key_type->name), XKeysymToString(keysym), keycode,
+          XKeysymToString(keysym), keycode,
           modnames(map.mods.mask), map.mods.real_mods,
           vmodnames(dpy, desc, map.mods.vmods),
 
