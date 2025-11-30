@@ -28,7 +28,7 @@ DYNLIBFLAG=$(shell sh platform.sh dynlibflag)
 LIBNAMEFLAG=$(shell sh platform.sh libnameflag $(MAJOR) $(INSTALLLIB))
 
 CFLAGS?=-pipe -O2 $(WARNFLAGS)
-CFLAGS+=-g # TODO(sissel): Comment before release
+#CFLAGS+=-g # TODO(sissel): Comment before release
 CFLAGS+=$(CPPFLAGS)
 CFLAGS+=$(shell sh cflags.sh)
 

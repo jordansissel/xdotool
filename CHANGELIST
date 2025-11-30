@@ -9,6 +9,24 @@ KNOWN ISSUES:
     Unfortunately, there seem to be no common and stable way to do what
     xdotool does *on* Wayland, so xdotool does not work correctly under Wayland.
 
+4.20251130.1
+  - Fix bug in typing/keyboard causing xdotool to send extra modifier
+    keys in certain cases. When xkeyboard-config 2.46 is installed,
+    xdotool would send incorrect key sequences for function keys, for
+    example incorrectly sending "Alt + F3" when F3 was requested. (#491, PR #493)
+  - Add 'windowlower' command (#426)
+  - Fix some crashes in xdo_get_desktop_for_window (#434)
+  - Fix mouse movement under Xwayland when multiple screens are present (#435)
+  - mousemove --sync no only waits if the cursor is expected to actually move (#463, #464)
+
+  Development/Build changes:
+  - Remove dependency on libXi that was leftover from Wayland detection code no 
+    longer used in xdotool
+  - Bump SONAME to 4 hopefully to resolve ABI issues with previous versions of libxdo.
+  - Code improvements intended to reduce compiler warnings (#364)
+  - Add support for Cygwin when building
+  - Test suite works again! :)
+
 3.20211022.1
   - Fix a bug causing `make create-package-deb` to fail. (#362)
 
