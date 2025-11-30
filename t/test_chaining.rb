@@ -4,7 +4,7 @@
 require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolChainingTests < MiniTest::Test
+class XdotoolChainingTests < Minitest::Test
   include XdoTestHelper
 
   def setup

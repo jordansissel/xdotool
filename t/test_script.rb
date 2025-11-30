@@ -5,7 +5,7 @@ require "minitest"
 require "./xdo_test_helper"
 require "tempfile"
 
-class XdotoolScriptTests < MiniTest::Test
+class XdotoolScriptTests < Minitest::Test
   include XdoTestHelper
 
   def xdotool_script_ok(commands)

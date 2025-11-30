@@ -4,7 +4,7 @@
 require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolBasicTests < MiniTest::Test
+class XdotoolBasicTests < Minitest::Test
   include XdoTestHelper
 
   def test_noargs_exit_1

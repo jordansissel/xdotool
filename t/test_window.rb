@@ -3,7 +3,7 @@
 require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolWindowTests < MiniTest::Test
+class XdotoolWindowTests < Minitest::Test
   include XdoTestHelper
 
   def setup
@@ -19,8 +19,8 @@ class XdotoolWindowTests < MiniTest::Test
     status, lines = xdotool "set_window --name '#{name}' #{@wid}"
     assert_status_ok(status);
     assert_equal(0, lines.length, "set_window should have no output")
-    xprop_status, xprop_output = runcmd("xprop -id #{@wid}")
-    assert_send([xprop_output, :include?, "WM_NAME(STRING) = \"#{name}\""],
+    _, xprop_output = runcmd("xprop -id #{@wid}")
+    assert(xprop_output.include?("WM_NAME(STRING) = \"#{name}\""),
                 "xprop should report the WM_NAME as the value we set")
   end
 
@@ -37,9 +37,8 @@ class XdotoolWindowTests < MiniTest::Test
     assert_status_ok(status);
     assert_equal(0, lines.length, "set_window should have no output")
 
-    xprop_status, xprop_output = runcmd("xprop -id #{@wid}")
-    assert_send([xprop_output, :include?, 
-                "WM_CLASS(STRING) = \"#{classname}\", \"#{_class}\""],
+    _, xprop_output = runcmd("xprop -id #{@wid}")
+    assert(xprop_output.include?("WM_CLASS(STRING) = \"#{classname}\", \"#{_class}\""),
                 "xprop should report the WM_CLASS as the value we set")
   end
 
@@ -49,9 +48,8 @@ class XdotoolWindowTests < MiniTest::Test
     status, lines = xdotool "set_window --icon '#{icon}' #{@wid}"
     assert_status_ok(status);
     assert_equal(0, lines.length, "set_window should have no output")
-    xprop_status, xprop_output = runcmd("xprop -id #{@wid}")
-    assert_send([xprop_output, :include?, "WM_ICON_NAME(STRING) = \"#{icon}\""],
-                "xprop should report the WM_ICON_NAME as the value we set")
+    _, xprop_output = runcmd("xprop -id #{@wid}")
+    assert(xprop_output.include?("WM_ICON_NAME(STRING) = \"#{icon}\""), "xprop should report the WM_ICON_NAME as the value we set")
   end
 
   def test_set_role
@@ -60,8 +58,8 @@ class XdotoolWindowTests < MiniTest::Test
     status, lines = xdotool "set_window --role '#{role}' #{@wid}"
     assert_status_ok(status);
     assert_equal(0, lines.length, "set_window should have no output")
-    xprop_status, xprop_output = runcmd("xprop -id #{@wid}")
-    assert_send([xprop_output, :include?, "WM_WINDOW_ROLE(STRING) = \"#{role}\""],
+    _, xprop_output = runcmd("xprop -id #{@wid}")
+    assert(xprop_output.include?("WM_WINDOW_ROLE(STRING) = \"#{role}\""),
                 "xprop should report the WM_ROLE as the value we set")
   end
 end # class XdotoolWindowTests

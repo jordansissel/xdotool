@@ -4,7 +4,7 @@
 require "minitest"
 require "./xdo_test_helper"
 
-class XdotoolCommandGetWindowPidTests < MiniTest::Test
+class XdotoolCommandGetWindowPidTests < Minitest::Test
   include XdoTestHelper
 
   def assert_is_title(lines)

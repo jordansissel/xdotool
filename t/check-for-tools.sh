@@ -3,13 +3,20 @@
 XSERVERNAME=${XSERVER%% *}
 WMNAME=${WM%% *}
 
-if ! which $XSERVERNAME > /dev/null 2>&1 ; then
-  echo "Can't find $XSERVERNAME, skipping..." >&2
+need() {
+  if ! which "$1" > /dev/null 2>&1 ; then
+    echo "Can't find program '$1', skipping..." >&2
+    exit 1
+  fi
+}
+
+need "$XSERVERNAME"
+
+if [ ! -z "$WMNAME" -a "$WMNAME" != "none" ]; then
+  need "$WMNAME"
   exit 1
 fi
 
-if [ ! -z "$WMNAME" -a "$WMNAME" != "none" ] \
-   && ! which $WMNAME > /dev/null 2>&1 ; then
-  echo "Can't find $WMNAME, skipping..." >&2
-  exit 1
-fi
+need xwininfo
+need xdpyinfo
+need xprop

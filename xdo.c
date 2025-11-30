@@ -45,6 +45,9 @@
  */
 #define MAX_TRIES 500
 
+static const char *vmodnames(Display *dpy, XkbDescPtr desc, short vmods);
+static const char *modnames(short mask);
+
 static void _xdo_populate_charcode_map(xdo_t *xdo);
 static int _xdo_has_xtest(const xdo_t *xdo);
 
@@ -63,7 +66,6 @@ static void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
                           int modstate, int is_press, useconds_t delay);
 static void _xdo_send_modifier(const xdo_t *xdo, int modmask, int is_press);
 
-static int _xdo_query_keycode_to_modifier(XModifierKeymap *modmap, KeyCode keycode);
 static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press);
 
 static int _is_success(const char *funcname, int code, const xdo_t *xdo);
@@ -128,6 +130,10 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
 
   if (getenv("XDO_QUIET")) {
     xdo->quiet = True;
+  }
+
+  if (getenv("DEBUG")) {
+    xdo->debug = True;
   }
 
   if (_xdo_has_xtest(xdo)) {
@@ -1066,7 +1072,8 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
   for (i = 0; i < nkeys; i++) {
     if (keys[i].needs_binding == 1) {
       KeySym keysym_list[] = { keys[i].symbol };
-      _xdo_debug(xdo, "Mapping sym %lu to %d", keys[i].symbol, scratch_keycode);
+      const char *text = XKeysymToString(keys[i].symbol);
+      _xdo_debug(xdo, "Mapping sym %lu (%s) to %d", keys[i].symbol, text, scratch_keycode);
       XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
       XSync(xdo->xdpy, False);
       /* override the code in our current key to use the scratch_keycode */
@@ -1259,6 +1266,7 @@ static KeySym _xdo_keysym_from_char(const xdo_t *xdo, wchar_t key) {
 static void _xdo_charcodemap_from_char(const xdo_t *xdo, charcodemap_t *key) {
   KeySym keysym = _xdo_keysym_from_char(xdo, key->key);
   _xdo_charcodemap_from_keysym(xdo, key, keysym);
+  _xdo_debug(xdo, "Char '%c' made with Symbol(%s) using keycode %d mask %s", key->key, XKeysymToString(keysym), key->code, modnames(key->modmask));
 
   /* If the character is an uppercase character within the Basic Latin or Latin-1 code block,
    * then sending the capital character keycode will not work.
@@ -1288,6 +1296,7 @@ static void _xdo_charcodemap_from_keysym(const xdo_t *xdo, charcodemap_t *key, K
       return;
     }
   }
+  _xdo_debug(xdo, "No mapping found: Symbol(%s)", XKeysymToString(keysym));
 }
 
 static int _xdo_has_xtest(const xdo_t *xdo) {
@@ -1295,57 +1304,154 @@ static int _xdo_has_xtest(const xdo_t *xdo) {
   return (XTestQueryExtension(xdo->xdpy, &dummy, &dummy, &dummy, &dummy) == True);
 }
 
+#define AddCharcodeEntry(idx, xdo, keysym, keycode, group, mask) \
+          if (idx == charcodes_size) { \
+            xdo->charcodes = realloc(xdo->charcodes, (charcodes_size += 100) * sizeof(charcodemap_t)); \
+          } \
+          xdo->charcodes[idx].key = _keysym_to_char(keysym); \
+          xdo->charcodes[idx].code = keycode; \
+          xdo->charcodes[idx].group = group; \
+          xdo->charcodes[idx].modmask = mask; \
+          xdo->charcodes[idx].symbol = keysym; \
+          xdo->charcodes_len = idx; \
+          idx++; 
+
+
 static void _xdo_populate_charcode_map(xdo_t *xdo) {
-  /* assert xdo->display is valid */
-  int keycodes_length = 0;
-  int idx = 0;
-  int keycode, group, groups, level, modmask, num_map;
-
-  XDisplayKeycodes(xdo->xdpy, &(xdo->keycode_low), &(xdo->keycode_high));
-  XModifierKeymap *modmap = XGetModifierMapping(xdo->xdpy);
-  KeySym *keysyms = XGetKeyboardMapping(xdo->xdpy, xdo->keycode_low,
-                                        xdo->keycode_high - xdo->keycode_low + 1,
-                                        &xdo->keysyms_per_keycode);
-  XFree(keysyms);
-
-  /* Add 2 to the size because the range [low, high] is inclusive */
-  /* Add 2 more for tab (\t) and newline (\n) */
-  keycodes_length = ((xdo->keycode_high - xdo->keycode_low) + 1)
-                     * xdo->keysyms_per_keycode;
-
-  xdo->charcodes = calloc(keycodes_length, sizeof(charcodemap_t));
+  size_t idx = 0;
   XkbDescPtr desc = XkbGetMap(xdo->xdpy, XkbAllClientInfoMask, XkbUseCoreKbd);
 
-  for (keycode = xdo->keycode_low; keycode <= xdo->keycode_high; keycode++) {
-    groups = XkbKeyNumGroups(desc, keycode);
-    for (group = 0; group < groups; group++) {
-      XkbKeyTypePtr key_type = XkbKeyKeyType(desc, keycode, group);
-      for (level = 0; level < key_type->num_levels; level++) {
-        KeySym keysym = XkbKeycodeToKeysym(xdo->xdpy, keycode, group, level);
-        modmask = 0;
+  xdo->keycode_low = desc->min_key_code;
+  xdo->keycode_high = desc->max_key_code;
 
-        for (num_map = 0; num_map < key_type->map_count; num_map++) {
-          XkbKTMapEntryRec map = key_type->map[num_map];
-          if (map.active && map.level == level) {
-            modmask = map.mods.mask;
-            break;
+  // Fetch atom names so XGetAtomName works on Xkb atoms
+  XkbGetNames(
+      xdo->xdpy,
+      XkbKeyTypeNamesMask | XkbKTLevelNamesMask | XkbVirtualModNamesMask, desc);
+
+  size_t charcodes_size = 100;
+
+  xdo->charcodes = calloc(charcodes_size, sizeof(charcodemap_t));
+
+  Display* dpy = xdo->xdpy;
+
+  // Scan all known keycodes and modifier mappings to find what symbols can be typed
+  for (int keycode = desc->min_key_code; keycode <= desc->max_key_code; keycode++) {
+
+    // For each keycode, scan across the groups
+    for (int group = 0; group < XkbKeyNumGroups(desc, keycode); group++) {
+
+      XkbKeyTypePtr key_type = XkbKeyKeyType(desc, keycode, group);
+      if (key_type->num_levels == 0) {
+        printf("Bug? No shift levels found for code:%d, group: %d\n", keycode,
+               group);
+        continue;
+      }
+      // For each shift level on this keycode and group
+      for (unsigned char li = 0; li < key_type->num_levels; li++) {
+        XkbKTMapEntryRec map = {
+          .active =  False,
+          .level =  0,
+          .mods = {
+            .mask = 0,
+            .real_mods = 0,
+            .vmods = 0,
+          }
+        };
+
+        KeySym keysym = XkbKeycodeToKeysym(dpy, keycode, group, map.level);
+
+        if (keysym == NoSymbol) {
+          // No keysym produced by the given (keycode, group, shift level)
+          _xdo_debug(
+              xdo, "[group %d, level %s[%d]] (KT: %s) keycode %d is not bound at this level",
+              group, XGetAtomName(dpy, key_type->level_names[li]),
+              li + 1 /* levels are named starting at 1 */,
+              XGetAtomName(dpy, key_type->name), keycode);
+          continue;
+        }
+
+        /* From:
+         * https://x.z-yx.cc/libX11/XKB/16-chapter-15-xkb-client-keyboard-mapping.html#The_Canonical_Key_Types
+         * > Any combination of modifiers not explicitly listed somewhere in
+         * > the map yields shift level one.
+         *
+         * Also: xkbcomp will delete all level 1 key map entries when compiling.
+         * Reference:
+         * https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/blob/d03a4ab1c0b24f6581411622ccf729ceb329aeb8/keytypes.c#L1247
+         *
+         * Thus, if no active map entry is found, and the current shift
+         * level is "one" (0), we must assume that the keycode alone will
+         * produce a keysym.
+         *
+         * Further, if no map entry with 'mask == 0' is found, it means that
+         * shift level one is produced when the keycode is used without any
+         * modifiers.
+         *
+         * As a shortcut, for shift level 1 (li == 0), check if the keycode
+         * produces this level's keysym without any modifiers. If so, then
+         * prefer it in the keymap.
+         */
+        if (li == 0) {
+          KeySym key_without_mask;
+          // Ask what keysym is produced by this keycode when mask == 0.
+          if (XkbTranslateKeyCode(desc, keycode, 0 /* modifier mask */, NULL, &key_without_mask) == True) {
+            // Safety check: does the keysym found above match the keysm produced by this shift level?
+            if (key_without_mask == keysym) {
+              // pretend we found the map entry in the XkbKTMap
+              map.level = li;
+              map.active = True;
+            }
           }
         }
 
-        xdo->charcodes[idx].key = _keysym_to_char(keysym);
-        xdo->charcodes[idx].code = keycode;
-        xdo->charcodes[idx].group = group;
-        xdo->charcodes[idx].modmask = modmask | _xdo_query_keycode_to_modifier(modmap, keycode);
-        xdo->charcodes[idx].symbol = keysym;
+        // Find out if there's any active modifier mappings for this keycode, group, and shift level.
+        // We can stop looking after we find one.
+        for (int mi = 0; mi < key_type->map_count && !map.active; mi++) {
+          if (key_type->map[mi].active && key_type->map[mi].level == li) {
+            //_xdo_debug(xdo, "Found modifiers -> level mapping for keycode %d level %d", keycode, li);
+            memcpy(&map, &(key_type->map[mi]), sizeof(map));
 
-        idx++;
+            if (map.mods.real_mods == 0 && map.mods.vmods == 0) {
+              _xdo_debug(xdo, "Warning: found a mod entry with mods=0. This isn't expected?");
+            }
+            keysym = XkbKeycodeToKeysym(dpy, keycode, group, map.level);
+          }
+        }
+
+        // If no active mapping is found, then no keysym is produced by this
+        // keycode+modifier at this shift level.
+        if (!map.active) {
+            continue;
+        }
+
+        _xdo_debug(
+          xdo,
+          "[group %d, level %s[%d]] Symbol(%s) = keycode %d with "
+          "mask:%s, "
+          "real_mods:%x, vmods:%s%s",
+          group, XGetAtomName(dpy, key_type->level_names[li]),
+          li + 1 /* levels are named starting at 1 */,
+          XKeysymToString(keysym), keycode,
+          modnames(map.mods.mask), map.mods.real_mods,
+          vmodnames(dpy, desc, map.mods.vmods),
+
+          // Here, "IMPLICIT" means: Xkb defines any missing mappings as
+          // reaching shift level 1. Per the Xkb documentation: 
+          // > Any combination of modifiers not explicitly listed somewhere in the
+          // > map yields shift level one
+          // If no active mapping was found for level 1 (li == 0), the keycode alone
+          // shall be valid.
+          (!map.active && li == 0) ? " [IMPLICIT] " : "");
+
+        AddCharcodeEntry(idx, xdo, keysym, keycode, group, map.mods.mask);
       }
     }
   }
-  xdo->charcodes_len = idx;
-  XkbFreeKeyboard(desc, 0, 1);
-  XFreeModifiermap(modmap);
+
+  XkbFreeKeyboard(desc, 0, True);
 }
+
 
 /* context-free functions */
 wchar_t _keysym_to_char(KeySym keysym) {
@@ -1535,18 +1641,19 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
     }
   }
   if (use_xtest) {
-    //printf("XTEST: Sending key %d %s\n", key->code, is_press ? "down" : "up");
     XkbStateRec state;
     XkbGetState(xdo->xdpy, XkbUseCoreKbd, &state);
     int current_group = state.group;
     XkbLockGroup(xdo->xdpy, XkbUseCoreKbd, key->group);
     if (mask)
       _xdo_send_modifier(xdo, mask, is_press);
-    //printf("XTEST: Sending key %d %s %x %d\n", key->code, is_press ? "down" : "up", key->modmask, key->group);
+    _xdo_debug(xdo, "XTEST: %s key: keycode %d", is_press ? "Press" : "Release",
+               key->code);
     XTestFakeKeyEvent(xdo->xdpy, key->code, is_press, CurrentTime);
     XkbLockGroup(xdo->xdpy, XkbUseCoreKbd, current_group);
     XSync(xdo->xdpy, False);
   } else {
+    _xdo_debug(xdo, "XSendEvent: Sending key %s, keycode %d mask %s\n", is_press ? "down" : "up", key->code, modnames(key->modmask));
     /* Since key events have 'state' (shift, etc) in the event, we don't
      * need to worry about key press ordering. */
     XKeyEvent xk;
@@ -1565,31 +1672,6 @@ void _xdo_send_key(const xdo_t *xdo, Window window, charcodemap_t *key,
   }
 }
 
-int _xdo_query_keycode_to_modifier(XModifierKeymap *modmap, KeyCode keycode) {
-  int i = 0, j = 0;
-  int max = modmap->max_keypermod;
-
-  for (i = 0; i < 8; i++) { /* 8 modifier types, per XGetModifierMapping(3X) */
-    for (j = 0; j < max && modmap->modifiermap[(i * max) + j]; j++) {
-      if (keycode == modmap->modifiermap[(i * max) + j]) {
-        switch (i) {
-          case ShiftMapIndex: return ShiftMask; break;
-          case LockMapIndex: return LockMask; break;
-          case ControlMapIndex: return ControlMask; break;
-          case Mod1MapIndex: return Mod1Mask; break;
-          case Mod2MapIndex: return Mod2Mask; break;
-          case Mod3MapIndex: return Mod3Mask; break;
-          case Mod4MapIndex: return Mod4Mask; break;
-          case Mod5MapIndex: return Mod5Mask; break;
-        }
-      } /* end if */
-    } /* end loop j */
-  } /* end loop i */
-
-  /* No modifier found for this keycode, return no mask */
-  return 0;
-}
-
 void _xdo_send_modifier(const xdo_t *xdo, int modmask, int is_press) {
   XModifierKeymap *modifiers = XGetModifierMapping(xdo->xdpy);
   int mod_index, mod_key, keycode;
@@ -1599,6 +1681,12 @@ void _xdo_send_modifier(const xdo_t *xdo, int modmask, int is_press) {
       for (mod_key = 0; mod_key < modifiers->max_keypermod; mod_key++) {
         keycode = modifiers->modifiermap[mod_index * modifiers->max_keypermod + mod_key];
         if (keycode) {
+          _xdo_debug(
+            xdo,
+            "XTEST: %s modifier %s using keycode %d",
+            is_press ? "Press" : "Release",
+            modnames(modmask & (1 << mod_index)),
+            keycode);
           XTestFakeKeyEvent(xdo->xdpy, keycode, is_press, CurrentTime);
           XSync(xdo->xdpy, False);
           break;
@@ -2022,4 +2110,65 @@ int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
     Window root = RootWindow(xdo->xdpy, screen);
     return xdo_get_window_size(xdo, root, width, height);
   }
+}
+
+static const char *vmodnames(Display *dpy, XkbDescPtr desc, short vmods) {
+  static char names[1024];
+  memset(names, 0, sizeof(names));
+
+  if (vmods == 0) {
+    return "<none>";
+  }
+
+  for (int i = 0; (1 << i) <= vmods; i++) {
+    if (vmods & (1 << i)) {
+      const char *n = XGetAtomName(dpy, desc->names->vmods[i]);
+      if (names[0] == 0) {
+        strncpy(names, n, 20);
+      } else {
+        strncpy(names+strlen(names), "+", 20);
+        strncpy(names+strlen(names), n,20);
+      }
+    }
+  }
+
+  if (strlen(names) == 0) {
+    printf("bug: empty vmod string for value: %d\n", vmods);
+  }
+
+  return names;
+}
+
+static const char *modnames(short mask) {
+  static char names[1024];
+  memset(names, 0, sizeof(names));
+
+  if (mask == 0) {
+    return "<none>";
+  }
+
+  if (mask & ShiftMask)
+    strncat(names, "+Shift", 20);
+  if (mask & LockMask)
+    strncat(names, "+Lock", 20);
+  if (mask & ControlMask)
+    strncat(names, "+Control", 20);
+  if (mask & Mod1Mask)
+    strncat(names, "+Mod1", 20);
+  if (mask & Mod2Mask)
+    strncat(names, "+Mod2", 20);
+  if (mask & Mod3Mask)
+    strncat(names, "+Mod3", 20);
+  if (mask & Mod4Mask)
+    strncat(names, "+Mod4", 20);
+  if (mask & Mod5Mask)
+    strncat(names, "+Mod5", 20);
+
+  if (names[0] == '+') {
+    memmove(names, names+1, strlen(names)-1);
+    names[strlen(names)-1] = 0;
+      
+  }
+
+  return names;
 }
