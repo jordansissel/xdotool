@@ -45,8 +45,8 @@ class XdotoolTypingTests < Minitest::Test
   def type(input)
     #status, lines = xdotool "type --window #{@wid} --clearmodifiers '#{input}'"
     #_xdotool "key ctrl+s ctrl+q"
-    status, lines = xdotool("type","--clearmodifiers", "--delay", "0", input)
-    xdotool "key --delay 0 ctrl+d ctrl+d"
+    status, lines = xdotool("type","--clearmodifiers", "--delay", "20", input)
+    xdotool "key --delay 20 ctrl+d ctrl+d"
     Process.wait(@launchpid) rescue nil
     return readfile
   end
