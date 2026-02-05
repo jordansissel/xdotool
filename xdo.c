@@ -983,8 +983,13 @@ int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button,
 
 /* XXX: Return proper code if errors found */
 int xdo_enter_text_window(const xdo_t *xdo, Window window, const char *string, useconds_t delay) {
-  /* Keep the original delay for key up events, but use 50000 microseconds (50ms) for key down */
-  useconds_t down_delay = 50000; 
+  /* Split delay into keyup and keydown, not letting keydown exceed 50000 (50ms) */
+  useconds_t down_delay, up_delay;
+  down_delay = up_delay = delay / 2;
+  if (down_delay > 50000) {
+    down_delay = 50000;
+    up_delay = delay - down_delay;
+  }
 
   charcodemap_t key;
   setlocale(LC_CTYPE,"");
@@ -1002,11 +1007,11 @@ int xdo_enter_text_window(const xdo_t *xdo, Window window, const char *string, u
       continue;
     }
 
-    /* Send the key press event with the fixed 50ms delay */
+    /* Send the key press event */
     xdo_send_keysequence_window_list_do(xdo, window, &key, 1, True, NULL, down_delay);
     key.needs_binding = 0;
-    /* Send the key release event with the user-specified delay */
-    xdo_send_keysequence_window_list_do(xdo, window, &key, 1, False, NULL, delay);
+    /* Send the key release event */
+    xdo_send_keysequence_window_list_do(xdo, window, &key, 1, False, NULL, up_delay);
   }
 
   return XDO_SUCCESS;
