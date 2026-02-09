@@ -180,6 +180,14 @@ typedef struct xdo_search {
   const char *winclassname; /** pattern to test against a window class */
   const char *winname;      /** pattern to test against a window name */
   const char *winrole;      /** pattern to test against a window role */
+
+  /** the compiled regular expressions */
+  regex_t title_re;
+  regex_t class_re;
+  regex_t classname_re;
+  regex_t name_re;
+  regex_t role_re;
+
   int pid;            /** window pid (From window atom _NET_WM_PID) */
   long max_depth;     /** depth of search. 1 means only toplevel windows */
   int only_visible;   /** boolean; set true to search only visible windows */
@@ -745,6 +753,19 @@ int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop);
 int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop);
 
 /**
+ * Compiles the regexes in xdo_search_t.
+ * This should be called once after the fields for string patterns
+ * such as title, winclassname, etc. has been initialized.
+ */
+int xdo_search_compile(xdo_search_t *search);
+
+/**
+ * Deinitializes the regexes in xdo_search_t.
+ * This should be called when search is no longer needed.
+ */
+void xdo_search_free(xdo_search_t *search);
+
+/**
  * Search for windows.
  *
  * @param search the search query.
@@ -752,7 +773,7 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop);
  * @param nwindows_ret the number of windows (length of windowlist_ret)
  * @see xdo_search_t
  */
-int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
+int xdo_search_windows(const xdo_t *xdo, xdo_search_t *search,
                       Window **windowlist_ret, unsigned int *nwindows_ret);
 
 /**
