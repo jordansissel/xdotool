@@ -91,7 +91,7 @@ KNOWN ISSUES:
     Guarino)
   - Typing commands (key and type) will now try to use XTEST instead of
     XSendEvent in a special circumstance. If the window id given (by window
-    stack or the --window flag) is the currenly-focused window, key sequences
+    stack or the --window flag) is the currently-focused window, key sequences
     will be sent using XTEST. (#85, mpnolan)
   - getmouselocation, getwindowgeometry, and search commands: now supports
     --shell and --prefix for having stdout be consumable by bash or similar
