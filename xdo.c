@@ -1775,6 +1775,23 @@ int xdo_get_active_modifiers(const xdo_t *xdo, charcodemap_t **keys,
   return XDO_SUCCESS;
 }
 
+void xdo_wait_for_key_release(const xdo_t *xdo) {
+  char keymap[32]; /* keycode map: 256 bits */
+  for (;;) {
+    XQueryKeymap(xdo->xdpy, keymap);
+    int any_key_down = 0;
+    for (size_t i = 0; i < sizeof(keymap); i++) {
+      if (keymap[i]) {
+        any_key_down = 1;
+        break;
+      }        
+    }
+    if (!any_key_down)
+      return;          
+    usleep(30000);
+  }
+}
+
 unsigned int xdo_get_input_state(const xdo_t *xdo) {
   Window root, dummy;
   int root_x, root_y, win_x, win_y;
