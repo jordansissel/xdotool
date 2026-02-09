@@ -53,6 +53,11 @@ extern "C" {
 #define CURRENTWINDOW (0)
 
 /**
+ * Default delay in milliseconds for key and mouse events
+ */
+#define DEFAULT_DELAY 12
+
+/**
  * @internal
  * Map character to whatever information we need to be able to send
  * this key (keycode, modifiers, group, etc)
@@ -340,7 +345,7 @@ int xdo_wait_for_mouse_move_to(const xdo_t *xdo, int dest_x, int dest_y);
  * @param button The mouse button. Generally, 1 is left, 2 is middle, 3 is
  *    right, 4 is wheel up, 5 is wheel down.
  */
-int xdo_click_window(const xdo_t *xdo, Window window, int button);
+int xdo_click_window(const xdo_t *xdo, Window window, int button, useconds_t mouse_up_delay);
 
 /**
  * Send a one or more clicks for a specific mouse button at the current mouse
@@ -351,7 +356,7 @@ int xdo_click_window(const xdo_t *xdo, Window window, int button);
  *    right, 4 is wheel up, 5 is wheel down.
  */
 int xdo_click_window_multiple(const xdo_t *xdo, Window window, int button,
-                       int repeat, useconds_t delay);
+                       int repeat, useconds_t delay, useconds_t mouse_up_delay);
 
 /**
  * Type a string to the specified window.
