@@ -261,6 +261,39 @@ int xdo_get_window_size(const xdo_t *xdo, Window wid, unsigned int *width_ret,
   return _is_success("XGetWindowAttributes", ret == 0, xdo);
 }
 
+int xdo_get_window_hinted_size(const xdo_t *xdo, Window window,
+                               unsigned int *hinted_width_ret,
+                               unsigned int *hinted_height_ret) {
+
+  XSizeHints hints;
+  long supplied_return;
+  unsigned int width = 0;
+  unsigned int height = 0;
+  xdo_get_window_size(xdo, window, &width, &height);
+  XGetWMNormalHints(xdo->xdpy, window, &hints, &supplied_return);
+  if (supplied_return & PResizeInc
+      && hints.width_inc != 0 && hints.height_inc != 0
+      && width != 0 && height != 0) {
+    if (hints.flags & (PMinSize | PBaseSize)) {
+      if (hints.flags & PBaseSize) {
+        width -= hints.base_width;
+        height -= hints.base_height;
+      } else {
+        width -= hints.min_width;
+        height -= hints.min_height;
+      }
+    }
+    *hinted_width_ret = width/hints.width_inc;
+    *hinted_height_ret = height/hints.height_inc;
+  } else {
+    fprintf(stderr, "No size hints found for window %ld\n", window);
+    *hinted_width_ret = 0;
+    *hinted_height_ret = 0;
+  }
+
+  return XDO_SUCCESS;
+}
+
 int xdo_move_window(const xdo_t *xdo, Window wid, int x, int y) {
   XWindowChanges wc;
   int ret = 0;
