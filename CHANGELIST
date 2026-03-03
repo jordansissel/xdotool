@@ -9,6 +9,14 @@ KNOWN ISSUES:
     Unfortunately, there seem to be no common and stable way to do what
     xdotool does *on* Wayland, so xdotool does not work correctly under Wayland.
 
+4.20260303.1
+  - XSendEvent now correctly sets the modifier mask when sending key
+    combinations. This was a regression introduced in the previous release
+    (#495, #505)
+  - Keystroke delays less than 50ms should work now correctly; type and key
+    commands were affected. This was a regression introduced in the previous
+    release. (#496, #498, #506)
+
 4.20251130.1
   - Fix bug in typing/keyboard causing xdotool to send extra modifier
     keys in certain cases. When xkeyboard-config 2.46 is installed,
