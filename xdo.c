@@ -1354,8 +1354,20 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
                group);
         continue;
       }
+
       // For each shift level on this keycode and group
       for (unsigned char li = 0; li < key_type->num_levels; li++) {
+        // Skip this level if it's been deleted? Hard to explain...
+        // Issue: https://github.com/jordansissel/xdotool/issues/507
+        // there's at least one case (`-option 'numpad:mac'`) where Base/Level1
+        // (level_names[0]) is simply *gone* from the entire key type, and
+        // Level2 is set as the default, `map[none] = level2`
+        if (key_type->level_names[li] == 0) {
+          // the only way i've found to detect this is by checking if a given level_name entry is null.
+          _xdo_debug(xdo, "Found weird edge case where level name is gone (keycode: %d, level %d, group %d)", keycode, li, group);
+          continue;
+        }
+
         XkbKTMapEntryRec map = {
           .active =  False,
           .level =  0,
@@ -1366,13 +1378,15 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
           }
         };
 
-        KeySym keysym = XkbKeycodeToKeysym(dpy, keycode, group, map.level);
+        // Figure out if this (keycode, group , shift level) has a keysym mapped to it.
+        KeySym keysym = XkbKeySymEntry(desc, keycode, li, group);
 
         if (keysym == NoSymbol) {
           // No keysym produced by the given (keycode, group, shift level)
           _xdo_debug(
               xdo, "[group %d, level %s[%d]] (KT: %s) keycode %d is not bound at this level",
-              group, XGetAtomName(dpy, key_type->level_names[li]),
+              group, 
+              key_type->level_names[li] == 0 ? "<no level name>" : XGetAtomName(dpy, key_type->level_names[li]),
               li + 1 /* levels are named starting at 1 */,
               XGetAtomName(dpy, key_type->name), keycode);
           continue;
@@ -1399,37 +1413,32 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
          * produces this level's keysym without any modifiers. If so, then
          * prefer it in the keymap.
          */
-        if (li == 0) {
-          KeySym key_without_mask;
-          // Ask what keysym is produced by this keycode when mask == 0.
-          if (XkbTranslateKeyCode(desc, keycode, 0 /* modifier mask */, NULL, &key_without_mask) == True) {
-            // Safety check: does the keysym found above match the keysm produced by this shift level?
-            if (key_without_mask == keysym) {
-              // pretend we found the map entry in the XkbKTMap
-              map.level = li;
-              map.active = True;
-            }
-          }
-        }
 
-        // Find out if there's any active modifier mappings for this keycode, group, and shift level.
-        // We can stop looking after we find one.
+        // It's time to find out what combination of modifiers produces this
+        // shift level.
+        //
+        // In a given group, a keysym is produced with a specific (keysym,
+        // modifier keys) pairing, so we need to find out what modifier keys are
+        // needed. We can stop looking after we find one.
         for (int mi = 0; mi < key_type->map_count && !map.active; mi++) {
-          if (key_type->map[mi].active && key_type->map[mi].level == li) {
-            //_xdo_debug(xdo, "Found modifiers -> level mapping for keycode %d level %d", keycode, li);
-            memcpy(&map, &(key_type->map[mi]), sizeof(map));
-
-            if (map.mods.real_mods == 0 && map.mods.vmods == 0) {
-              _xdo_debug(xdo, "Warning: found a mod entry with mods=0. This isn't expected?");
+          if (key_type->map[mi].active) {
+            if (key_type->map[mi].level == li) {
+              memcpy(&map, &(key_type->map[mi]), sizeof(map));
             }
-            keysym = XkbKeycodeToKeysym(dpy, keycode, group, map.level);
           }
         }
 
-        // If no active mapping is found, then no keysym is produced by this
-        // keycode+modifier at this shift level.
         if (!map.active) {
-            continue;
+          // No map w/ active + modifiers was found, so let's apply what the
+          // documentation says:
+          // > Any combination of modifiers not explicitly listed somewhere in
+          // > the map yields shift level one. In addition, map entries
+          // > specifying unbound virtual modifiers are not considered.
+          //
+          // Getting this far, we know this keycode + group + shift level produces a keysym.
+          // And getting here, no modifiers are required to reach this shift level.
+          map.active = True;
+          map.level = li;
         }
 
         _xdo_debug(
@@ -1437,8 +1446,10 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
           "[group %d, level %s[%d]] Symbol(%s) = keycode %d with "
           "mask:%s, "
           "real_mods:%x, vmods:%s%s",
-          group, XGetAtomName(dpy, key_type->level_names[li]),
-          li + 1 /* levels are named starting at 1 */,
+          group, 
+          //XGetAtomName(xdo->xdpy, key_type->level_names[key_type->map[li].level]),
+          XGetAtomName(xdo->xdpy, key_type->level_names[map.level]),
+          li,
           XKeysymToString(keysym), keycode,
           modnames(map.mods.mask), map.mods.real_mods,
           vmodnames(dpy, desc, map.mods.vmods),
