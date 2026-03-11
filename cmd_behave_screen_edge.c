@@ -116,7 +116,14 @@ int cmd_behave_screen_edge(context_t *context) {
   search.require = SEARCH_ANY;
   search.searchmask = SEARCH_NAME;
   search.winname = "^"; /* Match anything */
+
+  if (!xdo_search_compile(&search)) {
+    return EXIT_FAILURE;
+  }
+
   xdo_search_windows(context->xdo, &search, &windowlist, &nwindows);
+  xdo_search_free(&search);
+
   unsigned int i;
   for (i = 0; i < nwindows; i++) {
     XSelectInput(context->xdo->xdpy, windowlist[i], PointerMotionMask | SubstructureNotifyMask);

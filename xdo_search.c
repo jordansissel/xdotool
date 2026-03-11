@@ -4,7 +4,6 @@
  */
 
 #include <stdlib.h>
-#include <regex.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -14,7 +13,7 @@
 #include "xdo.h"
 
 static int compile_re(const char *pattern, regex_t *re);
-static int check_window_match(const xdo_t *xdo, Window wid, const xdo_search_t *search);
+static int check_window_match(const xdo_t *xdo, Window wid, xdo_search_t *search);
 static int _xdo_match_window_class(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_match_window_classname(const xdo_t *xdo, Window window, regex_t *re);
 static int _xdo_match_window_role(const xdo_t *xdo, Window window, regex_t *re);
@@ -23,13 +22,38 @@ static int _xdo_match_window_title(const xdo_t *xdo, Window window, regex_t *re)
 static int _xdo_match_window_pid(const xdo_t *xdo, Window window, int pid);
 static int _xdo_is_window_visible(const xdo_t *xdo, Window wid);
 static void find_matching_windows(const xdo_t *xdo, Window window, 
-                                  const xdo_search_t *search,
+                                  xdo_search_t *search,
                                   Window **windowlist_ret,
                                   unsigned int *nwindows_ret,
                                   unsigned int *windowlist_size,
                                   int current_depth);
 
-int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
+int xdo_search_compile(xdo_search_t *search) {
+  int ok = True;
+
+  /* This compiles all regexes even if any of them fails.
+     This avoids needing to use a flag to determine which one
+     to free on xdo_search_free(). Keep this in mind when refactoring
+     this part. */
+  ok = compile_re(search->title, &search->title_re) && ok;
+  ok = compile_re(search->winclass, &search->class_re) && ok;
+  ok = compile_re(search->winclassname, &search->classname_re) && ok;
+  ok = compile_re(search->winrole, &search->role_re) && ok;
+  ok = compile_re(search->winname, &search->name_re) && ok;
+
+  return ok;
+}
+
+void xdo_search_free(xdo_search_t *search) {
+    /* This will segfault when regex_t in not properly initialized with regcomp(). */
+    regfree(&search->title_re);
+    regfree(&search->class_re);
+    regfree(&search->classname_re);
+    regfree(&search->name_re);
+    regfree(&search->role_re);
+}
+
+int xdo_search_windows(const xdo_t *xdo, xdo_search_t *search,
                       Window **windowlist_ret, unsigned int *nwindows_ret) {
   int i = 0;
 
@@ -232,29 +256,7 @@ static int _xdo_is_window_visible(const xdo_t *xdo, Window wid) {
 } /* int _xdo_is_window_visible */
 
 static int check_window_match(const xdo_t *xdo, Window wid,
-                              const xdo_search_t *search) {
-  regex_t title_re;
-  regex_t class_re;
-  regex_t classname_re;
-  regex_t name_re;
-  regex_t role_re;
-
-
-  if (!compile_re(search->title, &title_re) \
-      || !compile_re(search->winclass, &class_re) \
-      || !compile_re(search->winclassname, &classname_re) \
-      || !compile_re(search->winrole, &role_re) \
-      || !compile_re(search->winname, &name_re)) {
-
-    regfree(&title_re);
-    regfree(&class_re);
-    regfree(&classname_re);
-    regfree(&name_re);
-    regfree(&role_re);
-
-    return False;
-  }
-
+                              xdo_search_t *search) {
   /* Set this to 1 for dev debugging */
   static const int debug = 0;
 
@@ -300,42 +302,37 @@ static int check_window_match(const xdo_t *xdo, Window wid,
       break;
     }
 
+
     if (pid_want && !_xdo_match_window_pid(xdo, wid, search->pid)) {
       if (debug) fprintf(stderr, "skip %ld pid\n", wid); 
       pid_ok = False;
     }
 
-    if (title_want && !_xdo_match_window_title(xdo, wid, &title_re)) {
+    if (title_want && !_xdo_match_window_title(xdo, wid, &search->title_re)) {
       if (debug) fprintf(stderr, "skip %ld title\n", wid);
       title_ok = False;
     }
 
-    if (name_want && !_xdo_match_window_name(xdo, wid, &name_re)) {
+    if (name_want && !_xdo_match_window_name(xdo, wid, &search->name_re)) {
       if (debug) fprintf(stderr, "skip %ld winname\n", wid);
       name_ok = False;
     }
 
-    if (class_want && !_xdo_match_window_class(xdo, wid, &class_re)) {
+    if (class_want && !_xdo_match_window_class(xdo, wid, &search->class_re)) {
       if (debug) fprintf(stderr, "skip %ld winclass\n", wid);
       class_ok = False;
     }
 
-    if (classname_want && !_xdo_match_window_classname(xdo, wid, &classname_re)) {
+    if (classname_want && !_xdo_match_window_classname(xdo, wid, &search->classname_re)) {
       if (debug) fprintf(stderr, "skip %ld winclassname\n", wid);
       classname_ok = False;
     }
 
-    if (role_want && !_xdo_match_window_role(xdo, wid, &role_re)) {
+    if (role_want && !_xdo_match_window_role(xdo, wid, &search->role_re)) {
       if (debug) fprintf(stderr, "skip %ld winrole\n", wid);
       role_ok = False;
     }
   } while (0);
-
-  regfree(&title_re);
-  regfree(&class_re);
-  regfree(&classname_re);
-  regfree(&name_re);
-  regfree(&role_re);
 
   if (debug) {
     fprintf(stderr, "win: %ld, pid:%d, title:%d, name:%d, class:%d, visible:%d\n",
@@ -386,7 +383,7 @@ static int ignore_badwindow(Display *dpy, XErrorEvent *xerr) {
 }
 
 static void find_matching_windows(const xdo_t *xdo, Window window, 
-                                  const xdo_search_t *search,
+                                  xdo_search_t *search,
                                   Window **windowlist_ret,
                                   unsigned int *nwindows_ret,
                                   unsigned int *windowlist_size,

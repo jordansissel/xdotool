@@ -189,6 +189,10 @@ int cmd_search(context_t *context) {
     consume_args(context, 1);
   }
 
+  if (!xdo_search_compile(&search)) {
+    return EXIT_FAILURE;
+  }
+
   do {
     free(list);
 
@@ -210,6 +214,8 @@ int cmd_search(context_t *context) {
       usleep(500000);
     }
   } while (op_sync && nwindows == 0);
+
+  xdo_search_free(&search);
 
   /* Free old list as it's malloc'd by xdo_search_windows */
   free(context->windows);
