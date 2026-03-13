@@ -43,6 +43,11 @@ See also: L<SENDEVENT NOTES> and L<WINDOW STACK>
 
 Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
 
+=item B<--afterkeys>
+
+Wait for the user to release all keys before sending keystrokes.
+See L<AFTERKEYS> below.
+
 =item B<--delay milliseconds>
 
 Delay between keystrokes. Default is 12ms.
@@ -104,6 +109,11 @@ Delay between keystrokes. Default is 12ms.
 =item B<--clearmodifiers>
 
 Clear modifiers before sending keystrokes. See L<CLEARMODIFIERS> below.
+
+=item B<--afterkeys>
+
+Wait for the user to release all keys before sending keystrokes.
+See L<AFTERKEYS> below.
 
 =back
 
@@ -168,6 +178,10 @@ The origin defaults to the center of the current screen. If you specify a
 
 See L<CLEARMODIFIERS>
 
+=item B<--afterkeys>
+
+See L<AFTERKEYS>
+
 =item B<--sync>
 
 After sending the mouse move request, wait until the mouse is actually
@@ -210,6 +224,10 @@ in the general case than waiting for a specific target.
 
 See L<CLEARMODIFIERS>
 
+=item B<--afterkeys>
+
+See L<AFTERKEYS>
+
 =back
 
 =item B<click> I<[options]> I<button>
@@ -225,6 +243,10 @@ wheel up is 4, wheel down is 5.
 =item B<--clearmodifiers>
 
 Clear modifiers before clicking. See L<CLEARMODIFIERS> below.
+
+=item B<--afterkeys>
+
+Wait for keys to be released before clicking. See L<AFTERKEYS> below.
 
 =item B<--repeat> REPEAT
 
@@ -1050,7 +1072,7 @@ The order of operations if you hold shift while running 'xdotool key --clearmodi
 
 =back
 
-The I<--clearmodifiers> flag can currently clear of the following:
+The I<--clearmodifiers> flag can currently clear the following:
 
 =over
 
@@ -1063,6 +1085,17 @@ The I<--clearmodifiers> flag can currently clear of the following:
 
 
 =back
+
+=head1 AFTERKEYS
+
+Any command taking the I<--afterkeys> flag will wait until any currently
+pressed keys have been released before performing the action, to avoid the
+end of a user's keyboard shortcut interfering with the beginning of xdotool's
+actions.
+
+I<--afterkeys> only waits for key presses, not mouse buttons or caps lock state.
+If you use both I<--afterkeys> and I<--clearmodifiers>, I<--afterkeys> happens
+first, then the mouse buttons and caps lock state will be cleared as described above.
 
 =head1 SENDEVENT NOTES
 
