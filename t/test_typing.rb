@@ -60,10 +60,17 @@ class XdotoolTypingTests < Minitest::Test
     end
   end
 
+  def test_us_option_numpad_mac_simple_typing
+    system("setxkbmap us -option 'numpad:mac'")
+    _test_typing(LETTERS)
+    system("setxkbmap -option ''")
+  end
+
   def test_us_simple_typing
     system("setxkbmap us")
     _test_typing(LETTERS)
   end
+
 
   def test_us_symbol_typing
     system("setxkbmap us")
