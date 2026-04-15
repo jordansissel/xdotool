@@ -1234,6 +1234,7 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
         }
         if (children != NULL)
           XFree(children);
+        return ret;
       } else {
         fprintf(stderr, "Invalid find_client direction (%d)\n", direction);
         *window_ret = 0;
