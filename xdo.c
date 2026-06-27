@@ -1293,16 +1293,36 @@ static void _xdo_charcodemap_from_keysym(const xdo_t *xdo, charcodemap_t *key, K
   key->modmask = 0;
   key->needs_binding = 1;
 
+  _xdo_debug(xdo, "Looking up keysym %s", XKeysymToString(keysym));
   for (i = 0; i < len; i++) {
+
     if (xdo->charcodes[i].symbol == keysym) {
-      key->code = xdo->charcodes[i].code;
-      key->group = xdo->charcodes[i].group;
-      key->modmask = xdo->charcodes[i].modmask;
-      key->needs_binding = 0;
-      return;
+      if (
+        key->code == 0 // not yet set
+        || (key->group > xdo->charcodes[i].group) // lower group found
+        || (xdo->charcodes[i].modmask == 0) // prefer mappings with no modifiers
+      ) {
+        // Prefer keys with lowest group number, or modmask 0
+        key->code = xdo->charcodes[i].code;
+        key->group = xdo->charcodes[i].group;
+        key->modmask = xdo->charcodes[i].modmask;
+        key->needs_binding = 0;
+
+        _xdo_debug(xdo, "Found %s = keycode %d mask %d group %d",
+                   XKeysymToString(keysym),
+                   key->code, key->modmask, key->group);
+
+        if (key->modmask == 0) {
+          // Early return, preferring a "Level1" group (0) or no modifiers
+          return;
+        }
+      }
     }
   }
-  _xdo_debug(xdo, "No mapping found: Symbol(%s)", XKeysymToString(keysym));
+
+  if (key->code == 0) {
+    _xdo_debug(xdo, "No mapping found: Symbol(%s)", XKeysymToString(keysym));
+  }
 }
 
 static int _xdo_has_xtest(const xdo_t *xdo) {
@@ -1528,6 +1548,10 @@ int _xdo_send_keysequence_window_to_keycode_list(const xdo_t *xdo, const char *k
       }
     } else {
       _xdo_charcodemap_from_keysym(xdo, &(*keys)[*nkeys], sym);
+			_xdo_debug(xdo, "Key Lookup: %s (sym %d) = keycode %d mask %d", tok, sym, 
+							(*keys)[*nkeys].code,
+							(*keys)[*nkeys].modmask
+							);
     }
 
     (*nkeys)++;
