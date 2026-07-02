@@ -756,6 +756,19 @@ int xdo_search_windows(const xdo_t *xdo, const xdo_search_t *search,
                       Window **windowlist_ret, unsigned int *nwindows_ret);
 
 /**
+ * Simulate an Xdnd event.
+ *
+ * @param target the target window
+ * @param x the x coordinate of the drop
+ * @param y the y coordinate of the drop
+ * @param formats the mimetypes of the values
+ * @param values the actual values to drop
+ * @param the number of values
+ */
+int xdo_drop(const xdo_t *xdo, Window target, int x, int y, char **formats,
+             char **values, int values_count);
+
+/**
  * Generic property fetch.
  *
  * @param window the window to query
