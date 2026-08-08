@@ -10,12 +10,13 @@ int cmd_click(context_t *context) {
   int active_mods_n;
   char *window_arg = NULL;
   useconds_t delay = 100000; /* 100ms */
+  useconds_t mouse_up_delay = DEFAULT_DELAY * 1000;
   int repeat = 1;
 
   int c;
   enum { 
     opt_unused, opt_help, opt_clearmodifiers, opt_window, opt_delay,
-    opt_repeat
+    opt_repeat, opt_mouseupdelay
   };
   static struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, opt_clearmodifiers },
@@ -23,6 +24,7 @@ int cmd_click(context_t *context) {
     { "window", required_argument, NULL, opt_window },
     { "delay", required_argument, NULL, opt_delay },
     { "repeat", required_argument, NULL, opt_repeat },
+    { "mouseupdelay", required_argument, NULL, opt_mouseupdelay },
     { 0, 0, 0, 0 },
   };
   static const char *usage = 
@@ -33,6 +35,9 @@ int cmd_click(context_t *context) {
             "--delay MILLISECONDS   - delay in milliseconds between clicks.\n"
             "    This has no effect if you do not use --repeat.\n"
             "    Default is 100ms\n"
+            "--mouseupdelay MILLISECONDS - delay in milliseconds between mouse down\n"
+            "                              and mouse up.\n"
+            "                              Default is 12ms.\n"
             "\n"
             "Button is a button number. Generally, left = 1, middle = 2, \n"
             "right = 3, wheel up = 4, wheel down = 5\n";
@@ -59,6 +64,9 @@ int cmd_click(context_t *context) {
       case 'd':
       case opt_delay:
         delay = strtoul(optarg, NULL, 0) * 1000; /* convert ms to usec */
+        break;
+      case opt_mouseupdelay:
+        mouse_up_delay = strtoul(optarg, NULL, 0) * 1000; /* convert ms to usec */
         break;
       case 'r':
       case opt_repeat:
@@ -91,7 +99,7 @@ int cmd_click(context_t *context) {
       xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);
     }
 
-    ret = xdo_click_window_multiple(context->xdo, window, button, repeat, delay);
+    ret = xdo_click_window_multiple(context->xdo, window, button, repeat, delay, mouse_up_delay);
     if (ret != XDO_SUCCESS) {
       fprintf(stderr, "xdo_click_window failed on window %ld\n", window);
       return ret;
