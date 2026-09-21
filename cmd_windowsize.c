@@ -4,6 +4,7 @@
 int cmd_windowsize(context_t *context) {
   int ret = 0;
   unsigned int width, height;
+  double width_percent, height_percent;
   int is_width_percent = 0, is_height_percent = 0;
   int c;
   int opsync = 0;
@@ -53,8 +54,8 @@ int cmd_windowsize(context_t *context) {
   const char *window_arg = "%1";
 
   if (!window_get_arg(context, 2, 0, &window_arg)) {
-    fprintf(stderr, "Invalid argument count, got %d, expected %d\n", 
-            3, context->argc);
+    fprintf(stderr, "Invalid argument count, got %d, expected %d\n",
+            context->argc - optind, 2);
     fprintf(stderr, usage, cmd);
     return EXIT_FAILURE;
   }
@@ -77,8 +78,12 @@ int cmd_windowsize(context_t *context) {
     }
   }
 
-  width = (unsigned int)strtoul(context->argv[0], NULL, 0);
-  height = (unsigned int)strtoul(context->argv[1], NULL, 0);
+  width_percent = strtod(context->argv[0], NULL);
+  height_percent = strtod(context->argv[1], NULL);
+
+  width = (unsigned int)width_percent;
+  height = (unsigned int)height_percent;
+
   consume_args(context, 2);
 
   XWindowAttributes wattr;
@@ -93,11 +98,11 @@ int cmd_windowsize(context_t *context) {
       xdo_get_window_size(context->xdo, root, &root_w, &root_h);
 
       if (is_width_percent) {
-        width = (root_w * width / 100);
+        width = (unsigned int)(root_w * width_percent / 100.0 + 0.5);
       }
 
       if (is_height_percent) {
-        height = (root_h * height / 100);
+        height = (unsigned int)(root_h * height_percent / 100.0 + 0.5);
       }
     }
 
