@@ -246,6 +246,7 @@ struct dispatch {
   { "windowsize", cmd_windowsize, },
   { "windowstate", cmd_windowstate, },
   { "windowunmap", cmd_windowunmap, },
+  { "window_override_redirect", cmd_window_override_redirect, },
 
   { "set_num_desktops", cmd_set_num_desktops, },
   { "get_num_desktops", cmd_get_num_desktops, },
