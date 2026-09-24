@@ -49,6 +49,7 @@ int cmd_sleep(context_t *context);
 int cmd_behave(context_t *context);
 int cmd_behave_screen_edge(context_t *context);
 int cmd_click(context_t *context);
+int cmd_drop(context_t *context);
 int cmd_getactivewindow(context_t *context);
 int cmd_getmouselocation(context_t *context);
 int cmd_getwindowfocus(context_t *context);

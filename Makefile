@@ -54,7 +54,7 @@ CMDOBJS= cmd_click.o cmd_mousemove.o cmd_mousemove_relative.o cmd_mousedown.o \
          cmd_getwindowname.o cmd_getwindowclassname.o cmd_behave_screen_edge.o \
          cmd_windowminimize.o cmd_exec.o cmd_getwindowgeometry.o \
          cmd_windowclose.o cmd_windowquit.o \
-         cmd_sleep.o cmd_get_display_geometry.o
+         cmd_sleep.o cmd_get_display_geometry.o cmd_drop.o
 
 .PHONY: all
 all: xdotool.1 libxdo.$(LIBSUFFIX) libxdo.$(VERLIBSUFFIX) xdotool
@@ -67,8 +67,8 @@ install-static: xdotool.static
 	install -d $(DINSTALLBIN)
 	install -m 755 xdotool.static $(DINSTALLBIN)/xdotool
 
-xdotool.static: xdotool.o $(CMDOBJS) xdo.o xdo_search.o
-	$(CC) -o xdotool.static xdotool.o xdo.o xdo_search.o $(CMDOBJS) $(LDFLAGS)  -lm $(XDOTOOL_LIBS) $(LIBXDO_LIBS)
+xdotool.static: xdotool.o $(CMDOBJS) xdo.o xdo_search.o xdo_dnd.o
+	$(CC) -o xdotool.static xdotool.o xdo.o xdo_search.o xdo_dnd.o $(CMDOBJS) $(LDFLAGS)  -lm $(XDOTOOL_LIBS) $(LIBXDO_LIBS)
 
 .PHONY: install
 install: pre-install installlib installprog installman installheader installpc post-install
@@ -133,18 +133,22 @@ xdo.o: xdo.c xdo_version.h
 xdo_search.o: xdo_search.c
 	$(CC) $(CFLAGS) -fPIC -c xdo_search.c
 
+xdo_dnd.o: xdo_dnd.c
+	$(CC) $(CFLAGS) -fPIC -c xdo_dnd.c
+
 xdotool.o: xdotool.c xdo_version.h
 	$(CC) $(CFLAGS) -c xdotool.c
 
 xdo_search.c: xdo.h
+xdo_dnd.c: xdo.h
 xdo.c: xdo.h
 xdotool.c: xdo.h
 
-libxdo.$(LIBSUFFIX): xdo.o xdo_search.o
-	$(CC) $(LDFLAGS) $(DYNLIBFLAG) $(LIBNAMEFLAG) xdo.o xdo_search.o -o $@ $(LIBXDO_LIBS)
+libxdo.$(LIBSUFFIX): xdo.o xdo_search.o xdo_dnd.o
+	$(CC) $(LDFLAGS) $(DYNLIBFLAG) $(LIBNAMEFLAG) xdo.o xdo_search.o xdo_dnd.o -o $@ $(LIBXDO_LIBS)
 
-libxdo.a: xdo.o xdo_search.o
-	ar qv $@ xdo.o xdo_search.o
+libxdo.a: xdo.o xdo_search.o xdo_dnd.o
+	ar qv $@ xdo.o xdo_search.o xdo_dnd.o
 
 libxdo.$(VERLIBSUFFIX): libxdo.$(LIBSUFFIX)
 	ln -s $< $@
@@ -161,7 +165,7 @@ ifneq ($(WITHOUT_RPATH_FIX),1)
 xdotool: LDFLAGS+=-rpath $(INSTALLLIB)
 endif
 xdotool: xdotool.o $(CMDOBJS) libxdo.$(LIBSUFFIX)
-	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS)  -lm $(XDOTOOL_LIBS)
+	$(CC) -o $@ xdotool.o $(CMDOBJS) -L. -lxdo $(LDFLAGS) -lm $(XDOTOOL_LIBS)
 
 xdotool.1: xdotool.pod
 	pod2man -c "" -r "" xdotool.pod > $@

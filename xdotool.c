@@ -222,6 +222,7 @@ struct dispatch {
   { "behave", cmd_behave, },
   { "behave_screen_edge", cmd_behave_screen_edge, },
   { "click", cmd_click, },
+  { "drop", cmd_drop, },
   { "getmouselocation", cmd_getmouselocation, },
   { "key", cmd_key, },
   { "keydown", cmd_key, },
