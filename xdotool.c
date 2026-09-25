@@ -258,6 +258,7 @@ struct dispatch {
 
   { "exec", cmd_exec, },
   { "sleep", cmd_sleep, },
+  { "print_time", cmd_print_time, },
 
   { NULL, NULL, },
 };
