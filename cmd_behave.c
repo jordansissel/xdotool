@@ -104,6 +104,16 @@ int cmd_behave(context_t *context) {
     // Copy context
     context_t tmpcontext = *context;
 
+    /* Allocate a proper heap buffer for the event window so that any
+     * chained command calling window_save() can safely free() it.
+     * The old code pointed tmpcontext.windows at a stack address
+     * (&e.xcrossing.window etc.) which caused a crash when window_save
+     * tried to free() a non-heap pointer. */
+    tmpcontext.windows = calloc(1, sizeof(Window));
+    if (tmpcontext.windows == NULL) {
+      fprintf(stderr, "Failed to allocate memory for window\n");
+      continue;
+    }
     tmpcontext.nwindows = 1;
     Window hover; /* for LeaveNotify */
     switch (e.type) {
@@ -127,22 +137,25 @@ int cmd_behave(context_t *context) {
 
         /* fall through */
       case EnterNotify:
-        tmpcontext.windows = &(e.xcrossing.window);
+        tmpcontext.windows[0] = e.xcrossing.window;
         ret = context_execute(&tmpcontext);
         break;
       case FocusIn:
       case FocusOut:
-        tmpcontext.windows = &(e.xfocus.window);
+        tmpcontext.windows[0] = e.xfocus.window;
         ret = context_execute(&tmpcontext);
         break;
       case ButtonRelease:
-        tmpcontext.windows = &(e.xbutton.window);
+        tmpcontext.windows[0] = e.xbutton.window;
         ret = context_execute(&tmpcontext);
         break;
       default:
         printf("Unexpected event: %d\n", e.type);
         break;
     }
+
+    /* Free whatever window_save() may have allocated (or our calloc above) */
+    free(tmpcontext.windows);
 
     if (ret != XDO_SUCCESS) {
       xdotool_output(context, "Command failed.");
