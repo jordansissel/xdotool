@@ -8,6 +8,7 @@ int cmd_search(context_t *context) {
   unsigned int i;
   int c;
   int op_sync = False;
+  int op_syncsleep = 500000;
 
   int search_title = 0;
   int search_name = 0;
@@ -19,8 +20,8 @@ int cmd_search(context_t *context) {
   enum {
     opt_unused, opt_title, opt_onlyvisible, opt_name, opt_shell, opt_prefix, opt_class, opt_maxdepth,
     opt_pid, opt_help, opt_any, opt_all, opt_screen, opt_classname, opt_desktop,
-    opt_limit, opt_sync, opt_role
-  };
+    opt_limit, opt_sync, opt_role, opt_syncsleep
+  } optlist_t;
   struct option longopts[] = {
     { "all", no_argument, NULL, opt_all },
     { "any", no_argument, NULL, opt_any },
@@ -39,6 +40,7 @@ int cmd_search(context_t *context) {
     { "limit", required_argument, NULL, opt_limit },
     { "sync", no_argument, NULL, opt_sync },
     { "role", no_argument, NULL, opt_role },
+    { "syncsleep", required_argument, NULL, opt_syncsleep },
     { 0, 0, 0, 0 },
   };
   static const char *usage =
@@ -62,6 +64,7 @@ int cmd_search(context_t *context) {
       "--all           Require all conditions match a window. Default is --any\n"
       "--any           Windows matching any condition will be reported\n"
       "--sync          Wait until a search result is found.\n"
+      "--syncsleep     Delay between searches with --sync. Default is 500ms.\n"
       "-h, --help      show this help output\n"
       "\n"
       "If none of --name, --classname, --class, or --role are specified, the \n"
@@ -138,6 +141,14 @@ int cmd_search(context_t *context) {
       case opt_sync:
         op_sync = True;
         break;
+      case opt_syncsleep:
+        op_syncsleep = strtol(optarg, NULL, 0) * 1000;
+        if (op_syncsleep == 0) {
+          fprintf(stderr, "Invalid syncsleep value\n");
+          fprintf(stderr, usage, cmd);
+          return EXIT_FAILURE;
+        }
+        break;
       default:
         fprintf(stderr, "Invalid usage\n");
         fprintf(stderr, usage, cmd);
@@ -206,8 +217,7 @@ int cmd_search(context_t *context) {
     if (op_sync && nwindows == 0) {
       xdotool_debug(context, "No search results, still waiting...");
 
-      /* TODO(sissel): Make this tunable */
-      usleep(500000);
+      usleep(op_syncsleep);
     }
   } while (op_sync && nwindows == 0);
 
