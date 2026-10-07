@@ -118,6 +118,7 @@ int cmd_key(context_t *context) {
     if (clear_modifiers) {
       xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
       xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);
+      free(active_mods);
     }
 
     for (j = 0; j < repeat; j++) {
@@ -141,10 +142,10 @@ int cmd_key(context_t *context) {
       }
     } /* repeat */
 
-    if (clear_modifiers) {
-      xdo_set_active_modifiers(context->xdo, window, active_mods, active_mods_n);
-      free(active_mods);
-    }
+    //if (clear_modifiers) {
+      //xdo_set_active_modifiers(context->xdo, window, active_mods, active_mods_n);
+      //free(active_mods);
+    //}
   }); /* window_each(...) */
 
   if (free_arg) {
