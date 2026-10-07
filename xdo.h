@@ -671,6 +671,18 @@ int xdo_get_window_location(const xdo_t *xdo, Window wid,
 int xdo_get_window_size(const xdo_t *xdo, Window wid, unsigned int *width_ret,
                         unsigned int *height_ret);
 
+/**
+ * Get a window's size in the size hints increment unit
+ * Will be 0 if window doesn't have any size hints.
+ *
+ * @param window the window to use
+ * @param hinted_width_ret width in size hints unit
+ * @param hinted_height_ret height in size hints unit
+ */
+int xdo_get_window_hinted_size(const xdo_t *xdo, Window window,
+                               unsigned int *hinted_width_ret,
+                               unsigned int *hinted_height_ret);
+
 /* pager-like behaviors */
 
 /**

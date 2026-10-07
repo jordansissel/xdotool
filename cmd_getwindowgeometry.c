@@ -5,6 +5,7 @@ int cmd_getwindowgeometry(context_t *context) {
   int x, y;
   Screen *screen;
   unsigned int width, height;
+  unsigned int hinted_width, hinted_height;
 
   int shell_output = False;
   char out_prefix[17] = {'\0'};
@@ -64,18 +65,23 @@ int cmd_getwindowgeometry(context_t *context) {
       fprintf(stderr, "window %ld - failed to get location?\n", window);
     }
 
+    xdo_get_window_hinted_size(context->xdo, window, &hinted_width, &hinted_height);
+
     if (shell_output) {
       xdotool_output(context, "%sWINDOW=%ld", out_prefix, window);
       xdotool_output(context, "%sX=%d", out_prefix, x);
       xdotool_output(context, "%sY=%d", out_prefix, y);
       xdotool_output(context, "%sWIDTH=%u", out_prefix, width);
       xdotool_output(context, "%sHEIGHT=%u", out_prefix, height);
+      xdotool_output(context, "%sHINTEDWIDTH=%u", out_prefix, hinted_width);
+      xdotool_output(context, "%sHINTEDHEIGHT=%u", out_prefix, hinted_height);
       xdotool_output(context, "%sSCREEN=%d", out_prefix, XScreenNumberOfScreen(screen));
     } else {
       xdotool_output(context, "Window %ld", window);
       xdotool_output(context, "  Position: %d,%d (screen: %d)", x, y,
                      XScreenNumberOfScreen(screen));
       xdotool_output(context, "  Geometry: %ux%u", width, height);
+      xdotool_output(context, "  Hinted geometry: %ux%u", hinted_width, hinted_height);
     }
   }); /* window_each(...) */
   return EXIT_SUCCESS;
