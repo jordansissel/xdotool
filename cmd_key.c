@@ -22,9 +22,11 @@ int cmd_key(context_t *context) {
 
   /* Options */
   int clear_modifiers = 0;
+  int after_keys = 0;
 
   static struct option longopts[] = {
     { "clearmodifiers", no_argument, NULL, 'c' },
+    { "afterkeys", no_argument, NULL, 'a' },
     { "delay", required_argument, NULL, 'd' },
     { "repeat-delay", required_argument, NULL, 'R' },
     { "help", no_argument, NULL, 'h' },
@@ -36,6 +38,7 @@ int cmd_key(context_t *context) {
   static const char *usage = 
      "Usage: %s [options] <keysequence> [keysequence ...]\n"
      "--clearmodifiers     - clear active keyboard modifiers during keystrokes\n"
+     "--afterkeys          - wait for all keys to be released before typing\n"
      "--delay DELAY        - Use DELAY milliseconds between keystrokes\n"
      "--repeat TIMES       - How many times to repeat the key sequence\n"
      "--repeat-delay DELAY - DELAY milliseconds between repetitions\n"
@@ -51,7 +54,7 @@ int cmd_key(context_t *context) {
 
   int option_index;
 
-  while ((c = getopt_long_only(context->argc, context->argv, "+d:hcw:",
+  while ((c = getopt_long_only(context->argc, context->argv, "+d:hcaw:",
                                longopts, &option_index)) != -1) {
     switch (c) {
       case 'w':
@@ -61,6 +64,9 @@ int cmd_key(context_t *context) {
       case 'c':
         clear_modifiers = 1;
         break;
+      case 'a':
+	after_keys = 1;
+	break;
       case 'h':
         printf(usage, cmd);
         consume_args(context, context->argc);
@@ -115,6 +121,9 @@ int cmd_key(context_t *context) {
 
   int max_arg = context->argc;
   window_each(context, window_arg, {
+    if (after_keys) {
+      xdo_wait_for_key_release(context->xdo);
+    }
     if (clear_modifiers) {
       xdo_get_active_modifiers(context->xdo, &active_mods, &active_mods_n);
       xdo_clear_active_modifiers(context->xdo, window, active_mods, active_mods_n);
