@@ -414,7 +414,7 @@ static void find_matching_windows(const xdo_t *xdo, Window window,
     return;
   }
 
-  /* Don't crash if window dissappear in the meantime */
+  /* Don't crash if window disappear in the meantime */
   old_error_handler = XSetErrorHandler(ignore_badwindow);
 
   /* Break if XQueryTree fails.

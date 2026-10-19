@@ -71,8 +71,8 @@ Wayland is a very different graphics system than X11 (which you might know as Xo
 
 Some other tools that might help you if you use Wayland are:
 
-* [ydotool](https://github.com/ReimuNotMoe/ydotool) - a tool for sending mouse and keyboard events using Linux's uinput sytem
-* [dotool](https://git.sr.ht/~geb/dotool) - a tool for sending mouse and keyboard events using Linux's uinput sytem
+* [ydotool](https://github.com/ReimuNotMoe/ydotool) - a tool for sending mouse and keyboard events using Linux's uinput system
+* [dotool](https://git.sr.ht/~geb/dotool) - a tool for sending mouse and keyboard events using Linux's uinput system
 
 ## Building / Compiling
 
