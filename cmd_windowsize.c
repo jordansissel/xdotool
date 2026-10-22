@@ -3,7 +3,8 @@
 
 int cmd_windowsize(context_t *context) {
   int ret = 0;
-  unsigned int width, height;
+  unsigned int width = 0, height = 0;
+  double width_pct = 0.0, height_pct = 0.0;
   int is_width_percent = 0, is_height_percent = 0;
   int c;
   int opsync = 0;
@@ -77,8 +78,17 @@ int cmd_windowsize(context_t *context) {
     }
   }
 
-  width = (unsigned int)strtoul(context->argv[0], NULL, 0);
-  height = (unsigned int)strtoul(context->argv[1], NULL, 0);
+  if (is_width_percent) {
+    width_pct = strtod(context->argv[0], NULL);
+  } else {
+    width = (unsigned int)strtoul(context->argv[0], NULL, 0);
+  }
+
+  if (is_height_percent) {
+    height_pct = strtod(context->argv[1], NULL);
+  } else {
+    height = (unsigned int)strtoul(context->argv[1], NULL, 0);
+  }
   consume_args(context, 2);
 
   XWindowAttributes wattr;
@@ -93,11 +103,11 @@ int cmd_windowsize(context_t *context) {
       xdo_get_window_size(context->xdo, root, &root_w, &root_h);
 
       if (is_width_percent) {
-        width = (root_w * width / 100);
+        width = (unsigned int)((double)root_w * width_pct / 100.0 + 0.5);
       }
 
       if (is_height_percent) {
-        height = (root_h * height / 100);
+        height = (unsigned int)((double)root_h * height_pct / 100.0 + 0.5);
       }
     }
 

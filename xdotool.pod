@@ -572,6 +572,11 @@ the screen, but half height:
 
  xdotool windowsize <window> 100% 50%
 
+Percentages may be fractional. Fractional sizes are rounded to the nearest
+pixel, for example:
+
+ xdotool windowsize <window> 50.5% 50.5%
+
 Percentages are valid with --usehints and still mean pixel-width relative to
 the screen size.
 
