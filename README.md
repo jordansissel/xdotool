@@ -11,7 +11,7 @@ number of desktops.
 
 Also in this repository is `libxdo`, a C library for doing the same.
 
-You may view the user documentation in [`xdotool.pod`](https://github.com/jordansissel/xdotool/blob/master/xdotool.pod)
+You may view the user documentation in [`xdotool.pod`](https://github.com/jordansissel/xdotool/blob/main/xdotool.pod)
 
 ## Installation
 
